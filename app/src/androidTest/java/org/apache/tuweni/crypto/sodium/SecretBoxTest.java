@@ -13,42 +13,28 @@
  */
 package org.apache.tuweni.crypto.sodium;
 
-import static androidx.test.core.app.ActivityScenario.launch;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import androidx.test.core.app.ActivityScenario;
-import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.dlog.MainActivity;
-import org.dlog.libsodium.Sodium;
-import org.junit.Rule;
+import in.delog.libsodium.NaCl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import androidx.test.core.app.ActivityScenario;
-import androidx.test.runner.AndroidJUnitRunner;
 
 @RunWith(AndroidJUnit4.class)
-//@RunWith(androidx.test.runner.AndroidJUnit4.class)
-class SecretBoxTest   {
+class SecretBoxTest {
 
-    @Rule
-    public ActivityScenarioRule mMainActivityRule = new ActivityScenarioRule(MainActivity.class);
-
-    ///Rule var activityScenarioRule = activityScenarioRule<MyActivity>()
 
     @BeforeAll
     static void checkAvailable() {
-        launch(MainActivity.class);
-
-        //mMainActivityRule.getScenario().l
-        Sodium.sodium_init();
-        //assumeTrue(Sodium.isAvailable(), "Sodium native library is not available");
+        NaCl.sodium();
+        ///System.loadLibrary("libsodiumjni");
+        //Sodium.sodium_init();
     }
 
     @Test
@@ -60,7 +46,6 @@ class SecretBoxTest   {
 
         byte[] cipherText = SecretBox.encrypt(message, key, nonce);
         byte[] clearText = SecretBox.decrypt(cipherText, key, nonce);
-
         assertNotNull(clearText);
         assertArrayEquals(message, clearText);
 

@@ -13,11 +13,10 @@
 package org.apache.tuweni.crypto.sodium;
 
 import org.apache.tuweni.bytes.Bytes;
+import in.delog.libsodium.SodiumUtils;
+import org.jetbrains.annotations.Nullable;
 
 import javax.security.auth.Destroyable;
-
-import jnr.ffi.Pointer;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Allocated objects track allocation of memory using Sodium.
@@ -26,120 +25,75 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class Allocated implements Destroyable {
 
-  /**
-   * Assign bytes using Sodium memory allocation
-   * 
-   * @param bytes the bytes to assign
-   * @return a new allocated value filled with the bytes
-   */
-  public static Allocated fromBytes(Bytes bytes) {
-    Allocated allocated = Allocated.allocate(bytes.size());
-    allocated.pointer().put(0, bytes.toArrayUnsafe(), 0, bytes.size());
-    return allocated;
-  }
+    private final int length;
+    @Nullable
+    private byte[] ptr;
 
-  /**
-   * Allocate bytes using Sodium memory allocation
-   * 
-   * @param length the length of the memory allocation, in bytes
-   * @return a new allocated value
-   */
-  static Allocated allocate(long length) {
-    Pointer ptr = Sodium.malloc(length);
-    return new Allocated(ptr, (int) length);
-  }
-
-  @Nullable
-  private Pointer ptr;
-  private final int length;
-
-  Allocated(Pointer ptr, int length) {
-    this.ptr = ptr;
-    this.length = length;
-  }
-
-  Pointer pointer() {
-    if (isDestroyed()) {
-      throw new IllegalArgumentException("SecretKey has been destroyed");
+    Allocated(byte[] ptr, int length) {
+        this.ptr = ptr;
+        this.length = length;
     }
-    return ptr;
-  }
 
-  int length() {
-    return length;
-  }
-
-  /**
-   * Destroys the value from memory.
-   */
-  @Override
-  public void destroy() {
-    if (!isDestroyed()) {
-      Pointer p = ptr;
-      ptr = null;
-      Sodium.sodium_free(p);
+    /**
+     * Assign bytes using Sodium memory allocation
+     *
+     * @param bytes the bytes to assign
+     * @return a new allocated value filled with the bytes
+     */
+    public static Allocated fromBytes(Bytes bytes) {
+        Allocated allocated = Allocated.allocate(bytes.size());
+        allocated.ptr = bytes.toArrayUnsafe().clone();
+        return allocated;
     }
-  }
 
-  /**
-   * Returns true if the value is destroyed.
-   *
-   * @return true if the allocated value is destroyed
-   */
-  @Override
-  public boolean isDestroyed() {
-    return ptr == null;
-  }
+    /**
+     * Allocate bytes using Sodium memory allocation
+     *
+     * @param length the length of the memory allocation, in bytes
+     * @return a new allocated value
+     */
+    static Allocated allocate(long length) {
+//    SWIGTYPE_p_void ptr = Sodium.sodium_malloc((int) length);
+        return new Allocated(new byte[(int) length], (int) length);
+    }
 
-  /**
-   * Provides the bytes of this key.
-   * 
-   * @return The bytes of this key.
-   */
-  public Bytes bytes() {
-    return Bytes.wrap(bytesArray());
-  }
+    int length() {
+        return length;
+    }
 
-  /**
-   * Provides the bytes of this key.
-   * 
-   * @return The bytes of this key.
-   */
-  public byte[] bytesArray() {
-    if (isDestroyed()) {
-      throw new IllegalStateException("allocated value has been destroyed");
-    }
-    return Sodium.reify(ptr, length);
-  }
 
-  @Override
-  protected void finalize() {
-    Sodium.sodium_free(ptr);
-  }
+    /**
+     * Provides the bytes of this key.
+     *
+     * @return The bytes of this key.
+     */
+    public Bytes bytes() {
+        return Bytes.wrap(bytesArray());
+    }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
+    /**
+     * Provides the bytes of this key.
+     *
+     * @return The bytes of this key.
+     */
+    public byte[] bytesArray() {
+        return ptr;
     }
-    if (!(obj instanceof Allocated)) {
-      return false;
-    }
-    Allocated other = (Allocated) obj;
-    if (isDestroyed()) {
-      throw new IllegalStateException("allocated value has been destroyed");
-    }
-    if (other.isDestroyed()) {
-      throw new IllegalStateException("allocated value has been destroyed");
-    }
-    return Sodium.sodium_memcmp(this.ptr, other.ptr, length) == 0;
-  }
 
-  @Override
-  public int hashCode() {
-    if (isDestroyed()) {
-      throw new IllegalStateException("allocated value has been destroyed");
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        return false;
     }
-    return Sodium.hashCode(ptr, length);
-  }
+
+    @Override
+    public int hashCode() {
+        if (isDestroyed()) {
+            throw new IllegalStateException("allocated value has been destroyed");
+        }
+        return SodiumUtils.hashCode(ptr, length);
+    }
 }
