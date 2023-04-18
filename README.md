@@ -33,4 +33,9 @@ You will need an Android NDK and set in the Android Studio env i.e.:
 ```
 ~$ export ANDROID_NDK_HOME=~/Android/Sdk/ndk/25.1.8937393/
 ~$ ./android-studio/bin/studio.sh
-``
+```
+
+## Running tests
+
+Given `cucumberUseAndroidJUnitRunner` in `gradle.properties` you can run cucumber-android 
+bdd tests (default) or JUnit4 classic `connectedAndroidTest`.
