@@ -1,4 +1,4 @@
-package `in`.delog.ssb.test
+package `in`.delog.ssb.test.steps
 
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import io.cucumber.junit.WithJunitRule;

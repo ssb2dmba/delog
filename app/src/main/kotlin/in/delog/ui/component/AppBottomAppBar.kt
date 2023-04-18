@@ -53,7 +53,7 @@ fun AppBottomAppBar(onNavIconClick: () -> Job) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedIconButton(
-                        modifier = Modifier.testTag("addButton"),
+                        modifier = Modifier.testTag("openDrawer"),
                         onClick = { onNavIconClick() }
                     ) {
                         Icon(Icons.Outlined.Menu, contentDescription = "menu")

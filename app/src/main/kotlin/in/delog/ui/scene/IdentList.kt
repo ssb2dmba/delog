@@ -32,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -84,7 +85,10 @@ fun IdentList(navController: NavHostController) {
 @Composable
 fun IdentListFab(navController: NavController) {
     ExtendedFloatingActionButton(
-        onClick = { navController.navigate(Scenes.NewFeed.route) },
+        modifier = Modifier.testTag("new_identifier"),
+        onClick = {
+            navController.navigate(Scenes.NewFeed.route)
+        },
         icon = { Icon(Icons.Filled.Add, "", tint = MaterialTheme.colorScheme.onPrimary) },
         text = { Text(text = "New identity") }
     )

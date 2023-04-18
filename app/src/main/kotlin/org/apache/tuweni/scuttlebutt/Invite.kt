@@ -45,7 +45,6 @@ class Invite(var host: String, var port: Int, val identity: Identity, val seedKe
         fun fromCanonicalForm(inviteCode: String): Invite {
             val exceptionMessage =
                 "Invite code should be of format host:port:publicKey.curveName~secretKey"
-            System.out.println(inviteCode)
             val parts = Arrays.asList(*inviteCode.split(":".toRegex()).toTypedArray())
             if (parts.size != 3) {
                 throw MalformedInviteCodeException(exceptionMessage)

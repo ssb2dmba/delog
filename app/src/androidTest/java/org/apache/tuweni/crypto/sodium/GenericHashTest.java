@@ -33,7 +33,6 @@ class GenericHashTest {
 
     @Test
     void hashValue() {
-        System.out.println("hello world!");
         Bytes a = Bytes.random(384);
         GenericHash.Input.fromBytes(Bytes.random(384));
         GenericHash.hash(64, GenericHash.Input.fromBytes(Bytes.random(384)));
