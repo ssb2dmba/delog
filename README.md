@@ -12,9 +12,10 @@
 - [x] [Koin](https://insert-koin.io/) dependency injection
 - [x] multiple identities
 - [x] BIP39 export mnemonic
-- [ ] multiple relays per indentity
+- [x] Espresso/Gherkin Behavioral Driven Integration Tests
+- [ ] BIP39 import mnemonic
+- [ ] multiple relays per identifier
 - [ ] clean architecture
-- [ ] Espresso/Gherkin Behavioral Driven Integration Tests
 - [ ] blob support
 - [ ] hypertext link embedding
 - [ ] quotes, reply, vote support
