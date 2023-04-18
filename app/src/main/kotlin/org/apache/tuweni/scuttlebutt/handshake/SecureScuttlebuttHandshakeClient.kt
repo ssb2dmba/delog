@@ -73,7 +73,7 @@ class SecureScuttlebuttHandshakeClient private constructor(
      */
     fun readHello(message: Bytes) {
         if (message.size() != 64) {
-            throw HandshakeException("Invalid handshake message length: " + message.size())
+            throw HandshakeException("Invalid handshake message length: " + message.toArrayUnsafe().decodeToString())
         }
         val hmac = message.slice(0, 32)
         val key = message.slice(32, 32)

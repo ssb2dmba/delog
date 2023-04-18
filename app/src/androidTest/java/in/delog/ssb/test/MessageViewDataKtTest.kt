@@ -1,5 +1,6 @@
-package `in`.delog.ssb.ui.component
+package `in`.delog.ssb.test
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Message
 import `in`.delog.ssb.BaseSsbService.Companion.format
@@ -8,7 +9,9 @@ import `in`.delog.ui.component.content
 import `in`.delog.ui.component.toMessageViewData
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class MessageViewDataKtTest {
 
 

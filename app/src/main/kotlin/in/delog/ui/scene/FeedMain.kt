@@ -40,12 +40,14 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.flow.Flow
 import `in`.delog.R
 import `in`.delog.db.model.About
+import `in`.delog.ssb.SsbService
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.MessageListViewModel
+import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.net.URLEncoder
@@ -57,6 +59,9 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
     if (feedToReadKey == null) {
         return
     }
+
+
+
     LaunchedEffect(feedToReadKey) {
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
@@ -68,6 +73,17 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
     val viewModel =
         koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
     if (viewModel.identAndAbout == null) return
+
+    val ssbService: SsbService = get()
+    LaunchedEffect(feedToReadKey) {
+        try {
+            ssbService.reconnect(viewModel.identAndAbout!!.ident)
+        } catch (e: Exception) {
+            // TODO snackbar
+            e.printStackTrace()
+        }
+    }
+
 
     val fpgMessages: Flow<PagingData<MessageViewData>> = viewModel.messagesPaged
     val lazyMessageItems: LazyPagingItems<MessageViewData> = fpgMessages.collectAsLazyPagingItems()

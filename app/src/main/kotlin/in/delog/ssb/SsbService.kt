@@ -55,13 +55,13 @@ class SsbService(
 
 
     suspend fun reconnect(pFeed: Ident) {
-        Log.i(TAG, "connecting to %s %s".format(pFeed.server, pFeed.publicKey))
+        Log.i(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
         try {
             super.connect(pFeed, ::onConnected)
         } catch (e: Exception) {
             Log.e(
                 TAG,
-                "connecting to %s %s : %s ".format(
+                "error connecting to %s %s : %s ".format(
                     pFeed.server,
                     pFeed.publicKey,
                     e.message.toString()
@@ -75,14 +75,16 @@ class SsbService(
         GlobalScope.launch {
             try {
                 // let's call all of our friends
-                contactRepositoryImpl.geContacts(myFeed).forEach {
-                    val ourSequence = messageRepositoryImpl.getLastSequence(it.follow)
-                    createHistoryStream(it.follow, ourSequence)
-                }
+                createHistoryStream(myFeed, 0)
+               // contactRepositoryImpl.geContacts(myFeed).forEach {
+               //     val ourSequence = messageRepositoryImpl.getLastSequence(it.follow)
+               //     createHistoryStream(it.follow, 0)
+               // }
             } catch (e: Exception) {
                 println(e.message)
             }
         }
+
     }
 
 
@@ -242,9 +244,9 @@ class SsbService(
 
 
     open suspend fun connectWithInvite(s: String, feed: Ident, callBack: (RPCResponse) -> Unit) {
-
+        println("connect with invite !!!!!!!!!!!!!!")
         setIdentity(feed) // TODO to rework
-        val invite: Invite = Invite.fromCanonicalForm(s);
+        val invite: Invite = Invite.fromCanonicalForm(s.drop(5));
         // hack replace invite by our current feed so we can bypass server name for dev/test
         invite.port = feed.port
         invite.host = feed.server

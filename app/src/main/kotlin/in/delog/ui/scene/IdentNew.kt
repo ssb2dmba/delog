@@ -56,7 +56,7 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun IdentNew(navController: NavHostController) {
-    val startUrl = "http://192.168.0.45:8000/invite/";
+    val startUrl = "https://delog.in/invite/";
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
 
     LaunchedEffect(Unit) {
@@ -236,7 +236,8 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     val identity = identity
     var invite: Invite? = null
     try {
-        invite = Invite.fromCanonicalForm(inviteString)
+        System.out.println(inviteString.drop(5))
+        invite = Invite.fromCanonicalForm(inviteString.drop(5))
     } catch (e: MalformedInviteCodeException) {
         e.printStackTrace();
         return
