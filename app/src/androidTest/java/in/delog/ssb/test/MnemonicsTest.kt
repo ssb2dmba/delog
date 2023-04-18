@@ -1,8 +1,12 @@
-package `in`.delog.ssb
+package `in`.delog.ssb.test
 
+import `in`.delog.ssb.Dict
+import `in`.delog.ssb.WordList
+import `in`.delog.ssb.mnemonicToSignature
+import `in`.delog.ssb.secretKeyToMnemonic
 import org.apache.tuweni.io.Base64
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertEquals
+import org.junit.Test
 import java.util.*
 
 class MnemonicsTest {

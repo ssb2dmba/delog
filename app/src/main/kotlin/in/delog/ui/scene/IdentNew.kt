@@ -32,6 +32,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -56,9 +57,8 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun IdentNew(navController: NavHostController) {
-    val startUrl = "http://192.168.0.45:8000/invite/";
+    val startUrl = "https://delog.in/invite/";
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-
     LaunchedEffect(Unit) {
         bottomBarViewModel.setTitle("New identity")
         bottomBarViewModel.setActions { }
@@ -310,7 +310,7 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().testTag("alias")
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(Modifier.fillMaxWidth()) {

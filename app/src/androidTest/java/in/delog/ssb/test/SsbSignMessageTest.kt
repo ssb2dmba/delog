@@ -1,8 +1,10 @@
-package `in`.delog.ssb
+package `in`.delog.ssb.test
 
 import `in`.delog.db.model.Ident
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import `in`.delog.ssb.*
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
 
 class SsbSignMessageTest {
 

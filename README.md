@@ -12,9 +12,10 @@
 - [x] [Koin](https://insert-koin.io/) dependency injection
 - [x] multiple identities
 - [x] BIP39 export mnemonic
-- [ ] multiple relays per indentity
+- [x] Espresso/Gherkin Behavioral Driven Integration Tests
+- [ ] BIP39 import mnemonic
+- [ ] multiple relays per identifier
 - [ ] clean architecture
-- [ ] Espresso/Gherkin Behavioral Driven Integration Tests
 - [ ] blob support
 - [ ] hypertext link embedding
 - [ ] quotes, reply, vote support
@@ -32,4 +33,9 @@ You will need an Android NDK and set in the Android Studio env i.e.:
 ```
 ~$ export ANDROID_NDK_HOME=~/Android/Sdk/ndk/25.1.8937393/
 ~$ ./android-studio/bin/studio.sh
-``
+```
+
+## Running tests
+
+Given `cucumberUseAndroidJUnitRunner` in `gradle.properties` you can run cucumber-android 
+bdd tests (default) or JUnit4 classic `connectedAndroidTest`.

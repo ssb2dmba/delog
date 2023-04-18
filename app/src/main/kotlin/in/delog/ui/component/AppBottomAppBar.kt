@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import `in`.delog.viewmodel.BottomBarViewModel
@@ -52,6 +53,7 @@ fun AppBottomAppBar(onNavIconClick: () -> Job) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedIconButton(
+                        modifier = Modifier.testTag("openDrawer"),
                         onClick = { onNavIconClick() }
                     ) {
                         Icon(Icons.Outlined.Menu, contentDescription = "menu")
