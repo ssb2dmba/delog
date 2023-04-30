@@ -16,7 +16,7 @@ class CommonSteps(val composeRuleHolder: ComposeRuleHolder,
                   val scenarioHolder: ActivityScenarioHolder)
     :SemanticsNodeInteractionsProvider by composeRuleHolder.composeRule {
 
-    val sleep = 1000L
+    val sleep = 100L // used to add some wait to visualize says 1000L
     @When("^I open application$")
     fun iOpenComposeActivity() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -25,7 +25,7 @@ class CommonSteps(val composeRuleHolder: ComposeRuleHolder,
 
     @Then("^\"([^\"]*)\" text is presented$")
     fun textIsPresented(arg0: String) {
-        onNodeWithText(arg0).assertIsDisplayed()
+        onAllNodesWithText(arg0)[0].assertIsDisplayed()
     }
 
 
@@ -33,6 +33,13 @@ class CommonSteps(val composeRuleHolder: ComposeRuleHolder,
     fun I_click(s: String) {
         Thread.sleep(sleep)
         onNodeWithText(s).performClick();
+        Thread.sleep(sleep)
+    }
+
+    @Then("I click element with testTag {string}")
+    fun I_clickTestTag(s: String) {
+        Thread.sleep(sleep)
+        onNodeWithTag(s).performClick();
         Thread.sleep(sleep)
     }
 
@@ -50,7 +57,7 @@ class CommonSteps(val composeRuleHolder: ComposeRuleHolder,
         Thread.sleep(sleep)
     }
 
-    @Then("I submit webview")
+    @Then("I submit webview passing succesfully the captcha")
     fun I_submit_webview() {
         Thread.sleep(sleep)
         onWebView().withElement(findElement(Locator.ID,"captcha")).perform(DriverAtoms.webKeys("1234"))
@@ -63,6 +70,12 @@ class CommonSteps(val composeRuleHolder: ComposeRuleHolder,
         Thread.sleep(sleep)
         onNode(hasTestTag(testTag)).performTextInput(value)
         Thread.sleep(sleep)
+    }
+
+
+    @Then("I wait {string}")
+    fun I_wait(value: String) {
+        Thread.sleep(value.toLong())
     }
 
 }

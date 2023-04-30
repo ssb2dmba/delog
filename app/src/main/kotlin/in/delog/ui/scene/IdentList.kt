@@ -51,7 +51,7 @@ fun IdentList(navController: NavHostController) {
     val identListViewModel = koinViewModel<IdentListViewModel>()
 
     val idents: State<List<IdentAndAbout>> = identListViewModel.idents.observeAsState(listOf())
-    var strIdents = stringResource(R.string.identities)
+    var strIdents = stringResource(R.string.identifiers)
 
     LaunchedEffect(Unit) {
         bottomBarViewModel.setActions {}
@@ -90,6 +90,6 @@ fun IdentListFab(navController: NavController) {
             navController.navigate(Scenes.NewFeed.route)
         },
         icon = { Icon(Icons.Filled.Add, "", tint = MaterialTheme.colorScheme.onPrimary) },
-        text = { Text(text = "New identity") }
+        text = { Text(text = stringResource(R.string.identifier)) }
     )
 }
