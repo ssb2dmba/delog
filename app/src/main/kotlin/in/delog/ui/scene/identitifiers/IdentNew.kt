@@ -60,10 +60,3 @@ fun IdentNew(navController: NavHostController) {
     }
 
 }
-
-
-
-
-
-
-

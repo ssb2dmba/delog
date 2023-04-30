@@ -94,7 +94,7 @@ fun IdentityBox(
             AsyncImage(
                 model = "https://robohash.org/${about.about}.png",
                 placeholder = rememberAsyncImagePainter("https://robohash.org/${about.about}.png"),
-                contentDescription = "profile image identity box",
+                contentDescription = "Profile Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(size = 48.dp)
