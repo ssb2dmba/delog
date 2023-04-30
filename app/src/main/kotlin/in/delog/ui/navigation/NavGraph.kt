@@ -25,6 +25,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import `in`.delog.ui.scene.*
+import `in`.delog.ui.scene.identitifiers.IdentNew
 
 
 @Composable

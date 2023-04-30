@@ -100,7 +100,6 @@ fun IdentityBox(
                     .size(size = 48.dp)
                     .clip(shape = CircleShape)
                     .background(MaterialTheme.colorScheme.outline),
-
                 )
             Column(
                 Modifier

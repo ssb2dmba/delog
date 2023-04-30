@@ -35,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
@@ -168,7 +167,7 @@ private fun prepareNavigationDrawerItems(): List<NavigationDrawerItem> {
     itemsList.add(
         NavigationDrawerItem(
             image = rememberVectorPainter(Icons.Rounded.Fingerprint),
-            label = stringResource(R.string.identities),
+            label = stringResource(R.string.identifiers),
             route = Scenes.FeedList.route
         )
     )

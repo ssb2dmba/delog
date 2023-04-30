@@ -17,6 +17,7 @@
  */
 package `in`.delog.ui.scene
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -41,10 +42,13 @@ import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.asKeyPair
 import `in`.delog.ssb.*
+import `in`.delog.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.keySmall
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentViewModel
+import io.vertx.core.http.impl.HttpClientConnection.log
+import org.apache.tuweni.io.Base64
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.net.URLEncoder
@@ -352,8 +356,7 @@ fun IdentDetailExportDialog(
             )
         },
         text = {
-            val entropy: ByteArray =
-                viewModel.ident!!.asKeyPair()?.publicKey()?.bytesArray() ?: ByteArray(0)
+            val entropy: ByteArray = Base64.decode(viewModel.ident!!.privateKey).toArray()
             val arr: List<String> = WordList(Locale.ENGLISH).words
             val dict = Dict(arr.toTypedArray())
             var mnemonicCode = secretKeyToMnemonic(entropy, dict)

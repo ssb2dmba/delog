@@ -15,7 +15,7 @@
     <string name="export_pub_key">export pub key</string>
     <string name="export_mnemonic">export mnemonic</string>
     <string name="profile_image">profile image</string>
-    <string name="identities">identities</string>
+    <string name="identifiers">identifiers</string>
     <string name="drafts">drafts</string>
     <string name="main_feed">thread</string>
     <string name="set_as_default">set as default</string>
@@ -38,4 +38,9 @@
     <string name="compose">compose</string>
     <string name="reply">reply</string>
     <string name="replies">replies</string>
+    <string name="identifier">New identifier</string>
+    <string name="insert_key">Insert key</string>
+    <string name="smthg_went_wrong">something wen\'t wrong</string>
+    <string name="load_new_identifier">load new identifier</string>
+    <string name="gen_rand_identifier">Generate random identifier</string>
 </resources>
