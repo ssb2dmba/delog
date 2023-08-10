@@ -37,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,7 +53,6 @@ fun AppDrawer(
 ) {
 
     val itemsList = prepareNavigationDrawerItems()
-    val context = LocalContext.current
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
