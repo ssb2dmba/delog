@@ -18,7 +18,6 @@
 package `in`.delog.ui.component
 
 import android.text.format.DateUtils
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -31,13 +30,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import `in`.delog.R
 import `in`.delog.ssb.BaseSsbService.Companion.format
 import `in`.delog.ui.navigation.Scenes
@@ -53,10 +50,11 @@ fun MessageItem(
     navController: NavController,
     message: MessageViewData,
     showToolbar: Boolean = false,
-    onClickCallBack: () -> Unit,
+    expand: Boolean = false,
+    onClickCallBack: () -> Unit
 ) {
 
-    var expand by remember { mutableStateOf(false) }
+    var expand by remember { mutableStateOf(expand) }
 
     Card(
         colors = CardDefaults.cardColors(),
@@ -68,6 +66,7 @@ fun MessageItem(
                 onClickCallBack()
             }
     ) {
+        var text = message.content(format).text.toString()
         Row(
             modifier = Modifier
                 .fillMaxHeight()
@@ -118,68 +117,58 @@ fun MessageItem(
                         Calendar.getInstance().getTimeInMillis(),
                         DateUtils.MINUTE_IN_MILLIS
                     ).toString()
-
                     Text(
                         text = strTimeAgo,
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
-                    if (expand) {
-                        IconButton(onClick = { expand = false }) {
-                            Icon(
-                                Icons.Default.ExpandLess,
-                                contentDescription = "",
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = { expand = true }) {
-                            Icon(
-                                Icons.Default.ExpandMore,
-                                contentDescription = "",
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                            )
+
+                    var isLongText = text.split("\n").size > 5
+                    if (isLongText) {
+                        if (expand) {
+                            IconButton(onClick = { expand = false }) {
+                                Icon(
+                                    Icons.Default.ExpandLess,
+                                    contentDescription = "",
+                                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = { expand = true }) {
+                                Icon(
+                                    Icons.Default.ExpandMore,
+                                    contentDescription = "",
+                                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                                )
+                            }
                         }
                     }
                 }
+                Column(
+               // modifier=Modifier.verticalScroll(rememberScrollState())
+               //     .weight(weight =1f, fill = false)
 
-                // Message content
-                Row(
-                    modifier = Modifier
-                        .padding(end = 6.dp, top = 12.dp)
-                        .fillMaxWidth()
-                        .clickable {
-                            onClickCallBack();
-                        }
                 ) {
-                    if (expand) {
-                        MarkdownText(
-                            onClick = onClickCallBack,
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            markdown = message.content(format).text.toString(),
-                            maxLines = Int.MAX_VALUE,
-                            textAlign = TextAlign.Companion.Justify
-                        )
-                    } else {
-                        MarkdownText(
-                            onClick = onClickCallBack,
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            markdown = message.content(format).text.toString(),
-                            maxLines = 4,
-                            textAlign = TextAlign.Companion.Justify
-                        )
+                    // Message content
+                    Row(
+                        modifier = Modifier
+                            .padding(end = 6.dp, top = 12.dp)
+                            .fillMaxWidth()
+                            .clickable {
+                                onClickCallBack();
+                            }
+                    ) {
+
+                        if (!expand) { // do we show all or only 4 lines?
+                            text = text.split("\n").take(5).joinToString("\n")
+                        }
+                        RichTextViewer(text, onClickCallBack)
                     }
                 }
             }
         }
-
-        val currentRoute = navController.currentBackStackEntry?.arguments?.getString("id")
-        if (currentRoute?.contains(message.key) == true) {
-            expand = true
-        }
-        if (expand) {
+        Spacer(modifier=Modifier.height(12.dp))
+        if (showToolbar) {
             // toolbar
             Row(
                 horizontalArrangement = Arrangement.Center,
@@ -202,7 +191,8 @@ fun MessageItem(
                 }
 
                 val hasReply = true // todo stub
-                if (hasReply && currentRoute?.contains(message.key) != true) {
+                val currentKey = navController.currentBackStackEntry?.arguments?.getString("id")
+                if (hasReply && currentKey?.contains(message.key) != true) {
                     OutlinedButton(
                         modifier = Modifier
                             .weight(1f)
@@ -234,13 +224,10 @@ fun MessageItem(
                     )
                     Text(text = stringResource(R.string.reply))
                 }
-
-
             }
         } else {
             Spacer(modifier = Modifier.height(16.dp))
         }
-
         Row(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier
@@ -248,13 +235,17 @@ fun MessageItem(
                 .padding(0.dp)
         ) {
             // favorite
-
         }
-
-
     }
+}
 
-
+fun notADraft(navController: NavController, message: MessageViewData): Boolean {
+    val routeName = navController.currentBackStackEntry?.destination?.route
+    val currentKey = navController.currentBackStackEntry?.arguments?.getString("id")
+    return (currentKey != null && routeName !=null)
+            && currentKey.contains(message.key)
+            && !routeName.contains(Scenes.DraftEdit.route)
+            && !routeName.contains(Scenes.DraftList.route)
 }
 
 
@@ -278,8 +269,8 @@ fun MessageItemPreview() {
                 LazyVerticalGrid(columns = GridCells.Fixed(1)) {
                     item {
                         MessageItem(
-                            message = messageViewData,
                             navController = navController,
+                            message = messageViewData,
                             showToolbar = false,
                             onClickCallBack = { }
                         )

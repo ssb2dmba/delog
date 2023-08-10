@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.component
 
-import `in`.delog.ui.LocalActiveFeed
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -45,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import `in`.delog.R
+import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.navigation.Scenes
 
 @Composable
@@ -53,7 +53,6 @@ fun AppDrawer(
 ) {
 
     val itemsList = prepareNavigationDrawerItems()
-
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()

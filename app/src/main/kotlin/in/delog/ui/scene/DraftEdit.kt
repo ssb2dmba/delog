@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.scene
 
-import `in`.delog.ui.LocalActiveFeed
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.Draft
+import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.component.toMessageViewData
@@ -174,7 +174,6 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
 
     var contentAsText by remember { mutableStateOf(draftViewModel.draft!!.contentAsText) }
 
-
     bottomBarViewModel.setActions {
         IconButton(
             modifier = Modifier.height(56.dp),
@@ -198,7 +197,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                 )
                 draftViewModel.update(draft = draft)
                 draftViewModel.setDirty(false)
-                navController.navigate(Scenes.DraftList.route)
+                navController.navigate("${Scenes.DraftEdit.route}/${draftId}")
             })
         } else {
             IconButton(
@@ -234,6 +233,8 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    //.verticalScroll(rememberScrollState())
+                    //.weight(weight =1f, fill = false)
             ) {
                 if (draftViewModel.dirtyStatus) {
                     // edit mode
@@ -243,12 +244,19 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                             draftViewModel.setDirty(true)
                             contentAsText = it
                         },
-                        modifier = Modifier
+                        modifier = Modifier.fillMaxHeight()
                     )
                 } else {
                     // preview mode
                     val obj: MessageViewData = draftViewModel.draft!!.toMessageViewData();
-                    MessageItem(navController = navController, obj, onClickCallBack = {})
+                    MessageItem(
+                        navController = navController,
+                        message = obj,
+                        showToolbar = false,
+                        expand = true,
+                        onClickCallBack = {
+                            draftViewModel.dirtyStatus=!draftViewModel.dirtyStatus
+                        })
                 }
             }
         }

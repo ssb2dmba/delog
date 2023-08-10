@@ -20,20 +20,6 @@ package `in`.delog.ssb
 import android.util.Log
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import org.apache.tuweni.bytes.Bytes
-import org.apache.tuweni.concurrent.AsyncResult
-import org.apache.tuweni.crypto.sodium.Signature
-import org.apache.tuweni.io.Base64
-import org.apache.tuweni.scuttlebutt.Invite
-import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClient
-import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClientFactory
-import org.apache.tuweni.scuttlebutt.lib.model.FeedMessage
-import org.apache.tuweni.scuttlebutt.lib.model.toMessage
-import org.apache.tuweni.scuttlebutt.rpc.*
-import org.apache.tuweni.scuttlebutt.rpc.mux.ScuttlebuttStreamHandler
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
@@ -41,6 +27,18 @@ import `in`.delog.db.model.toJsonResponse
 import `in`.delog.repository.AboutRepository
 import `in`.delog.repository.ContactRepositoryImpl
 import `in`.delog.repository.MessageRepositoryImpl
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import org.apache.tuweni.bytes.Bytes
+import org.apache.tuweni.concurrent.AsyncResult
+import org.apache.tuweni.scuttlebutt.Invite
+import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClient
+import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClientFactory
+import org.apache.tuweni.scuttlebutt.lib.model.FeedMessage
+import org.apache.tuweni.scuttlebutt.lib.model.toMessage
+import org.apache.tuweni.scuttlebutt.rpc.*
+import org.apache.tuweni.scuttlebutt.rpc.mux.ScuttlebuttStreamHandler
 
 
 class SsbService(
@@ -244,8 +242,7 @@ class SsbService(
 
 
     open suspend fun connectWithInvite(s: String, feed: Ident, callBack: (RPCResponse) -> Unit) {
-        println("connect with invite !!!!!!!!!!!!!!")
-        setIdentity(feed) // TODO to rework
+        setIdentity(feed)
         val invite: Invite = Invite.fromCanonicalForm(s.drop(5));
         // hack replace invite by our current feed so we can bypass server name for dev/test
         invite.port = feed.port

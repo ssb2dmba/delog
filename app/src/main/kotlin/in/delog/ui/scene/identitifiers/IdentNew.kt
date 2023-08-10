@@ -17,46 +17,90 @@
  */
 package `in`.delog.ui.scene.identitifiers
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+
+import android.util.Log
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import `in`.delog.db.model.Ident
+import `in`.delog.ui.navigation.Scenes
+import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.BottomBarViewModel
+import `in`.delog.viewmodel.IdentListViewModel
 import org.apache.tuweni.scuttlebutt.Identity
 import org.koin.androidx.compose.koinViewModel
+import java.net.URLEncoder
+import java.nio.charset.Charset
 
 @Composable
 fun IdentNew(navController: NavHostController) {
-    val startUrl = "http://192.168.0.45:8000/invite/";
+
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
+
     LaunchedEffect(Unit) {
         bottomBarViewModel.setTitle("New identity")
         bottomBarViewModel.setActions { }
     }
 
+    var inviteUrl: String? by remember { mutableStateOf(null) }
     var invite: String? by remember { mutableStateOf(null) }
+    var identity: Identity? by remember { mutableStateOf(null) }
+
+    val identListViewModel = koinViewModel<IdentListViewModel>()
+    val insertionState by identListViewModel.insertedIdent.observeAsState(null)
+    var hasNavigated  by remember { mutableStateOf(false) }
+
     fun setInvite(s: String) {
         invite = s
     }
 
-    var identity: Identity? by remember { mutableStateOf(null) }
-    fun setIdentity(s: Identity?) {
-        identity = s
+    fun setIdentity(pIdentity: Identity?, pInviteUrl: String?) {
+        identity = pIdentity
+        inviteUrl = pInviteUrl
     }
 
+    fun doneWithoutInvite() {
+
+        if (hasNavigated==true) return
+        hasNavigated = true
+        val ident = Ident(
+            0,
+            identity!!.toCanonicalForm(),
+            "",
+            8008,
+            identity!!.privateKeyAsBase64String(),
+            false,
+            identity!!.toCanonicalForm().subSequence(0,5).toString(),
+            1,
+            ""
+        );
+
+        identListViewModel.insertAndNavigate(ident = ident, navController)
+
+
+        if (insertionState != null) {
+            Log.w("OK", "nav to " + insertionState!!.oid)
+            var argUri = URLEncoder.encode(
+                ident.publicKey,
+                Charset
+                    .defaultCharset()
+                    .toString()
+            )
+            navController.navigate("${Scenes.FeedDetail.route}/${insertionState!!.oid}")
+
+        }
+    }
 
     if (identity == null) {
-        LoadIdentity(navController = navController, ::setIdentity)
+            LoadIdentity(::setIdentity)
     } else {
         if (invite == null) {
-            InviteWebRequest(startUrl, ::setInvite)
+            if (inviteUrl!=null) {
+                InviteWebRequest(inviteUrl!!, ::setInvite)
+            } else {
+                doneWithoutInvite();
+            }
         } else {
             IdentNewEdit(navController, identity!!, invite!!)
         }
     }
-
 }

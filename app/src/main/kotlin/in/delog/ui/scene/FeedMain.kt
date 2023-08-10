@@ -18,7 +18,6 @@
 package `in`.delog.ui.scene
 
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -37,7 +36,6 @@ import androidx.navigation.NavController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import kotlinx.coroutines.flow.Flow
 import `in`.delog.R
 import `in`.delog.db.model.About
 import `in`.delog.ssb.SsbService
@@ -47,6 +45,7 @@ import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.MessageListViewModel
+import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -69,9 +68,11 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
         }
         bottomBarViewModel.setTitle("main")
     }
+    System.out.println(navController.currentBackStackEntry?.arguments?.getString("id"))
+    var id = navController.currentBackStackEntry?.arguments?.getString("id") ?: feedToReadKey
 
-    val viewModel =
-        koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
+    val viewModel = koinViewModel<MessageListViewModel>(parameters = { parametersOf(id) })
+    System.out.println(" newviewModel. " + id)
     if (viewModel.identAndAbout == null) return
 
     val ssbService: SsbService = get()
@@ -83,11 +84,10 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
             e.printStackTrace()
         }
     }
-
-
-    val fpgMessages: Flow<PagingData<MessageViewData>> = viewModel.messagesPaged
+    if (viewModel.messagesPaged==null) return
+    val fpgMessages: Flow<PagingData<MessageViewData>> = viewModel.messagesPaged!!
     val lazyMessageItems: LazyPagingItems<MessageViewData> = fpgMessages.collectAsLazyPagingItems()
-    Column() {
+    Column {
         LazyVerticalGrid(columns = GridCells.Fixed(1)) {
             item {
                 IdentityBox(
@@ -101,13 +101,17 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
                 count = lazyMessageItems.itemCount,
             ) { index ->
                 lazyMessageItems[index]?.let {
-                    MessageItem(navController = navController,
-                        it, false,
+                    val argUri = URLEncoder.encode(it.key, Charset.defaultCharset().toString())
+                    MessageItem(
+                        navController = navController,
+                        message = it,
+                        showToolbar = false,
+                        expand = false,
                         onClickCallBack = {
-                            var argUri =
-                                URLEncoder.encode(it.key, Charset.defaultCharset().toString())
+                            System.out.println("navigate:" + "${Scenes.MainFeed.route}/${argUri} ${it.key}" )
                             navController.navigate("${Scenes.MainFeed.route}/${argUri}")
-                        })
+                        }
+                    )
                 }
             }
         }
