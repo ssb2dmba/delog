@@ -1,6 +1,6 @@
 # Delog 
 
-## An Android Kotlin JetPack Compose Room Koin Material3 SSB Application
+## An Android Kotlin JetPack Compose Room Koin Material3 Secure Scuttlebutt (SSB) Application
 
 - [x] multiple identities
 - [x] Secret Handshake Protocol by Dominic Tar boworred from [Apache Tuweni](https://github.com/apache/incubator-tuweni)
