@@ -61,6 +61,7 @@ class IdentViewModel(
     fun setCurrentIdent(oid: String) {
         GlobalScope.launch(Dispatchers.IO) {
             var identAndAbout = identRepository.findById(oid)
+            if (identAndAbout == null) return@launch
             ident = identAndAbout.ident
             if (ident != null && identAndAbout.about == null) {
                 // each ident shall have about

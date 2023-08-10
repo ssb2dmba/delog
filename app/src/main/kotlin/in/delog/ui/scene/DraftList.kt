@@ -17,26 +17,24 @@
  */
 package `in`.delog.ui.scene
 
-import `in`.delog.ui.LocalActiveFeed
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import kotlinx.coroutines.flow.Flow
-import `in`.delog.R
 import `in`.delog.db.model.Draft
+import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.toMessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.DraftListViewModel
+import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -45,7 +43,6 @@ import org.koin.core.parameter.parametersOf
 fun DraftList(navController: NavHostController) {
     val feed = LocalActiveFeed.current ?: return
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    val title = stringResource(R.string.drafts)
     LaunchedEffect(Unit) {
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
@@ -68,12 +65,13 @@ fun DraftList(navController: NavHostController) {
         ) { index ->
             lazyMovieItems[index]?.let {
                 MessageItem(
+                    navController = navController,
                     message = it.toMessageViewData(),
+                    showToolbar = false,
+                    expand = false,
                     onClickCallBack = {
                         navController.navigate("${Scenes.DraftEdit.route}/${it.oid}")
-                    },
-                    showToolbar = false,
-                    navController = navController
+                    }
                 )
             }
         }

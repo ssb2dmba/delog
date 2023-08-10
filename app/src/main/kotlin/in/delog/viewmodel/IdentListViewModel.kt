@@ -22,21 +22,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.navigation.NavHostController
+import `in`.delog.db.model.Ident
+import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.repository.IdentRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import `in`.delog.db.model.Ident
-import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.repository.IdentRepository
 
 
 class IdentListViewModel(private val repository: IdentRepository) : ViewModel() {
 
     private var _identToNavigate: MutableStateFlow<Ident?> = MutableStateFlow(null)
-    var identToNavigate: StateFlow<Ident?> = _identToNavigate.asStateFlow()
+    var insertedIdent: StateFlow<Ident?> = _identToNavigate.asStateFlow()
     var idents: LiveData<List<IdentAndAbout>> = repository.idents.asLiveData()
     val default: LiveData<IdentAndAbout> = repository.default.asLiveData()
     val count: LiveData<Int> = repository.count

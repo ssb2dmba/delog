@@ -22,15 +22,14 @@ import android.os.AsyncTask
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import `in`.delog.db.dao.AboutDao
-import org.apache.tuweni.crypto.sodium.Signature
-import org.apache.tuweni.io.Base64
-import org.apache.tuweni.scuttlebutt.Identity
-import org.apache.tuweni.scuttlebutt.Invite.Companion.fromCanonicalForm
 import `in`.delog.db.AppDatabase
 import `in`.delog.db.dao.*
 import `in`.delog.db.model.Contact
 import `in`.delog.db.model.Ident
+import org.apache.tuweni.crypto.sodium.Signature
+import org.apache.tuweni.io.Base64
+import org.apache.tuweni.scuttlebutt.Identity
+import org.apache.tuweni.scuttlebutt.Invite.Companion.fromCanonicalForm
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 
@@ -92,4 +91,79 @@ class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
         return null
     }
 }
+
+
+
+fun initDefaultData(myIdentDao: IdentDao, contactDao: ContactDao) {
+    if (myIdentDao.count() > 0) {
+        return
+    }
+    println("creating default identity...")
+    val b64key =
+        "8CcQUI27IE+Rjj7sZ4Q9njjqcB0vizqstNYGVux/ehJilJsTn/uha5/uTrOFT/DBubbwR99SCBgTBWkOQ4B0iA==.ed25519"
+    insertIdent(myIdentDao, "ssbpub", "192.168.0.40", "8008", b64key)
+
+    val b64key2 =
+        "ZUCJ2dS2+Wn7ByTYNenQUXxK8zxrpvg07doDoenRs232FW2bkAh9hcWnijbmw1huRxqWs6Oi+e4hqBKRzobCCQ==.ed25519"
+    val ident = insertIdent(myIdentDao, "remote1", "192.168.0.40", "8008", b64key2)
+
+    val b64key3 =
+        "aE49ri2GSz67A1jS6tVA97kBRP9PdZNOhJPD5rYuSLQVRMHScr3yJwKLj6O/uJERYLMl6n1fdl2vEZcq4Qgpgg==.ed25519"
+    val ident2 = insertIdent(myIdentDao, "remote2", "192.168.0.40", "8008", b64key3)
+
+    val testInvite =
+        "192.168.0.40:8008:@YpSbE5/7oWuf7k6zhU/wwbm28EffUggYEwVpDkOAdIg=.ed25519~QYdBi54tluAzqICLT03aOWwmfydVVjZGLW8lkt3QY64="
+    val invite = fromCanonicalForm(testInvite)
+
+    myIdentDao.setDefault(2)
+    // add contact
+    contactDao.insert(Contact(1, ident.publicKey, ident2.publicKey, true))
+
+    contactDao.insert(Contact(2, ident2.publicKey, ident.publicKey, true))
+
+    contactDao.insert(
+        Contact(
+            3,
+            ident.publicKey,
+            "@XVm2XGanhTuBPawgvjjAmbmAi3ENdJk4vGNFd+euT80=.ed25519",
+            true
+        )
+    )
+    contactDao.insert(
+        Contact(
+            4,
+            ident2.publicKey,
+            "@XVm2XGanhTuBPawgvjjAmbmAi3ENdJk4vGNFd+euT80=.ed25519",
+            true
+        )
+    )
+}
+
+fun insertIdent(
+    myIdentDao: IdentDao,
+    name: String,
+    server: String,
+    port: String,
+    b64key: String
+): Ident {
+    val privateKey = b64key.replace(".ed25519", "")
+    val privKeyBytes = Base64.decode(privateKey)
+    val secretKey = Signature.SecretKey.fromBytes(privKeyBytes)
+    val ssbIdentity: Identity = Identity.fromSecretKey(secretKey)
+    val feed = Ident(
+        0,
+        ssbIdentity.toCanonicalForm(),
+        server,
+        port.toInt(),
+        ssbIdentity.privateKeyAsBase64String(),
+        true,
+        name,
+        1,
+        null
+    );
+    println("adding: " + ssbIdentity.toCanonicalForm())
+    myIdentDao.insert(feed)
+    return feed;
+}
+
 

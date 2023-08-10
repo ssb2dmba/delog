@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.component
 
-import `in`.delog.ui.LocalActiveFeed
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -38,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import `in`.delog.R
+import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.navigation.Scenes
 
 @Composable
@@ -53,7 +54,7 @@ fun AppDrawer(
 ) {
 
     val itemsList = prepareNavigationDrawerItems()
-
+    val context = LocalContext.current
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()

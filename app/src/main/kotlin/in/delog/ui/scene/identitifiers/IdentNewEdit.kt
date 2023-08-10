@@ -45,7 +45,7 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     var isValid = (aliasInput.length > 1) && (serverInput.length > 1) && (portInput.length == 4)
     var defaultServer by remember { mutableStateOf(true) }
 
-    val responseState by identListViewModel.identToNavigate.observeAsState(null)
+    val responseState by identListViewModel.insertedIdent.observeAsState(null)
 
     if (responseState != null) {
         val identViewModel =
@@ -67,13 +67,17 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            Text("setup ended ok", style = MaterialTheme.typography.titleLarge)
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
             ) {
-
-                FilledIconButton(onClick = {
+                Text(stringResource(R.string.setup_end_ok),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.titleLarge)
+                FilledIconButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
                     identListViewModel.reset()
                     navController.navigate("${Scenes.MainFeed.route}/${identViewModel.ident!!.publicKey}")
                 },

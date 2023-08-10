@@ -41,6 +41,13 @@
     <string name="identifier">New identifier</string>
     <string name="insert_key">Insert key</string>
     <string name="smthg_went_wrong">something wen\'t wrong</string>
-    <string name="load_new_identifier">load new identifier</string>
-    <string name="gen_rand_identifier">Generate random identifier</string>
+    <string name="load_new_identifier">load identifier</string>
+    <string name="gen_rand_identifier">from entropy</string>
+    <string name="setup_end_ok">setup ended ok</string>
+    <string name="title_activity_settings">settings</string>
+    <string name="default_invite_url">http:192.168.1.40:8000/invite/</string>
+    <string name="cancel">cancel</string>
+    <string name="restore_from_mnemonic">from mnemonic</string>
+    <string name="get_invite_and_redeem_it">get invite from %s and redeem it</string>
+    <string name="edit_default_invite_url">edit default invite url</string>
 </resources>
