@@ -89,6 +89,11 @@ class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageReposit
         return messageDao.getFeed(key)
     }
 
+
+    override fun getPagedPosts(author: String): PagingSource<Int, MessageAndAbout> {
+        return messageDao.getPagedPostsAndAbout(author)
+    }
+
     override fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout> {
         return messageDao.getPagedFeed(author)
     }
