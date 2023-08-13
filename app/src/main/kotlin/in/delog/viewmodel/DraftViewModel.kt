@@ -22,6 +22,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import `in`.delog.db.model.*
+import `in`.delog.repository.DraftRepository
+import `in`.delog.repository.MessageRepository
+import `in`.delog.ssb.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,9 +33,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import `in`.delog.repository.DraftRepository
-import `in`.delog.repository.MessageRepository
-import `in`.delog.ssb.*
 
 
 class DraftViewModel(

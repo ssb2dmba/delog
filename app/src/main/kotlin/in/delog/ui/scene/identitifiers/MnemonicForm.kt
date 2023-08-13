@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.*
@@ -22,7 +21,6 @@ import `in`.delog.ssb.Dict
 import `in`.delog.ssb.WordList
 import `in`.delog.ssb.mnemonicToSignature
 import org.apache.tuweni.scuttlebutt.Identity
-import org.bouncycastle.math.raw.Mod
 import java.util.*
 
 

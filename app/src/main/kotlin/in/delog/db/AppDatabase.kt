@@ -19,9 +19,6 @@ package `in`.delog.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import `in`.delog.db.dao.AboutDao
-import `in`.delog.db.model.Contact
-import `in`.delog.db.model.RelayServer
 import `in`.delog.db.dao.*
 import `in`.delog.db.model.*
 

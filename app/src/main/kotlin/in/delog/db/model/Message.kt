@@ -19,8 +19,8 @@ package `in`.delog.db.model
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import kotlinx.serialization.json.Json
 import `in`.delog.ssb.SsbMessageContent
+import kotlinx.serialization.json.Json
 
 /**
 This model adapted for room database represent an ssb message as described in the ssb protocol guide

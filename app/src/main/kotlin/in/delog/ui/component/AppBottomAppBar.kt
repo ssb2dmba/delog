@@ -31,8 +31,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Job
 import `in`.delog.viewmodel.BottomBarViewModel
+import kotlinx.coroutines.Job
 import org.koin.androidx.compose.koinViewModel
 
 

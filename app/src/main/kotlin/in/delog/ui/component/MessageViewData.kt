@@ -17,10 +17,10 @@
  */
 package `in`.delog.ui.component
 
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Message
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 
 // @See https://scuttlebot.io/docs/message-types/post.html
 @kotlinx.serialization.Serializable

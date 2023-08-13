@@ -34,8 +34,8 @@ import kotlinx.coroutines.launch
 
 class IdentListViewModel(private val repository: IdentRepository) : ViewModel() {
 
-    private var _insertedIdentToNavigate: MutableStateFlow<Ident?> = MutableStateFlow(null)
-    var insertedIdent: StateFlow<Ident?> = _insertedIdentToNavigate.asStateFlow()
+    private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
+    var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
     var idents: LiveData<List<IdentAndAbout>> = repository.idents.asLiveData()
     val default: LiveData<IdentAndAbout> = repository.default.asLiveData()
     val count: LiveData<Int> = repository.count
@@ -44,12 +44,12 @@ class IdentListViewModel(private val repository: IdentRepository) : ViewModel() 
         GlobalScope.launch(Dispatchers.IO) {
             var id = repository.insert(ident)
             ident.oid = id
-            _insertedIdentToNavigate.value = ident
+            _insertedIdent.value = ident
         }
     }
 
     fun reset() {
-        _insertedIdentToNavigate.value = null
+        _insertedIdent.value = null
     }
 
 }

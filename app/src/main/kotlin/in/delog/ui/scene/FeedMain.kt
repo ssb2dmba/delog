@@ -40,8 +40,10 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.db.AppDatabaseView
+import `in`.delog.db.model.About
 import `in`.delog.db.toMessageViewData
 import `in`.delog.ssb.SsbService
+import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
@@ -78,24 +80,27 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
     val ssbService: SsbService = get()
     LaunchedEffect(feedToReadKey) {
         try {
-            //ssbService.reconnect(viewModel.identAndAbout!!.ident)
+            ssbService.reconnect(viewModel.identAndAbout!!.ident)
         } catch (e: Exception) {
-            Toast.makeText(context,e.message, Toast.LENGTH_LONG).show()
+            Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
     }
-    if (viewModel.messagesPaged==null) return
+    if (viewModel.messagesPaged == null) return
     val fpgMessages: Flow<PagingData<AppDatabaseView.MessageInTree>> = viewModel.messagesPaged!!
-    val lazyMessageItems: LazyPagingItems<AppDatabaseView.MessageInTree> = fpgMessages.collectAsLazyPagingItems()
+    val lazyMessageItems: LazyPagingItems<AppDatabaseView.MessageInTree> =
+        fpgMessages.collectAsLazyPagingItems()
     Column {
         LazyVerticalGrid(columns = GridCells.Fixed(1)) {
-            item {
-//                IdentityBox(
-//                    about = viewModel.identAndAbout?.about ?: About("", "", ""),
-//                    navController = navController,
-//                    short = true,
-//                    mine = false
-//                )
+            if (viewModel.identAndAbout != null) {
+                item {
+                    IdentityBox(
+                        about = viewModel.identAndAbout?.about ?: About("", "", ""),
+                        navController = navController,
+                        short = true,
+                        mine = false
+                    )
+                }
             }
             items(
                 count = lazyMessageItems.itemCount,
@@ -107,7 +112,7 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
                         message = it.toMessageViewData(),
                         showToolbar = true,
                         expand = false,
-                        hasLine = if (it.ct>0 || it.level>0) true else false,
+                        hasLine = if (it.ct > 0 || it.level > 0) true else false,
                         onClickCallBack = {
                             navController.navigate("${Scenes.MainFeed.route}/${argUri}")
                         }

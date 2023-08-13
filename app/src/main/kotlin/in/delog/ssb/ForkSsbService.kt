@@ -17,9 +17,9 @@
  */
 package `in`.delog.ssb
 
-import `in`.delog.ui.LocalActiveFeed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import `in`.delog.ui.LocalActiveFeed
 import org.koin.androidx.compose.get
 
 @Composable

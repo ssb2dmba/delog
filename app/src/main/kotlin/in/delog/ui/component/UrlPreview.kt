@@ -22,8 +22,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import com.baha.url.preview.IUrlPreviewCallback
 import com.baha.url.preview.UrlInfoItem
-import `in`.delog.ui.component.ClickableUrl
-import `in`.delog.ui.component.UrlCachedPreviewer
 
 
 @Composable

@@ -22,11 +22,11 @@ import com.baha.url.preview.IUrlPreviewCallback
 import com.baha.url.preview.UrlInfoItem
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.content
+import `in`.delog.ssb.BaseSsbService.Companion.format
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import `in`.delog.ssb.BaseSsbService.Companion.format
 
 object UrlCachedPreviewer {
     var cache = mapOf<String, UrlInfoItem>()

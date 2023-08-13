@@ -18,7 +18,6 @@
 package `in`.delog.db.model
 
 import androidx.room.*
-import `in`.delog.db.model.Contact
 
 @Entity
 data class About(
