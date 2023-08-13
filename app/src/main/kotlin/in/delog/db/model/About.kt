@@ -39,7 +39,40 @@ data class About(
     @ColumnInfo(name = "dirty")
     var dirty: Boolean = false,
 )
+/*
+WITH RECURSIVE tree_view AS (
+select  m1.*  from message m1
+union all (select * from  message)  m2 on m2.`key`=m1.root
+where  m1.author = "@Edxyzw78VTaOeBDZE7Mf3tY4RnTDB7uscGQwjaWqXa8=.ed25519" or m1.author IN (select follow from contact where author = "@Edxyzw78VTaOeBDZE7Mf3tY4RnTDB7uscGQwjaWqXa8=.ed25519"  and value = 1)
+order by min(coalesce(m2.timestamp ,9223372036854775807),m1.timestamp) desc, m2.timestamp asc
+)
+select * from tree_view
 
+WITH RECURSIVE tree_view AS (
+    SELECT
+         0 AS level,
+         author as pauthor,
+         CAST(message.timestamp AS varchar(50)) AS order_sequence,
+         message.timestamp as ts,
+         (select count(*) from message x where x.root=message.`key`) as ct,
+         message.*
+    FROM message, about a1
+    WHERE message.author=a1.about and message.root IS NULL
+UNION ALL
+    SELECT
+    level + 1 AS level,
+    cast(pauthor  as varchar(255)) pauthor,
+    CAST(order_sequence || '_' || CAST(m2.timestamp AS VARCHAR (50)) AS VARCHAR(50)) AS order_sequence,
+    min(ts,m2.timestamp) as ts,
+             (select count(*) from message x where x.root=x.`key`) as ct,
+    m2. *
+    FROM message m2, about a2
+    JOIN tree_view tv
+      ON m2.root = tv.`key`
+            WHERE a2.about=m2.author
+)
+select * from tree_view order by ts desc, order_sequence desc;
+ */
 data class MessageAndAbout(
     @Embedded val message: Message,
     @Relation(

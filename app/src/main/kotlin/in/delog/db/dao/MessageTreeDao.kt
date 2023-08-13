@@ -15,34 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.db.model
+package `in`.delog.db.dao
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.paging.PagingSource
+import androidx.room.Dao
+import androidx.room.Query
+import `in`.delog.db.AppDatabaseView
+import java.util.*
 
-@Entity
-data class Draft(
+@Dao
+interface MessageTreeDao {
 
-    @PrimaryKey(autoGenerate = true)
-    val oid: Int,
+    @Query("select m1.*  from MessageTree m1 where  m1.author = :author or m1.author IN (select follow from contact where author = :author  and value = 1)")
+    fun getPagedFeed(author: String): PagingSource<Int, AppDatabaseView.MessageInTree>
 
-    @ColumnInfo(name = "author")
-    val author: String,
 
-    @ColumnInfo(name = "timestamp")
-    val timestamp: Long,
+    @Query("select m1.*  from MessageTree m1 where  m1.key = :key or m1.root = :key")
+    fun getPagedMessage(key: String): PagingSource<Int, AppDatabaseView.MessageInTree>
 
-    @ColumnInfo(name = "type")
-    var type: String,
-
-    @ColumnInfo(name = "contentAsText")
-    var contentAsText: String,
-
-    @ColumnInfo(name = "root")
-    var root: String?,
-
-    @ColumnInfo(name = "branch")
-    var branch: String?
-
-)
+}

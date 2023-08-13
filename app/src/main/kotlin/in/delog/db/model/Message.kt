@@ -65,12 +65,19 @@ data class Message(
     @ColumnInfo(name = "contentAsText")
     var contentAsText: String,
 
-    // in content but preset for better indexing
+    @ColumnInfo(name = "signature")
+    var signature: String,
+
+    // in content but as column for better indexing
     @ColumnInfo(name = "type")
     var type: String?,
 
-    @ColumnInfo(name = "signature")
-    var signature: String,
+    @ColumnInfo(name = "root")
+    var root: String?,
+
+    @ColumnInfo(name = "branch")
+    var branch: String?,
+
 ) {
 
 }

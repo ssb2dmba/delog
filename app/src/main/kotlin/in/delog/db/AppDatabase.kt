@@ -34,11 +34,15 @@ import `in`.delog.db.model.*
         About::class,
         RelayServer::class,
     ],
-    version = 1
+    views = [
+        AppDatabaseView.MessageInTree::class
+    ],
+    version = 5
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun identDao(): IdentDao
     abstract fun messageDao(): MessageDao
+    abstract fun messageTreeDao(): MessageTreeDao
     abstract fun draftDao(): DraftDao
     abstract fun contactDao(): ContactDao
     abstract fun authorInfoDao(): AboutDao

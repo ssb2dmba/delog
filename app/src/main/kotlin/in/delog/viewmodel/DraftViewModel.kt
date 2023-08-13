@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import `in`.delog.db.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,10 +30,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import `in`.delog.db.model.About
-import `in`.delog.db.model.Draft
-import `in`.delog.db.model.Ident
-import `in`.delog.db.model.Message
 import `in`.delog.repository.DraftRepository
 import `in`.delog.repository.MessageRepository
 import `in`.delog.ssb.*
@@ -50,6 +47,14 @@ class DraftViewModel(
     var dirtyStatus: Boolean by mutableStateOf(false)
 
     var draft: Draft? by mutableStateOf(null)
+
+    var link: MessageAndAbout? by mutableStateOf(null)
+
+    fun getLink(key: String) {
+        GlobalScope.launch(Dispatchers.IO) {
+            link = messageRepository.getMessageAndAbout(key)
+        }
+    }
 
     fun insert(draft: Draft) {
         GlobalScope.launch(Dispatchers.IO) {
@@ -139,9 +144,11 @@ fun fromSsbSignedMessage(ssbSignedMessage: SsbSignedMessage): Message {
         sequence = ssbSignedMessage.sequence,
         key = ssbSignedMessage.key,
         contentAsText = Json.encodeToString(ssbSignedMessage.content),
-        type = "post",
+        type = ssbSignedMessage.content.type,
         previous = ssbSignedMessage.previous.toString(),
-        signature = ssbSignedMessage.signature
+        signature = ssbSignedMessage.signature,
+        root = ssbSignedMessage.content.root,
+        branch = ssbSignedMessage.content.branch
     )
 }
 
@@ -152,7 +159,9 @@ private fun SsbSignableMessage.Companion.fromDraft(draft: Draft): SsbSignableMes
         author = draft.author,
         content = SsbMessageContent(
             draft.contentAsText,
-            "post"
+            type = draft.type,
+            root = draft.root,
+            branch = draft.branch,
         ),
         timestamp = System.currentTimeMillis(),
         hash = ""

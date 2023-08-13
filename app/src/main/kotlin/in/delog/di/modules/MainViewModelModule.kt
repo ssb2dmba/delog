@@ -36,6 +36,7 @@ val mainViewModel = module {
     viewModel { IdentViewModel(get(), get(), get()) }
     single { MessageRepositoryImpl(get()) }
     factory<MessageRepository> { (MessageRepositoryImpl(get())) }
+    factory<MessageTreeRepository> { (MessageTreeRepositoryImpl(get())) }
     viewModel { MessageListViewModel(get(), get()) }
 
     factory<DraftRepository> { (DraftRepositoryImpl(get())) }

@@ -38,7 +38,9 @@ data class MessageViewData(
     val author: String,
     val contentAsText: String,
     var authorName: String? = null,
-    var authorImage: String? = null
+    var authorImage: String? = null,
+    var root: String? = null,
+    var branch: String? = null
 )
 
 fun Message.toMessageViewData() = MessageViewData(
@@ -46,6 +48,8 @@ fun Message.toMessageViewData() = MessageViewData(
     timestamp = timestamp,
     author = author,
     contentAsText = contentAsText,
+    root= root,
+    branch = branch
 )
 
 

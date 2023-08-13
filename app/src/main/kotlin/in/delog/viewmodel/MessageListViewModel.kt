@@ -21,13 +21,14 @@ package `in`.delog.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.*
+import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message
 import `in`.delog.repository.MessageRepository
-import `in`.delog.ui.component.MessageViewData
+import `in`.delog.repository.MessageTreeRepository
 import `in`.delog.ui.component.UrlCachedPreviewer
-import `in`.delog.ui.component.toMessageViewData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -35,19 +36,26 @@ import kotlinx.coroutines.launch
 
 class MessageListViewModel(
     private var key: String,
-    private val repository: MessageRepository
+    private val messageTreeRepository: MessageTreeRepository,
+    private val messageRepository: MessageRepository
 ) : ViewModel() {
 
-    var messagesPaged: Flow<PagingData<MessageViewData>>? = null
+    var messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null
     var identAndAbout: IdentAndAbout? = null
+
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            System.out.println("init with " + key)
+
+        GlobalScope.launch(Dispatchers.IO) {
             if (key.startsWith("%")) {
-                val m: Message? = repository.getMessage(key)
+                val m: Message? = messageRepository.getMessage(key)
                 if (m != null) key = m.author
             }
-            identAndAbout = repository.getFeed(key)
+            identAndAbout = messageRepository.getFeed(key)
+        }
+
+
+        viewModelScope.launch(Dispatchers.IO) {
+
             messagesPaged = Pager(
                 PagingConfig(
                     pageSize = 10,
@@ -56,25 +64,16 @@ class MessageListViewModel(
                 )
             ) {
                 if (key.startsWith("@")) {
-                    System.out.println("getPagedFeed " + key)
-                    repository.getPagedFeed(key)
+                    messageTreeRepository.getPagedMessageByAuthor(key)
                 } else { // starts with %
-                    System.out.println("getPagedPost")
-                    repository.getPagedPosts(key)
+                    messageTreeRepository.getPagedMessageByKey(key)
                 }
             }.flow.map { pagingData ->
                 pagingData.map { msgAndAbout ->
-                    var msgViewData = msgAndAbout.message.toMessageViewData()
-                    if (msgAndAbout.about != null) {
-                        msgViewData.authorName = msgAndAbout.about!!.name
-                        msgViewData.authorImage = msgAndAbout.about!!.image
-                    }
-                    UrlCachedPreviewer.preloadPreviewsFor(msgViewData)
-                    msgViewData
+                    UrlCachedPreviewer.preloadPreviewsFor(msgAndAbout)
+                    msgAndAbout
                 }
             }.cachedIn(viewModelScope)
         }
     }
-
-
 }

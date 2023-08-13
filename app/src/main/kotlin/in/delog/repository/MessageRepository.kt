@@ -36,16 +36,20 @@ interface MessageRepository {
     fun getLastMessage(author: String): Message?
     fun getLastSequence(author: String): Long
     fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout>
-    fun getPagedPosts(author: String): PagingSource<Int, MessageAndAbout>
     fun getFeed(key: String): IdentAndAbout
+    fun getMessageAndAbout(key: String): MessageAndAbout?
+
     fun getMessage(key: String): Message?
 }
 
 class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageRepository {
 
-
     override fun getMessage(key: String): Message? {
         return messageDao.getMessage(key)
+    }
+
+    override fun getMessageAndAbout(key: String): MessageAndAbout? {
+        return messageDao.getMessageAndAbout(key)
     }
 
     override fun getLastMessage(author: String): Message? {
@@ -83,11 +87,6 @@ class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageReposit
 
     override fun getFeed(key: String): IdentAndAbout {
         return messageDao.getFeed(key)
-    }
-
-
-    override fun getPagedPosts(author: String): PagingSource<Int, MessageAndAbout> {
-        return messageDao.getPagedPostsAndAbout(author)
     }
 
     override fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout> {

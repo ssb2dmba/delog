@@ -171,8 +171,7 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                         1,
                         inviteString
                     );
-                    identListViewModel.insertAndNavigate(ident = ident, navController)
-
+                    identListViewModel.insert(ident = ident)
                 },
                 content = { Text("save") }
             )

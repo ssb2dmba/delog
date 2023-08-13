@@ -16,6 +16,7 @@
  */
 package org.apache.tuweni.scuttlebutt.lib.model
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import `in`.delog.db.model.Message
 import java.util.*
@@ -39,7 +40,13 @@ fun FeedMessage.toMessage(): Message {
         contentAsText = this.value.contentAsString,
         type = if (this.type.isPresent()) this.type.get() else null,
         previous = this.value.previous,
-        signature = this.value.signature
+        signature = this.value.signature,
+        root = getContentValue("root", this.value.content),
+        branch = getContentValue("branch", this.value.content)
     )
+}
+
+fun getContentValue(key: String, content: JsonNode): String? {
+    return if (content.has("branch")) content.get("branch").asText() else null
 }
 

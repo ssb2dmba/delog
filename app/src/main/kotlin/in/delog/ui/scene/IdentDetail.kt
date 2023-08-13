@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Plumbing
@@ -249,12 +250,14 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewM
         ) {
             // public key
             Row {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = ident.publicKey,
-                    style = keySmall,
-                )
-            }
+
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = ident.publicKey,
+                        style = keySmall,
+                    )
+                }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Row {

@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 1,
-    "identityHash": "f4986a4d162d33338bf729dcf24af22b",
+    "version": 4,
+    "identityHash": "16c87a9050a502698a5afed166211b5a",
     "entities": [
       {
         "tableName": "Ident",
@@ -323,10 +323,15 @@
         "foreignKeys": []
       }
     ],
-    "views": [],
+    "views": [
+      {
+        "viewName": "MessageTree",
+        "createSql": "CREATE VIEW `${VIEW_NAME}` AS WITH RECURSIVE tree_view AS (       SELECT            0 AS level,            author as pauthor,            a1.name, a1.image,            CAST(message.key AS varchar(50)) AS seq,            message.timestamp as ts,            (select count(*) from message x where x.branch=message.key) as ct,            message.key,            message.author,            message.timestamp,            message.contentAsText,            message.root,            message.branch        FROM            message, about a1        WHERE            message.author=a1.about and message.root IS NULL and message.type ='post'        UNION ALL SELECT            level + 1 AS level,            cast(pauthor  as varchar(255)) pauthor,           a2.name, a2.image,            CAST(seq|| '_' || CAST(m2.key AS VARCHAR (50)) AS VARCHAR(50)) AS seq,            min(ts,m2.timestamp) as ts,            (select count(*) from message x where x.branch=x.key) as ct,           m2.key,           m2.author,            m2.timestamp,            m2.contentAsText,            m2.root,           m2.branch        FROM message m2, about a2        JOIN tree_view tv ON m2.branch = tv.key and m2.type=\"post\"        WHERE a2.about=m2.author) select * from tree_view order by ts desc, seq asc"
+      }
+    ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f4986a4d162d33338bf729dcf24af22b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '16c87a9050a502698a5afed166211b5a')"
     ]
   }
 }

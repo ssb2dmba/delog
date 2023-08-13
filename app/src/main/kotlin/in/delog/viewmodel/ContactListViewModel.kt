@@ -23,7 +23,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import `in`.delog.db.model.About
+import `in`.delog.db.model.Contact
+import `in`.delog.db.model.Ident
 import `in`.delog.repository.ContactRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class ContactListViewModel(
@@ -40,5 +46,20 @@ class ContactListViewModel(
     ) {
         repository.getPagedContacts(author)
     }.flow.cachedIn(viewModelScope)
+
+    fun insert(contact: Contact) {
+        GlobalScope.launch(Dispatchers.IO) {
+            val exist = repository.getByAuthorAndFollow(contact.author, contact.follow)
+            if (exist == null) {
+                repository.insert(contact)
+            }
+        }
+    }
+
+    fun remove(contact: Contact) {
+        GlobalScope.launch(Dispatchers.IO) {
+            repository.deleteContact(contact)
+        }
+    }
 
 }
