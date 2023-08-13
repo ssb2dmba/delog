@@ -17,6 +17,7 @@
  */
 package `in`.delog.ui.component
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,9 +27,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,7 +40,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import `in`.delog.R
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
@@ -57,22 +60,12 @@ fun IdentityBox(
     defaultIdent: Boolean = false
 ) {
 
+    val clipboardManager: ClipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .clickable {
-                var argUri = URLEncoder.encode(
-                    about.about,
-                    Charset
-                        .defaultCharset()
-                        .toString()
-                )
-                if (mine) {
-                    navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
-                } else {
-                    navController.navigate("${Scenes.MainFeed.route}/${argUri}")
-                }
-            }
     ) {
         // private Key
         Row(
@@ -81,7 +74,17 @@ fun IdentityBox(
         ) {
             Text(
                 text = about.about,
-                modifier = Modifier.padding(start = 56.dp),
+                modifier = Modifier.padding(start = 56.dp)
+                    .clickable {
+                    clipboardManager.setText(buildAnnotatedString { append(about.about) })
+                    Toast
+                        .makeText(
+                            context,
+                            String.format("%s copied!", about.about),
+                            Toast.LENGTH_LONG
+                        )
+                        .show()
+                },
                 style = keySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -90,6 +93,19 @@ fun IdentityBox(
         // alias
         Row(
             modifier = Modifier.fillMaxWidth()
+                .clickable {
+                    var argUri = URLEncoder.encode(
+                        about.about,
+                        Charset
+                            .defaultCharset()
+                            .toString()
+                    )
+                    if (mine) {
+                        navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
+                    } else {
+                        navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+                    }
+                }
         ) {
             AsyncImage(
                 model = "https://robohash.org/${about.about}.png",
@@ -154,40 +170,7 @@ fun IdentityBox(
 
         }
         if (!short) {
-            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                if (mine) {
-//                    IconButton(
-//                        onClick = {
-//                            var argUri = URLEncoder.encode(ident!!.publicKey, Charset.defaultCharset().toString())
-//                            navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
-//                        },
-//                    ) {
-//                        Icon(imageVector = Icons.Filled.Edit, contentDescription = "edit")
-//                    }
-                } else {
-                    if (following) {
-                        Button(
-                            onClick = {},
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiary
-                            )
-                        ) {
-                            Text(stringResource(id = R.string.follow))
-                        }
-                    } else {
-                        Button(
-                            onClick = {},
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiary
-                            )
-                        ) {
-                            Text(stringResource(id = R.string.unfollow))
-                        }
-                    }
-                }
-            }
+
         }
 
     }

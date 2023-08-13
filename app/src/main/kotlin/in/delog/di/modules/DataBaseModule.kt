@@ -61,6 +61,10 @@ val dataBaseModule = module(createdAtStart = true) {
         return dataBase.messageDao()
     }
 
+    fun provideMessageTreeDao(dataBase: AppDatabase): MessageTreeDao {
+        return dataBase.messageTreeDao()
+    }
+
     fun provideDraftDao(dataBase: AppDatabase): DraftDao {
         return dataBase.draftDao()
     }
@@ -76,6 +80,7 @@ val dataBaseModule = module(createdAtStart = true) {
     single { provideDataBase(androidApplication()) }
     single { provideFeedDao(get()) }
     single { provideMessageDao(get()) }
+    single { provideMessageTreeDao(get()) }
     single { provideDraftDao(get()) }
     single { provideContactDao(get()) }
     single { provideAuthorInfoDao(get()) }

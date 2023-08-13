@@ -21,7 +21,6 @@ package `in`.delog.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
-import androidx.navigation.NavHostController
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.repository.IdentRepository
@@ -35,22 +34,22 @@ import kotlinx.coroutines.launch
 
 class IdentListViewModel(private val repository: IdentRepository) : ViewModel() {
 
-    private var _identToNavigate: MutableStateFlow<Ident?> = MutableStateFlow(null)
-    var insertedIdent: StateFlow<Ident?> = _identToNavigate.asStateFlow()
+    private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
+    var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
     var idents: LiveData<List<IdentAndAbout>> = repository.idents.asLiveData()
     val default: LiveData<IdentAndAbout> = repository.default.asLiveData()
     val count: LiveData<Int> = repository.count
 
-    fun insertAndNavigate(ident: Ident, navController: NavHostController) {
+    fun insert(ident: Ident) {
         GlobalScope.launch(Dispatchers.IO) {
             var id = repository.insert(ident)
             ident.oid = id
-            _identToNavigate.value = ident
+            _insertedIdent.value = ident
         }
     }
 
     fun reset() {
-        _identToNavigate.value = null
+        _insertedIdent.value = null
     }
 
 }

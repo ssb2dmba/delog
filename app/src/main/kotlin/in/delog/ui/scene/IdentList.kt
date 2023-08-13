@@ -62,6 +62,8 @@ fun IdentList(navController: NavHostController) {
         }
     }
 
+
+
     LazyColumn(
     ) {
         items(idents.value) {
@@ -80,6 +82,8 @@ fun IdentList(navController: NavHostController) {
 
     }
 }
+
+
 
 
 @Composable

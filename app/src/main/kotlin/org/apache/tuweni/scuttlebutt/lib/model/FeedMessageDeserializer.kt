@@ -32,7 +32,9 @@ class FeedMessageDeserializer : JsonDeserializer<FeedMessage>() {
         val key = node["key"].asText()
         val value = node["value"]
         val content = value["content"]
-        val type = getType(content)
+        val type = getKeyValue("type", content)
+        val root = getKeyValue("root", content)
+        val branch = getKeyValue("branch", content)
         return FeedMessage(key, type, toFeedValue(value))
     }
 
@@ -48,12 +50,13 @@ class FeedMessageDeserializer : JsonDeserializer<FeedMessage>() {
         return FeedValue(previous, author, sequence, timestamp, hash, content, signature)
     }
 
-    private fun getType(content: JsonNode): Optional<String> {
+    private fun getKeyValue(key: String, content: JsonNode): Optional<String> {
         return if (content.nodeType != JsonNodeType.STRING) {
-            val type = content["type"]
+            val type = content[key]
             Optional.of(type.asText())
         } else {
             Optional.empty()
         }
     }
+
 }

@@ -18,7 +18,6 @@
 package `in`.delog.ui.scene.identitifiers
 
 
-import android.util.Log
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import `in`.delog.db.model.Ident
@@ -28,8 +27,6 @@ import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import org.apache.tuweni.scuttlebutt.Identity
 import org.koin.androidx.compose.koinViewModel
-import java.net.URLEncoder
-import java.nio.charset.Charset
 
 @Composable
 fun IdentNew(navController: NavHostController) {
@@ -59,7 +56,6 @@ fun IdentNew(navController: NavHostController) {
     }
 
     fun doneWithoutInvite() {
-
         if (hasNavigated==true) return
         hasNavigated = true
         val ident = Ident(
@@ -73,25 +69,14 @@ fun IdentNew(navController: NavHostController) {
             1,
             ""
         );
-
-        identListViewModel.insertAndNavigate(ident = ident, navController)
-
-
+        identListViewModel.insert(ident = ident)
         if (insertionState != null) {
-            Log.w("OK", "nav to " + insertionState!!.oid)
-            var argUri = URLEncoder.encode(
-                ident.publicKey,
-                Charset
-                    .defaultCharset()
-                    .toString()
-            )
-            navController.navigate("${Scenes.FeedDetail.route}/${insertionState!!.oid}")
-
+            navController.navigate("${Scenes.FeedList.route}")
         }
     }
 
     if (identity == null) {
-            LoadIdentity(::setIdentity)
+        LoadIdentity(::setIdentity)
     } else {
         if (invite == null) {
             if (inviteUrl!=null) {

@@ -30,13 +30,14 @@ import java.util.*
 @Dao
 interface MessageDao {
 
+
     @Query("SELECT * FROM message WHERE type='post' and author = :author or author IN (select follow from contact where author = :author and value = 1) order by oid desc")
     fun getPagedPosts(author: String): PagingSource<Int, MessageAndAbout>
 
-    @Query("SELECT * FROM message WHERE type='post' and author = :author or author IN (select follow from contact where author = :author and value = 1) order by oid desc")
-    fun getPagedPostsAndAbout(author: String): PagingSource<Int, MessageAndAbout>
-
-    @Query("SELECT * FROM message WHERE type='post' and author = :author order by oid desc")
+    @Query("select m1.*  from message m1\n" +
+            "left join message  m2 on m2.`key`=m1.root \n" +
+            "where  m1.author = :author or m1.author IN (select follow from contact where author = :author  and value = 1)\n" +
+            "order by min(coalesce(m2.timestamp ,9223372036854775807),m1.timestamp) desc, m2.timestamp asc\n")
     fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout>
 
 
@@ -66,7 +67,9 @@ interface MessageDao {
     fun getFeed(pk: String): IdentAndAbout
 
     @Query("SELECT * FROM message WHERE key = :key LIMIT 1")
-    fun getMessage(key: String): Message?
+    fun getMessageAndAbout(key: String): MessageAndAbout?
 
+    @Query("SELECT * FROM message WHERE key = :key LIMIT 1")
+    fun getMessage(key: String): Message?
 
 }

@@ -19,9 +19,9 @@ package `in`.delog.db.dao
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import kotlinx.coroutines.flow.Flow
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface IdentDao {

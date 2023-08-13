@@ -18,10 +18,12 @@
 package `in`.delog.ui.component
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -29,13 +31,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import `in`.delog.R
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import `in`.delog.ssb.BaseSsbService.Companion.format
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
@@ -51,52 +55,73 @@ fun MessageItem(
     message: MessageViewData,
     showToolbar: Boolean = false,
     expand: Boolean = false,
+    hasLine: Boolean = false,
     onClickCallBack: () -> Unit
 ) {
-
     var expand by remember { mutableStateOf(expand) }
+    var text by remember { mutableStateOf(message.content(format).text.toString()) }
+    var isLongText by remember { mutableStateOf(text.split("\n").size > 5) }
+    LaunchedEffect(expand) {
+        if (isLongText) {
+            if (!expand) { // do we show all or only 4 lines?
+                text = text.split("\n").take(5).joinToString("\n")
+                text = text.dropLast(1) + ".."
+            } else {
+                text = message.content(format).text.toString()
+            }
+        }
+    }
 
     Card(
         colors = CardDefaults.cardColors(),
         shape = RoundedCornerShape(0.dp),
         modifier = Modifier
             .wrapContentHeight()
-            .padding(vertical = 2.dp, horizontal = 4.dp)
             .clickable {
                 onClickCallBack()
             }
     ) {
-        var text = message.content(format).text.toString()
         Row(
             modifier = Modifier
-                .fillMaxHeight()
+                .height(IntrinsicSize.Max)
+                .padding(8.dp)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(16.dp)
-                    .clickable() {
-                        navController.popBackStack();
-                    }
+                    .width(44.dp)
             ) {
-                if (showToolbar) {
-                    Icon(
-                        Icons.Default.ArrowBackIosNew,
-                        contentDescription = "",
+                if (hasLine) {
+                    Divider(
                         modifier = Modifier
-                            .size(ButtonDefaults.IconSize)
-                            .padding(4.dp)
+                            .align(Alignment.BottomCenter)
+                            .fillMaxHeight()
+                            .padding(top = 48.dp)
+                            .width(width = 1.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-            }
-            Column(modifier = Modifier.padding(2.dp)) {
+                AsyncImage(
+                    model = "https://robohash.org/${message.author}.png",
+                    placeholder = rememberAsyncImagePainter("https://robohash.org/${message.author}.png"),
+                    contentDescription = "Profile Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .size(size = 36.dp)
+                        .clip(shape = CircleShape)
+                        .background(MaterialTheme.colorScheme.outline),
+                )
 
-                // Message head
+            }
+
+            // Message head
+            Column {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 6.dp, bottom = 6.dp, end = 6.dp)
                         .clickable {
                             onClickCallBack();
                         }
@@ -111,7 +136,6 @@ fun MessageItem(
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1
                     )
-
                     val strTimeAgo: String = DateUtils.getRelativeTimeSpanString(
                         Date(Timestamp(message.timestamp).time).getTime(),
                         Calendar.getInstance().getTimeInMillis(),
@@ -122,132 +146,112 @@ fun MessageItem(
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1
                     )
-
-                    var isLongText = text.split("\n").size > 5
-                    if (isLongText) {
-                        if (expand) {
-                            IconButton(onClick = { expand = false }) {
-                                Icon(
-                                    Icons.Default.ExpandLess,
-                                    contentDescription = "",
-                                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                                )
-                            }
-                        } else {
-                            IconButton(onClick = { expand = true }) {
-                                Icon(
-                                    Icons.Default.ExpandMore,
-                                    contentDescription = "",
-                                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                                )
-                            }
-                        }
-                    }
                 }
-                Column(
-               // modifier=Modifier.verticalScroll(rememberScrollState())
-               //     .weight(weight =1f, fill = false)
-
-                ) {
+                Column {
                     // Message content
                     Row(
                         modifier = Modifier
-                            .padding(end = 6.dp, top = 12.dp)
                             .fillMaxWidth()
                             .clickable {
                                 onClickCallBack();
                             }
                     ) {
-
-                        if (!expand) { // do we show all or only 4 lines?
-                            text = text.split("\n").take(5).joinToString("\n")
-                        }
                         RichTextViewer(text, onClickCallBack)
                     }
                 }
-            }
-        }
-        Spacer(modifier=Modifier.height(12.dp))
-        if (showToolbar) {
-            // toolbar
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .padding(start = 12.dp, top = 12.dp, end = 12.dp, bottom = 18.dp)
-                    .fillMaxWidth()
-            ) {
-                // favorite
-                FilledTonalButton(
-                    onClick = {}
-                )
-                {
-                    Icon(
-                        Icons.Filled.FavoriteBorder,
-                        contentDescription = "",
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                    )
-                    Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                    Text("react")
-                }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                val hasReply = true // todo stub
-                val currentKey = navController.currentBackStackEntry?.arguments?.getString("id")
-                if (hasReply && currentKey?.contains(message.key) != true) {
-                    OutlinedButton(
+
+                if (showToolbar) {
+                    // toolbar
+                    Row(
+                        horizontalArrangement = Arrangement.End,
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 12.dp, end = 12.dp),
-                        onClick = {
-                            var argUri =
-                                URLEncoder.encode(message.key, Charset.defaultCharset().toString())
-                            navController.navigate("${Scenes.MainFeed.route}/${argUri}")
-                        },
-                    )
-                    {
-                        Text(
-                            style = MaterialTheme.typography.labelSmall,
-                            text = stringResource(R.string.replies)
+                            .fillMaxWidth()
+                    ) {
+                        if (isLongText) {
+                            if (expand) {
+                                IconButton(onClick = { expand = false }) {
+                                    Icon(
+                                        Icons.Default.ExpandLess,
+                                        contentDescription = "",
+                                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                                    )
+                                }
+                            } else {
+                                IconButton(onClick = { expand = true }) {
+                                    Icon(
+                                        Icons.Default.ExpandMore,
+                                        contentDescription = "",
+                                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                                    )
+                                }
+                            }
+                        }
+                        // Repost
+                        IconButton(
+                            onClick = {
+                                repost(message.key, navController)
+                            }
                         )
+                        {
+                            Icon(
+                                Icons.Filled.Autorenew,
+                                contentDescription = "",
+                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                            )// reply
+                        }
+                        // Like
+                        IconButton(
+                            onClick = {
+                                vote(message.key, navController)
+                            }
+                        )
+                        {
+                            Icon(
+                                Icons.Filled.Favorite,
+                                contentDescription = "",
+                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                            )// reply
+                        }
+                        // Reply
+                        IconButton(
+                            onClick = {
+                                reply(message.key, navController)
+                            },
+                        )
+                        {
+                            Icon(
+                                Icons.Filled.Reply,
+                                contentDescription = "",
+                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                            )
+                        }
                     }
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                // reply
-                FilledTonalButton(
-                    onClick = {},
-                )
-                {
-                    Icon(
-                        Icons.Filled.Reply,
-                        contentDescription = "",
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                    )
-                    Text(text = stringResource(R.string.reply))
                 }
             }
-        } else {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(0.dp)
-        ) {
-            // favorite
         }
     }
 }
 
-fun notADraft(navController: NavController, message: MessageViewData): Boolean {
-    val routeName = navController.currentBackStackEntry?.destination?.route
-    val currentKey = navController.currentBackStackEntry?.arguments?.getString("id")
-    return (currentKey != null && routeName !=null)
-            && currentKey.contains(message.key)
-            && !routeName.contains(Scenes.DraftEdit.route)
-            && !routeName.contains(Scenes.DraftList.route)
+fun makeArgUri(key: String): Any {
+    return URLEncoder.encode(key, Charset.defaultCharset().toString())
 }
 
+fun reply(key: String, navController: NavController) {
+    val argUri = makeArgUri(key)
+    navController.navigate("${Scenes.DraftNew.route}/reply/${argUri}")
+}
+
+fun vote(key: String, navController: NavController) {
+    val argUri = makeArgUri(key)
+    navController.navigate("${Scenes.DraftNew.route}/vote/${argUri}")
+}
+
+fun repost(key: String, navController: NavController) {
+    val argUri = makeArgUri(key)
+    navController.navigate("${Scenes.DraftNew.route}/repost/${argUri}")
+}
 
 @Preview
 @Composable
@@ -271,7 +275,7 @@ fun MessageItemPreview() {
                         MessageItem(
                             navController = navController,
                             message = messageViewData,
-                            showToolbar = false,
+                            showToolbar = true,
                             onClickCallBack = { }
                         )
                     }

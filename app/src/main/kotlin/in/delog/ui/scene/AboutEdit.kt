@@ -18,10 +18,10 @@
 package `in`.delog.ui.scene
 
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,7 +34,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -59,7 +64,8 @@ fun AboutEdit(
     pubKey: String
 ) {
     val vm = koinViewModel<IdentViewModel>(parameters = { parametersOf(pubKey) })
-
+    val clipboardManager: ClipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
 
     var dirty by remember { mutableStateOf(false) }
@@ -96,7 +102,7 @@ fun AboutEdit(
     if (!dirty) {
         Card(
             elevation = CardDefaults.cardElevation(),
-            shape = RoundedCornerShape(0.dp),
+            //shape = RoundedCornerShape(0.dp),
             modifier = Modifier
                 .padding(vertical = 4.dp, horizontal = 8.dp)
                 .fillMaxHeight()
@@ -108,16 +114,28 @@ fun AboutEdit(
                     .fillMaxWidth()
             ) {
                 // public key
-                Row {
+                Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                clipboardManager.setText(buildAnnotatedString { append(about.about) })
+                                Toast
+                                    .makeText(
+                                        context,
+                                        String.format("%s copied!", about.about),
+                                        Toast.LENGTH_LONG
+                                    )
+                                    .show()
+                            },
                         text = about.about,
                         style = keySmall,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
 
-                Row {
+                Row(modifier = Modifier.padding(top = 16.dp)) {
                     AsyncImage(
                         model = "https://robohash.org/${about.about}.png",
                         placeholder = rememberAsyncImagePainter("https://robohash.org/${about.about}.png"),
@@ -144,11 +162,9 @@ fun AboutEdit(
                         },
                         modifier = Modifier.weight(0.8f)
                     )
-
                 }
-
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             // description
             OutlinedTextField(
                 value = if (description != null) description!! else "",

@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.scene
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -40,14 +39,11 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import `in`.delog.R
 import `in`.delog.db.model.Ident
-import `in`.delog.db.model.asKeyPair
 import `in`.delog.ssb.*
-import `in`.delog.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.keySmall
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentViewModel
-import io.vertx.core.http.impl.HttpClientConnection.log
 import org.apache.tuweni.io.Base64
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -249,12 +245,14 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewM
         ) {
             // public key
             Row {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = ident.publicKey,
-                    style = keySmall,
-                )
-            }
+
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = ident.publicKey,
+                        style = keySmall,
+                    )
+                }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Row {

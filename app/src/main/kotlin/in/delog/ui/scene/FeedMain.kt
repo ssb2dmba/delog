@@ -18,6 +18,7 @@
 package `in`.delog.ui.scene
 
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -31,17 +32,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
+import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.About
+import `in`.delog.db.toMessageViewData
 import `in`.delog.ssb.SsbService
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.MessageItem
-import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.MessageListViewModel
@@ -59,8 +62,6 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
         return
     }
 
-
-
     LaunchedEffect(feedToReadKey) {
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
@@ -68,34 +69,38 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
         }
         bottomBarViewModel.setTitle("main")
     }
-    System.out.println(navController.currentBackStackEntry?.arguments?.getString("id"))
+
     var id = navController.currentBackStackEntry?.arguments?.getString("id") ?: feedToReadKey
 
     val viewModel = koinViewModel<MessageListViewModel>(parameters = { parametersOf(id) })
-    System.out.println(" newviewModel. " + id)
-    if (viewModel.identAndAbout == null) return
 
+    if (feedToReadKey == null) return
+
+    val context = LocalContext.current
     val ssbService: SsbService = get()
     LaunchedEffect(feedToReadKey) {
         try {
             ssbService.reconnect(viewModel.identAndAbout!!.ident)
         } catch (e: Exception) {
-            // TODO snackbar
+            Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
     }
-    if (viewModel.messagesPaged==null) return
-    val fpgMessages: Flow<PagingData<MessageViewData>> = viewModel.messagesPaged!!
-    val lazyMessageItems: LazyPagingItems<MessageViewData> = fpgMessages.collectAsLazyPagingItems()
+    if (viewModel.messagesPaged == null) return
+    val fpgMessages: Flow<PagingData<AppDatabaseView.MessageInTree>> = viewModel.messagesPaged!!
+    val lazyMessageItems: LazyPagingItems<AppDatabaseView.MessageInTree> =
+        fpgMessages.collectAsLazyPagingItems()
     Column {
         LazyVerticalGrid(columns = GridCells.Fixed(1)) {
-            item {
-                IdentityBox(
-                    about = viewModel.identAndAbout?.about ?: About("error", "error", "error"),
-                    navController = navController,
-                    short = true,
-                    mine = false
-                )
+            if (viewModel.identAndAbout != null) {
+                item {
+                    IdentityBox(
+                        about = viewModel.identAndAbout?.about ?: About("", "", ""),
+                        navController = navController,
+                        short = true,
+                        mine = false
+                    )
+                }
             }
             items(
                 count = lazyMessageItems.itemCount,
@@ -104,11 +109,11 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
                     val argUri = URLEncoder.encode(it.key, Charset.defaultCharset().toString())
                     MessageItem(
                         navController = navController,
-                        message = it,
-                        showToolbar = false,
+                        message = it.toMessageViewData(),
+                        showToolbar = true,
                         expand = false,
+                        hasLine = if (it.ct > 0 || it.level > 0) true else false,
                         onClickCallBack = {
-                            System.out.println("navigate:" + "${Scenes.MainFeed.route}/${argUri} ${it.key}" )
                             navController.navigate("${Scenes.MainFeed.route}/${argUri}")
                         }
                     )

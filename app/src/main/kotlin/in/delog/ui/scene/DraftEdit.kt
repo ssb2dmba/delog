@@ -27,11 +27,14 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.Draft
+import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.MessageViewData
@@ -161,13 +164,26 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     val draftViewModel = koinViewModel<DraftViewModel>(parameters = { parametersOf(feed.ident) })
     val title = stringResource(id = R.string.drafts)
-
+    var link: MessageAndAbout? by remember {
+        mutableStateOf(null)
+    }
+    val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(draftId) {
         draftViewModel.setCurrentDraft(draftId)
         bottomBarViewModel.setTitle(title)
-
     }
+
+    LaunchedEffect(draftViewModel.draft) {
+        if (draftViewModel.draft != null && draftViewModel.draft!!.branch!=null) {
+            draftViewModel.getLink(draftViewModel.draft!!.branch!!)
+        }
+    }
+
+    LaunchedEffect(draftViewModel.link) {
+        link = draftViewModel.link
+    }
+
     if (draftViewModel.draft == null) {
         return
     }
@@ -188,17 +204,20 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
         }
         if (draftViewModel.dirtyStatus) {
             Spacer(Modifier.weight(1f))
-            SaveDraftFab(onClick = {
+            SaveDraftFab {
                 val draft = Draft(
-                    draftId.toInt(),
-                    feed.ident.publicKey,
-                    System.currentTimeMillis(),
-                    contentAsText
+                    oid = draftId.toInt(),
+                    author = feed.ident.publicKey,
+                    timestamp = System.currentTimeMillis(),
+                    type = draftViewModel.draft!!.type,
+                    contentAsText = contentAsText,
+                    root = draftViewModel.draft!!.root,
+                    branch = draftViewModel.draft!!.branch
                 )
                 draftViewModel.update(draft = draft)
                 draftViewModel.setDirty(false)
                 navController.navigate("${Scenes.DraftEdit.route}/${draftId}")
-            })
+            }
         } else {
             IconButton(
                 modifier = Modifier.height(56.dp),
@@ -224,7 +243,16 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
         modifier = Modifier
             .verticalScroll(rememberScrollState())
     ) {
-
+        if (link != null) {
+            MessageItem(
+                navController = navController,
+                message = link!!.message.toMessageViewData(),
+                showToolbar = false,
+                expand = false,
+                hasLine = true,
+                onClickCallBack = {}
+            )
+        }
         Card(
             shape = RoundedCornerShape(0.dp),
             elevation = CardDefaults.cardElevation(),
@@ -233,18 +261,24 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    //.verticalScroll(rememberScrollState())
-                    //.weight(weight =1f, fill = false)
             ) {
                 if (draftViewModel.dirtyStatus) {
+                    focusRequester.requestFocus()
                     // edit mode
-                    TextField(
+                    var placeholder =
+                        if (link!=null) "write your answer" else "write you message"
+                    OutlinedTextField(
+                        label = { placeholder },
                         value = contentAsText,
                         onValueChange = {
                             draftViewModel.setDirty(true)
                             contentAsText = it
                         },
-                        modifier = Modifier.fillMaxHeight()
+                        modifier = Modifier
+                            .focusRequester(focusRequester)
+                            .fillMaxHeight(0.85f)
+                            .padding(16.dp)
+                            .fillMaxWidth()
                     )
                 } else {
                     // preview mode
@@ -254,6 +288,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                         message = obj,
                         showToolbar = false,
                         expand = true,
+                        hasLine = link!=null,
                         onClickCallBack = {
                             draftViewModel.dirtyStatus=!draftViewModel.dirtyStatus
                         })

@@ -34,6 +34,8 @@ data class SsbMessageContent(
     val about: String? = null,
     val image: String? = null,
     val name: String? = null,
+    val root: String? = null,
+    val branch: String? = null,
     val description: String? = null
 )
 

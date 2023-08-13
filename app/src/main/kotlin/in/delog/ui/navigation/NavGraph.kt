@@ -17,13 +17,13 @@
  */
 package `in`.delog.ui.navigation
 
-import `in`.delog.ui.LocalActiveFeed
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.scene.*
 import `in`.delog.ui.scene.identitifiers.IdentNew
 
@@ -36,6 +36,7 @@ fun NavGraph(navController: NavHostController) {
     )
     {
         val id = "id";
+        val draftType = "draftType";
         composable(
             route = Scenes.MainFeed.route + "/{" + id + "}",
             arguments = listOf(navArgument(id) { type = NavType.StringType })
@@ -79,9 +80,20 @@ fun NavGraph(navController: NavHostController) {
         composable(route = Scenes.ContactList.route) {
             ContactList(navController)
         }
+
         composable(route = Scenes.DraftNew.route) {
             DraftNew(navController)
         }
+
+        composable(
+            route = Scenes.DraftNew.route + "/{" + draftType +"}" + "/{" + id + "}",
+            arguments = listOf(navArgument(id) { type = NavType.StringType }, navArgument(draftType) { type = NavType.StringType})
+        ) { backStackEntry ->
+            val key = backStackEntry.arguments?.getString(id)
+            val draftType = backStackEntry.arguments?.getString(draftType)
+            DraftNew(navController = navController, draftMode = draftType, linkedKey = key);
+        }
+
         composable(
             route = Scenes.DraftEdit.route + "/{" + id + "}",
             arguments = listOf(navArgument(id) { type = NavType.StringType })

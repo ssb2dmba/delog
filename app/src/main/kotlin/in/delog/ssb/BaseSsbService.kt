@@ -19,6 +19,10 @@ package `in`.delog.ssb
 
 import android.util.Log
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import `in`.delog.db.model.Ident
+import `in`.delog.db.model.asKeyPair
+import `in`.delog.repository.ContactRepositoryImpl
+import `in`.delog.repository.MessageRepositoryImpl
 import io.vertx.core.Vertx
 import kotlinx.serialization.json.Json
 import org.apache.tuweni.bytes.Bytes32
@@ -30,10 +34,6 @@ import org.apache.tuweni.scuttlebutt.handshake.vertx.SecureScuttlebuttVertxClien
 import org.apache.tuweni.scuttlebutt.lib.FeedService
 import org.apache.tuweni.scuttlebutt.rpc.*
 import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
-import `in`.delog.db.model.Ident
-import `in`.delog.db.model.asKeyPair
-import `in`.delog.repository.ContactRepositoryImpl
-import `in`.delog.repository.MessageRepositoryImpl
 import java.net.ConnectException
 import java.util.*
 

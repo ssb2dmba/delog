@@ -19,6 +19,7 @@ package org.apache.tuweni.scuttlebutt.rpc.mux
 import android.util.Log
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import `in`.delog.BuildConfig
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import org.apache.tuweni.bytes.Bytes
@@ -29,8 +30,6 @@ import org.apache.tuweni.scuttlebutt.handshake.vertx.ClientHandler
 import org.apache.tuweni.scuttlebutt.rpc.*
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeRequest
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeStreamEndRequest
-import `in`.delog.BuildConfig
-
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import java.util.function.Function

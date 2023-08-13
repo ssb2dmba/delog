@@ -20,8 +20,8 @@ package `in`.delog.ui
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
-import kotlinx.coroutines.flow.Flow
 import `in`.delog.db.model.IdentAndAbout
+import kotlinx.coroutines.flow.Flow
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
