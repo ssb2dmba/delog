@@ -18,8 +18,9 @@
 package `in`.delog.repository
 
 import androidx.lifecycle.LiveData
+import `in`.delog.db.dao.AboutDao
 import `in`.delog.db.dao.IdentDao
-import `in`.delog.db.dao.setDefault
+import `in`.delog.db.dao.setFeedAsDefaultFeed
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import kotlinx.coroutines.flow.Flow
@@ -33,29 +34,31 @@ interface IdentRepository {
     val default: Flow<IdentAndAbout>
     val idents: Flow<List<IdentAndAbout>>
     val count: LiveData<Int>
-    suspend fun insert(feed: Ident): Long
+    suspend fun insert(feed: IdentAndAbout): Long
     suspend fun update(feed: Ident)
     suspend fun delete(feed: Ident)
     suspend fun findById(id: String): IdentAndAbout
     suspend fun getLive(id: String): LiveData<Ident>
-    fun setDefault(it: Ident)
+    fun setFeedAsDefaultFeed(it: Ident)
     suspend fun findByPublicKey(pk: String): IdentAndAbout
 }
 
-class FeedRepositoryImpl(private val identDao: IdentDao) : IdentRepository {
+class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: AboutDao) : IdentRepository {
 
     override val idents: Flow<List<IdentAndAbout>> = identDao.getAllLive()
 
-    override val default: Flow<IdentAndAbout> = identDao.getDefault()
+    override val default: Flow<IdentAndAbout> = identDao.getDefaultFeed()
 
     override val count = identDao.liveCount()
 
-    override fun setDefault(it: Ident) {
-        identDao.setDefault(it.oid)
+    override fun setFeedAsDefaultFeed(it: Ident) {
+        identDao.setFeedAsDefaultFeed(it.oid)
     }
 
-    override suspend fun insert(feed: Ident): Long {
-        return identDao.insert(feed = feed)
+    override suspend fun insert(feed: IdentAndAbout): Long {
+        val id= identDao.insert(feed = feed.ident)
+        aboutDao.insert(feed.about!!)
+        return id;
     }
 
     override suspend fun update(feed: Ident) {
@@ -77,6 +80,5 @@ class FeedRepositoryImpl(private val identDao: IdentDao) : IdentRepository {
     override suspend fun getLive(id: String): LiveData<Ident> {
         return identDao.findByIdLive(id)
     }
-
 
 }

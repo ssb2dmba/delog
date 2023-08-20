@@ -18,7 +18,7 @@ import `in`.delog.ssb.SsbService
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.IdentListViewModel
-import `in`.delog.viewmodel.IdentViewModel
+import `in`.delog.viewmodel.IdentAndAboutViewModel
 import org.apache.tuweni.scuttlebutt.Identity
 import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.MalformedInviteCodeException
@@ -48,18 +48,18 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     val responseState by identListViewModel.insertedIdent.observeAsState(null)
 
     if (responseState != null) {
-        val identViewModel =
-            koinViewModel<IdentViewModel>(parameters = { parametersOf(responseState!!.oid) })
+        val identAndAboutViewModel =
+            koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(responseState!!.oid) })
         LaunchedEffect(responseState) {
-            identViewModel.setCurrentIdent(responseState!!.oid.toString())
+            identAndAboutViewModel.setCurrentIdent(responseState!!.oid.toString())
         }
-        if (identViewModel.ident == null) {
+        if (identAndAboutViewModel.identAndAbout == null) {
             return
         }
         val ssbService: SsbService = get()
-        identViewModel.ident!!.invite?.let {
-            identViewModel.connectWithInvite(
-                identViewModel.ident!!,
+        identAndAboutViewModel.identAndAbout!!.ident.invite?.let {
+            identAndAboutViewModel.connectWithInvite(
+                identAndAboutViewModel.identAndAbout!!.ident,
                 it,
                 ssbService
             )
@@ -79,7 +79,7 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
                     identListViewModel.reset()
-                    navController.navigate("${Scenes.MainFeed.route}/${identViewModel.ident!!.publicKey}")
+                    navController.navigate("${Scenes.MainFeed.route}/${identAndAboutViewModel.identAndAbout!!.ident.publicKey}")
                 },
                     content = { Text("start") }
                 )
@@ -110,7 +110,9 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
-                modifier = Modifier.fillMaxWidth().testTag("alias")
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("alias")
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(Modifier.fillMaxWidth()) {
@@ -161,19 +163,18 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                 enabled = isValid,
                 onClick = {
                     val ident = Ident(
-                        0,
-                        identity.toCanonicalForm(),
-                        serverInput,
-                        portInput.toInt(),
-                        identity.privateKeyAsBase64String(),
-                        defaultServer,
-                        aliasInput,
-                        1,
-                        inviteString
+                        oid =0,
+                        publicKey = identity.toCanonicalForm(),
+                        server = serverInput,
+                        port = portInput.toInt(),
+                        privateKey= identity.privateKeyAsBase64String(),
+                        invite = inviteString,
+                        sortOrder = 1,
+                        defaultIdent = defaultServer
                     );
                     identListViewModel.insert(ident = ident)
                 },
-                content = { Text("save") }
+                content = { Text(stringResource(id = R.string.save)) }
             )
         }
     }

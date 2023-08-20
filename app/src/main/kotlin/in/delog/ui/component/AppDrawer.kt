@@ -74,19 +74,21 @@ fun AppDrawer(
                 AsyncImage(
                     model = "https://robohash.org/${feed.ident.publicKey}.png",
                     placeholder = rememberAsyncImagePainter("https://robohash.org/${feed.ident.publicKey}.png"),
-                    contentDescription = feed.ident.alias,
+                    contentDescription = feed.about!!.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(size = 120.dp)
                         .clip(shape = CircleShape)
                         .background(MaterialTheme.colorScheme.outline),
-                    )
-
+                )
                 // user's name
                 Text(
                     modifier = Modifier
                         .padding(top = 12.dp),
-                    text = feed.ident.alias,
+                    text = if (feed.about!!.name != null)
+                        feed.about!!.name!!
+                    else
+                        feed.ident.publicKey.subSequence(0, 5).toString() + "error",
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.outline

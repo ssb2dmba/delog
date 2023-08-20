@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import `in`.delog.R
 import `in`.delog.ssb.BaseSsbService.Companion.format
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
@@ -58,12 +60,12 @@ fun MessageItem(
     hasLine: Boolean = false,
     onClickCallBack: () -> Unit
 ) {
-    var expand by remember { mutableStateOf(expand) }
+    var doExpand by remember { mutableStateOf(expand) }
     var text by remember { mutableStateOf(message.content(format).text.toString()) }
     var isLongText by remember { mutableStateOf(text.split("\n").size > 5) }
-    LaunchedEffect(expand) {
+    LaunchedEffect(doExpand) {
         if (isLongText) {
-            if (!expand) { // do we show all or only 4 lines?
+            if (!doExpand) { // do we show all or only 4 lines?
                 text = text.split("\n").take(5).joinToString("\n")
                 text = text.dropLast(1) + ".."
             } else {
@@ -122,39 +124,45 @@ fun MessageItem(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            onClickCallBack();
-                        }
                 ) {
-                    Text(
-                        modifier = Modifier
-                            .weight(0.9f),
-                        //.padding(2.dp),
-                        text = message.authorName ?: message.author,
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.titleSmall,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1
-                    )
-                    val strTimeAgo: String = DateUtils.getRelativeTimeSpanString(
-                        Date(Timestamp(message.timestamp).time).getTime(),
-                        Calendar.getInstance().getTimeInMillis(),
-                        DateUtils.MINUTE_IN_MILLIS
-                    ).toString()
-                    Text(
-                        text = strTimeAgo,
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1
-                    )
+                    Row {
+
+
+                        Text(
+                            modifier = Modifier
+                                .weight(0.9f),
+                            //.padding(2.dp),
+                            text = message.authorName ?: message.author,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleSmall,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1
+                        )
+                        val strTimeAgo: String = DateUtils.getRelativeTimeSpanString(
+                            Date(Timestamp(message.timestamp).time).getTime(),
+                            Calendar.getInstance().getTimeInMillis(),
+                            DateUtils.MINUTE_IN_MILLIS
+                        ).toString()
+                        Text(
+                            text = strTimeAgo,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1                         
+                        )
+                    }
+                    Row() {
+                        Text(
+                            text = String.format(stringResource(R.string.replying_to), " TODO"),
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1
+                        )
+                    }
+
                 }
                 Column {
                     // Message content
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                onClickCallBack();
-                            }
                     ) {
                         RichTextViewer(text, onClickCallBack)
                     }
@@ -170,8 +178,8 @@ fun MessageItem(
                             .fillMaxWidth()
                     ) {
                         if (isLongText) {
-                            if (expand) {
-                                IconButton(onClick = { expand = false }) {
+                            if (doExpand) {
+                                IconButton(onClick = { doExpand = false }) {
                                     Icon(
                                         Icons.Default.ExpandLess,
                                         contentDescription = "",
@@ -179,7 +187,7 @@ fun MessageItem(
                                     )
                                 }
                             } else {
-                                IconButton(onClick = { expand = true }) {
+                                IconButton(onClick = { doExpand = true }) {
                                     Icon(
                                         Icons.Default.ExpandMore,
                                         contentDescription = "",

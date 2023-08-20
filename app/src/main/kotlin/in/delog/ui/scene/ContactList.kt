@@ -37,9 +37,7 @@ import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
-import `in`.delog.db.model.About
-import `in`.delog.db.model.Contact
-import `in`.delog.db.model.ContactAndAbout
+import `in`.delog.db.model.*
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.EditDialog
 import `in`.delog.ui.component.IdentityBox
@@ -92,7 +90,7 @@ fun ContactList(navController: NavController) {
             count = lazyContactItems.itemCount,
         ) { index ->
             lazyContactItems[index]?.let {
-                ContactListItem(contactAndAbout = it, contactListViewModel, navController)
+                ContactListItem(contactAndAbout = it, contactListViewModel)
             }
         }
     }
@@ -102,12 +100,23 @@ fun ContactList(navController: NavController) {
 fun ContactListItem(
     contactAndAbout: ContactAndAbout,
     contactListViewModel: ContactListViewModel,
-    navController: NavController
 ) {
-    if (contactAndAbout.about == null) contactAndAbout.about =
-        About(about = contactAndAbout.contact.follow)
+    if (contactAndAbout.about == null) contactAndAbout.about = About(about = contactAndAbout.contact.follow)
     Box(modifier = Modifier.fillMaxWidth()) {
-        IdentityBox(about = contactAndAbout.about!!, navController = navController)
+
+        val identAndAbout = IdentAndAbout(ident = Ident(
+            -1,
+            publicKey = contactAndAbout.about!!.about,
+            "",
+            -1,
+            "",
+            false,
+            -1,
+            "",
+        ),
+            about = contactAndAbout.about
+        )
+        IdentityBox(identAndAbout = identAndAbout)
         Button(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -124,7 +133,6 @@ fun ContactListItem(
         }
     }
 }
-
 
 @Composable
 fun ContactListFab(callback: () -> Unit) {

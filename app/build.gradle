@@ -189,6 +189,9 @@ dependencies {
 
     implementation "androidx.datastore:datastore-preferences:1.0.0"
 
+    implementation 'androidx.emoji2:emoji2-emojipicker:1.4.0-beta05'
+
+
     androidTestUtil 'androidx.test:orchestrator:1.4.0'
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4:1.4.1'
     // junit5 for org.apache

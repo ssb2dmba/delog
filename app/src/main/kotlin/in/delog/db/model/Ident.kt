@@ -43,9 +43,6 @@ data class Ident(
     @ColumnInfo(name = "default_ident")
     var defaultIdent: Boolean,
 
-    @ColumnInfo(name = "alias")
-    var alias: String,
-
     @ColumnInfo(name = "sort_order")
     var sortOrder: Int,
 

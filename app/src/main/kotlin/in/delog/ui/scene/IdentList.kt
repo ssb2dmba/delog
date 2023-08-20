@@ -37,13 +37,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import `in`.delog.R
-import `in`.delog.db.model.About
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.ListSpacer
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.net.URLEncoder
+import java.nio.charset.Charset
 
 @Composable
 fun IdentList(navController: NavHostController) {
@@ -63,28 +65,34 @@ fun IdentList(navController: NavHostController) {
     }
 
 
-
-    LazyColumn(
-    ) {
-        items(idents.value) {
-
-                identAndAbout ->
-            IdentityBox(
-                about = if (identAndAbout.about != null) identAndAbout.about!! else About(
-                    about = identAndAbout.ident.publicKey
-                ),
-                short = true,
-                navController = navController,
-                mine = true,
-                defaultIdent = identAndAbout.ident.defaultIdent
+    LazyColumn {
+        items(idents.value) { identAndAbout ->
+            var argUri = URLEncoder.encode(
+                identAndAbout.ident.publicKey,
+                Charset
+                    .defaultCharset()
+                    .toString()
             )
-        }
+            IdentityBox(
+                identAndAbout = identAndAbout,
+                short = true,
+                onClick = {
+                    identAndAbout ->
+                        navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
 
+                },
+                onLongClick = {
+                        identAndAbout -> identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
+                },
+                onDblClick = {
+                        identAndAbout -> identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
+                        navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+                }
+            )
+            ListSpacer()
+        }
     }
 }
-
-
-
 
 @Composable
 fun IdentListFab(navController: NavController) {

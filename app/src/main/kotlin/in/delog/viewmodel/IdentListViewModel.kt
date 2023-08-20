@@ -21,8 +21,10 @@ package `in`.delog.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
+import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.repository.AboutRepository
 import `in`.delog.repository.IdentRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -32,7 +34,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
-class IdentListViewModel(private val repository: IdentRepository) : ViewModel() {
+class IdentListViewModel(private val repository: IdentRepository, private val aboutRepository: AboutRepository) : ViewModel() {
 
     private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
     var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
@@ -42,9 +44,23 @@ class IdentListViewModel(private val repository: IdentRepository) : ViewModel() 
 
     fun insert(ident: Ident) {
         GlobalScope.launch(Dispatchers.IO) {
-            var id = repository.insert(ident)
+            if (idents.value?.isEmpty() == true) {
+                ident.defaultIdent = true
+            }
+            val about = About(
+                ident.publicKey,
+                name = ident.publicKey.subSequence(0,6).toString(),
+                dirty = true
+            )
+            var id = repository.insert(IdentAndAbout(ident,about))
             ident.oid = id
             _insertedIdent.value = ident
+        }
+    }
+
+    fun setFeedAsDefaultFeed(ident: Ident) {
+        GlobalScope.launch(Dispatchers.IO) {
+            repository.setFeedAsDefaultFeed(ident)
         }
     }
 
