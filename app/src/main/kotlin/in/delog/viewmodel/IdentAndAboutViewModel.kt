@@ -18,7 +18,6 @@
 package `in`.delog.viewmodel
 
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -26,6 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
+import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message
 import `in`.delog.repository.AboutRepository
 import `in`.delog.repository.IdentRepository
@@ -39,14 +39,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
-class IdentViewModel(
+class IdentAndAboutViewModel(
     private val identRepository: IdentRepository,
     private val aboutRepository: AboutRepository,
     private val messageRepository: MessageRepository
 ) : ViewModel() {
 
-    var ident: Ident? by mutableStateOf(null)
-    var about: About? by mutableStateOf(null)
+    var identAndAbout: IdentAndAbout? by mutableStateOf(null)
+
     var dirty: Boolean by mutableStateOf(false)
 
     private val _showExportDialog = MutableStateFlow(false)
@@ -60,39 +60,30 @@ class IdentViewModel(
 
     fun setCurrentIdent(oid: String) {
         GlobalScope.launch(Dispatchers.IO) {
-            var identAndAbout = identRepository.findById(oid)
+            identAndAbout = identRepository.findById(oid)
             if (identAndAbout == null) return@launch
-            ident = identAndAbout.ident
-            if (ident != null && identAndAbout.about == null) {
+            if (identAndAbout!!.about == null) {
                 // each ident shall have about
-                val newAbout = About(ident!!.publicKey, ident!!.alias, "", null, dirty = false)
+                val newAbout = About(identAndAbout!!.ident.publicKey,  "","", null, dirty = false)
                 aboutRepository.insert(newAbout)
-                about = newAbout
-            } else {
-                about = identAndAbout.about
+                identAndAbout!!.about = newAbout
             }
             dirty = false
         }
     }
 
 
-    fun setCurrentIdentByPk(oid: String) {
+    fun setCurrentIdentByPk(pk: String) {
         GlobalScope.launch(Dispatchers.IO) {
-            var identAndAbout = identRepository.findByPublicKey(oid)
-            if (identAndAbout != null) {
-                ident = identAndAbout.ident
-                if (identAndAbout.about == null) {
-                    // each ident shall have about
-                    val newAbout = About(ident!!.publicKey, ident!!.alias, "", null, dirty = false)
-                    aboutRepository.insert(newAbout)
-                    about = newAbout
-                } else {
-                    about = identAndAbout.about
-                }
-                dirty = false
-            } else {
-                Log.e("dlog", "ident repository find by public key retunn nul !")
+            identAndAbout = identRepository.findByPublicKey(pk)
+            if (identAndAbout == null) return@launch
+            if (identAndAbout!!.about == null) {
+                // each ident shall have about
+                val newAbout = About(identAndAbout!!.ident.publicKey,  "","", null, dirty = false)
+                aboutRepository.insert(newAbout)
+                identAndAbout!!.about = newAbout
             }
+            dirty = false
         }
     }
 
@@ -100,7 +91,7 @@ class IdentViewModel(
         GlobalScope.launch(Dispatchers.IO) {
             identRepository.update(ident)
             if (ident.defaultIdent) {
-                identRepository.setDefault(ident)
+                identRepository.setFeedAsDefaultFeed(ident)
             }
             dirty = false
         }
@@ -112,7 +103,7 @@ class IdentViewModel(
             aboutRepository.insertOrUpdate(about)
             dirty = false
         }
-        this.about = about
+
     }
 
 
@@ -147,10 +138,13 @@ class IdentViewModel(
         _showPublishDialog.value = false
     }
 
-    fun onDoPublishClicked(_about: About) {
-        this.about = _about
-        if (this.about == null) return
+    fun onDoPublishClicked(about: About) {
         GlobalScope.launch(Dispatchers.IO) {
+            val iAndA : IdentAndAbout = identRepository.findByPublicKey(about.about)
+            if (iAndA == null) {
+                return@launch
+            }
+            val ident =iAndA.ident
             val ssbSignableMessage = SsbSignableMessage.fromAbout(about!!)
             // precise some blockchain info
             var last: Message? = messageRepository.getLastMessage(about!!.about)
@@ -182,6 +176,7 @@ class IdentViewModel(
 
     fun connectWithInvite(ident: Ident, toCanonicalForm: String, ssbService: SsbService) {
         if (connecting) return
+
         ssbService.rpcHandler?.close()
         viewModelScope.launch {
             connecting = true
@@ -190,10 +185,9 @@ class IdentViewModel(
                     // TODO follow up on implementic connect with invite
                 })
             } catch (e: Exception) {
+                //Toast.makeText(context,e.message,Toast.LENGTH_LONG).show()
                 e.printStackTrace();
             }
         }
-
     }
-
 }

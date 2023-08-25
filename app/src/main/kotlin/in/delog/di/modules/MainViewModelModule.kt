@@ -30,14 +30,14 @@ val mainViewModel = module {
         database.identDao()
     }
 
-    single { FeedRepositoryImpl(get()) }
-    factory<IdentRepository> { (FeedRepositoryImpl(get())) }
-    single { IdentListViewModel(get()) }
-    viewModel { IdentViewModel(get(), get(), get()) }
+    single { FeedRepositoryImpl(get(),get()) }
+    factory<IdentRepository> { (FeedRepositoryImpl(get(), get())) }
+    single { IdentListViewModel(get(),get()) }
+    viewModel { IdentAndAboutViewModel(get(), get(), get()) }
     single { MessageRepositoryImpl(get()) }
     factory<MessageRepository> { (MessageRepositoryImpl(get())) }
     factory<MessageTreeRepository> { (MessageTreeRepositoryImpl(get())) }
-    viewModel { MessageListViewModel(get(), get()) }
+    viewModel { MessageListViewModel(get(), get(), get()) }
 
     factory<DraftRepository> { (DraftRepositoryImpl(get())) }
     viewModel { DraftListViewModel(get(), get()) }

@@ -17,20 +17,22 @@
  */
 package `in`.delog.ui.scene
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import `in`.delog.R
 import `in`.delog.db.model.Draft
 import `in`.delog.ui.LocalActiveFeed
-import `in`.delog.ui.component.MessageItem
-import `in`.delog.ui.component.toMessageViewData
+import `in`.delog.ui.component.*
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.DraftListViewModel
@@ -41,38 +43,43 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun DraftList(navController: NavHostController) {
-    val feed = LocalActiveFeed.current ?: return
+    val identAndAbout = LocalActiveFeed.current ?: return
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
+    val title = stringResource(id = R.string.drafts);
     LaunchedEffect(Unit) {
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
             NewDraftFab(navController = navController)
         }
-        bottomBarViewModel.setTitle("%s".format(feed.ident.alias))
-
+        bottomBarViewModel.setTitle(title)
     }
 
-
     val draftListViewModel =
-        koinViewModel<DraftListViewModel>(parameters = { parametersOf(feed.ident.publicKey) })
+        koinViewModel<DraftListViewModel>(parameters = { parametersOf(identAndAbout.ident.publicKey) })
     val fpgDrafts: Flow<PagingData<Draft>> = draftListViewModel.draftsPaged
-    val lazyMovieItems: LazyPagingItems<Draft> = fpgDrafts.collectAsLazyPagingItems()
+    val lazyMessageItems: LazyPagingItems<Draft> = fpgDrafts.collectAsLazyPagingItems()
 
-
-    LazyVerticalGrid(columns = GridCells.Fixed(1)) {
-        items(
-            count = lazyMovieItems.itemCount,
-        ) { index ->
-            lazyMovieItems[index]?.let {
-                MessageItem(
-                    navController = navController,
-                    message = it.toMessageViewData(),
-                    showToolbar = false,
-                    expand = false,
-                    onClickCallBack = {
-                        navController.navigate("${Scenes.DraftEdit.route}/${it.oid}")
-                    }
-                )
+    Column {
+        IdentityBox(identAndAbout = identAndAbout)
+        if (lazyMessageItems.itemCount==0) {
+            AppEmptyList()
+        }
+        LazyVerticalGrid(columns = GridCells.Fixed(1)) {
+            items(
+                count = lazyMessageItems.itemCount,
+            ) { index ->
+                lazyMessageItems[index]?.let {
+                    MessageItem(
+                        navController = navController,
+                        message = it.toMessageViewData(),
+                        showToolbar = false,
+                        expand = false,
+                        onClickCallBack = {
+                            navController.navigate("${Scenes.DraftEdit.route}/${it.oid}")
+                        }
+                    )
+                    ListSpacer()
+                }
             }
         }
     }

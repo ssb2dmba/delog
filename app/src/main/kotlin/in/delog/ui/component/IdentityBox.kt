@@ -18,14 +18,18 @@
 package `in`.delog.ui.component
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -36,32 +40,31 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.ui.theme.keySmall
-import java.net.URLEncoder
-import java.nio.charset.Charset
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun IdentityBox(
-    about: About,
+    identAndAbout: IdentAndAbout,
     short: Boolean = false,
-    navController: NavController,
-    mine: Boolean = false,
-    following: Boolean = false,
-    defaultIdent: Boolean = false
+    onClick: ((IdentAndAbout) -> Unit)? = null,
+    onLongClick: ((IdentAndAbout) -> Unit)? = null,
+    onDblClick: ((IdentAndAbout) -> Unit)? = null
 ) {
 
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+
+    if (identAndAbout.about == null) {
+        identAndAbout.about = About(identAndAbout.ident.publicKey)
+    }
 
     Column(
         modifier = Modifier
@@ -73,14 +76,14 @@ fun IdentityBox(
                 .fillMaxWidth()
         ) {
             Text(
-                text = about.about,
+                text = identAndAbout.ident.publicKey,
                 modifier = Modifier.padding(start = 56.dp)
                     .clickable {
-                    clipboardManager.setText(buildAnnotatedString { append(about.about) })
+                    clipboardManager.setText(buildAnnotatedString { append(identAndAbout.ident.publicKey) })
                     Toast
                         .makeText(
                             context,
-                            String.format("%s copied!", about.about),
+                            String.format("%s copied!", identAndAbout.ident.publicKey),
                             Toast.LENGTH_LONG
                         )
                         .show()
@@ -92,24 +95,23 @@ fun IdentityBox(
         }
         // alias
         Row(
-            modifier = Modifier.fillMaxWidth()
-                .clickable {
-                    var argUri = URLEncoder.encode(
-                        about.about,
-                        Charset
-                            .defaultCharset()
-                            .toString()
-                    )
-                    if (mine) {
-                        navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
-                    } else {
-                        navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onLongClick = {
+                        onLongClick?.let { it(identAndAbout) }
+                    },
+                    onClick = {
+                        onClick?.let { it(identAndAbout) }
+                    },
+                    onDoubleClick = {
+                        onDblClick?.let { it(identAndAbout)}
                     }
-                }
+                )
         ) {
             AsyncImage(
-                model = "https://robohash.org/${about.about}.png",
-                placeholder = rememberAsyncImagePainter("https://robohash.org/${about.about}.png"),
+                model = "https://robohash.org/${identAndAbout.about!!.about}.png",
+                placeholder = rememberAsyncImagePainter("https://robohash.org/${identAndAbout.about!!.about}.png"),
                 contentDescription = "Profile Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -124,7 +126,7 @@ fun IdentityBox(
             ) {
                 Row(Modifier.fillMaxWidth()) {
                     Text(
-                        text = about?.name ?: about.about,
+                        text = identAndAbout.about?.name ?: identAndAbout.ident.publicKey,
                         style = MaterialTheme.typography.headlineSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -134,7 +136,7 @@ fun IdentityBox(
                     )
                     Spacer(modifier = Modifier.weight(0.2f))
 
-                    if (defaultIdent) {
+                    if (identAndAbout.ident.defaultIdent) {
                         Badge(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -154,29 +156,15 @@ fun IdentityBox(
 
                 if (short) {
                     Text(
-                        text = if (about?.description != null) about.description!! else "",
+                        text = if (identAndAbout.about?.description != null) identAndAbout.about!!.description!! else "",
                         style = MaterialTheme.typography.bodySmall,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (short) 2 else Int.MAX_VALUE,
                     )
-                } else {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    ClickableTextField(
-                        text = if (about?.description != null) about.description!! else "",
-                        onClick = {})
                 }
-
             }
-
         }
-        if (!short) {
-
-        }
-
     }
-
-    ListSpacer()
-
 }
 
 
@@ -192,9 +180,8 @@ fun IdentityCardPreview() {
             1234,
             "priv",
             false,
-            "Oreo Cookie",
             1,
-            null
+            ""
         ),
         about = About(
             about = "@YpSbE5/7oWuf7k6zhU/wwbm28EffUggYEwVpDkOAdIg=.ed25519",
@@ -210,9 +197,8 @@ fun IdentityCardPreview() {
     ) {
         Column() {
             IdentityBox(
-                about = identAndAbout.about!!,
+                identAndAbout = identAndAbout,
                 short = false,
-                navController = navController
             )
         }
     }

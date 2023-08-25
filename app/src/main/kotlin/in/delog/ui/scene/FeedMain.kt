@@ -25,10 +25,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Draw
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -40,10 +37,11 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.db.AppDatabaseView
-import `in`.delog.db.model.About
 import `in`.delog.db.toMessageViewData
 import `in`.delog.ssb.SsbService
+import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.ListSpacer
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
@@ -70,11 +68,7 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
         bottomBarViewModel.setTitle("main")
     }
 
-    var id = navController.currentBackStackEntry?.arguments?.getString("id") ?: feedToReadKey
-
-    val viewModel = koinViewModel<MessageListViewModel>(parameters = { parametersOf(id) })
-
-    if (feedToReadKey == null) return
+    val viewModel = koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
 
     val context = LocalContext.current
     val ssbService: SsbService = get()
@@ -91,17 +85,15 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
     val lazyMessageItems: LazyPagingItems<AppDatabaseView.MessageInTree> =
         fpgMessages.collectAsLazyPagingItems()
     Column {
+        IdentityBox(
+            identAndAbout = viewModel.identAndAbout!!,
+            short = true,
+        )
+        if (lazyMessageItems.itemCount==0) {
+            AppEmptyList()
+        }
+        var previous_root: String? = null
         LazyVerticalGrid(columns = GridCells.Fixed(1)) {
-            if (viewModel.identAndAbout != null) {
-                item {
-                    IdentityBox(
-                        about = viewModel.identAndAbout?.about ?: About("", "", ""),
-                        navController = navController,
-                        short = true,
-                        mine = false
-                    )
-                }
-            }
             items(
                 count = lazyMessageItems.itemCount,
             ) { index ->
@@ -112,11 +104,16 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
                         message = it.toMessageViewData(),
                         showToolbar = true,
                         expand = false,
-                        hasLine = if (it.ct > 0 || it.level > 0) true else false,
+                        hasLine = if (it.replies > 0 || it.level > 0) true else false,
                         onClickCallBack = {
                             navController.navigate("${Scenes.MainFeed.route}/${argUri}")
                         }
                     )
+                    if (it.root==null || it.root!=previous_root) {
+                        ListSpacer()
+                    }
+                    previous_root = if (it.root == null) it.key else it.root
+
                 }
             }
         }

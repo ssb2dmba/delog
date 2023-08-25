@@ -65,14 +65,11 @@ fun IdentNew(navController: NavHostController) {
             8008,
             identity!!.privateKeyAsBase64String(),
             false,
-            identity!!.toCanonicalForm().subSequence(0,5).toString(),
-            1,
-            ""
+            -1,
+            null
         );
         identListViewModel.insert(ident = ident)
-        if (insertionState != null) {
-            navController.navigate("${Scenes.FeedList.route}")
-        }
+        navController.navigate("${Scenes.FeedList.route}")
     }
 
     if (identity == null) {

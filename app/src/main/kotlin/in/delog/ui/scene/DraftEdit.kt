@@ -36,6 +36,7 @@ import `in`.delog.R
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.ui.LocalActiveFeed
+import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.component.toMessageViewData
@@ -160,10 +161,10 @@ fun DraftConfirmDeleteDialog(navHostController: NavHostController, viewModel: Dr
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DraftEdit(navController: NavHostController, draftId: String) {
-    val feed = LocalActiveFeed.current ?: return
+    val identAndAbout = LocalActiveFeed.current ?: return
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    val draftViewModel = koinViewModel<DraftViewModel>(parameters = { parametersOf(feed.ident) })
-    val title = stringResource(id = R.string.drafts)
+    val draftViewModel = koinViewModel<DraftViewModel>(parameters = { parametersOf(identAndAbout.ident) })
+    val title = stringResource(id = R.string.save_draft)
     var link: MessageAndAbout? by remember {
         mutableStateOf(null)
     }
@@ -189,7 +190,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
     }
 
     var contentAsText by remember { mutableStateOf(draftViewModel.draft!!.contentAsText) }
-
+    bottomBarViewModel.setTitle(title)
     bottomBarViewModel.setActions {
         IconButton(
             modifier = Modifier.height(56.dp),
@@ -207,7 +208,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
             SaveDraftFab {
                 val draft = Draft(
                     oid = draftId.toInt(),
-                    author = feed.ident.publicKey,
+                    author = identAndAbout.ident.publicKey,
                     timestamp = System.currentTimeMillis(),
                     type = draftViewModel.draft!!.type,
                     contentAsText = contentAsText,
@@ -258,12 +259,13 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
             elevation = CardDefaults.cardElevation(),
             modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
         ) {
+            IdentityBox(identAndAbout = identAndAbout)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
                 if (draftViewModel.dirtyStatus) {
-                    focusRequester.requestFocus()
+
                     // edit mode
                     var placeholder =
                         if (link!=null) "write your answer" else "write you message"
@@ -291,6 +293,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                         hasLine = link!=null,
                         onClickCallBack = {
                             draftViewModel.dirtyStatus=!draftViewModel.dirtyStatus
+                            focusRequester.requestFocus()
                         })
                 }
             }

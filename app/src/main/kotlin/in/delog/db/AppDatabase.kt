@@ -34,7 +34,7 @@ import `in`.delog.db.model.*
     views = [
         AppDatabaseView.MessageInTree::class
     ],
-    version = 5
+    version = 8
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun identDao(): IdentDao

@@ -31,6 +31,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
+import `in`.delog.db.model.About
+import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.ssb.ForkSsbService
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppBottomAppBar
@@ -65,7 +67,6 @@ fun MyApp() {
 
     val feedsViewModel = koinViewModel<IdentListViewModel>()
     val defaultFeed by feedsViewModel.default.observeAsState(null)
-
     CompositionLocalProvider(
         LocalActiveFeed provides defaultFeed
     ) {

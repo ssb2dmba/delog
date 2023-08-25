@@ -22,7 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
 import `in`.delog.ssb.SsbService
-import `in`.delog.viewmodel.IdentViewModel
+import `in`.delog.viewmodel.IdentAndAboutViewModel
 import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -30,15 +30,15 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun FeedInit(navController: NavController, id: String) {
-    val vm = koinViewModel<IdentViewModel>(parameters = { parametersOf(id) })
+    val vm = koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(id) })
     LaunchedEffect(id) {
-        id?.let { vm.setCurrentIdent(it) }
+        id?.let { vm.setCurrentIdentByPk(it) }
     }
-    if (vm.ident == null) {
+    if (vm.identAndAbout == null) {
         return
     }
     val ssbService: SsbService = get()
-    vm.ident!!.invite?.let { vm.connectWithInvite(vm.ident!!, it, ssbService) }
+    vm.identAndAbout!!.ident!!.invite?.let { vm.connectWithInvite(vm.identAndAbout!!.ident!!, it, ssbService) }
     Text(text = "feed init done")
     // TODO follow up on redirect
 }

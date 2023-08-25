@@ -11,10 +11,13 @@ class AppDatabaseView {
             "       SELECT " +
             "           0 AS level, " +
             "           author as pauthor, " +
-            "           a1.name, a1.image, " +
+            "           a1.name, " +
+            "           a1.image, " +
+            "           name as pname," +
             "           CAST(message.key AS varchar(50)) AS seq, " +
             "           message.timestamp as ts, " +
-            "           (select count(*) from message x where x.branch=message.key) as ct, " +
+            "           (select count(*) from message x where x.branch=message.key and x.type='post') as replies, " +
+            "           (select count(*) from message x where x.branch=message.key and x.type='vote') as votes, " +
             "           message.key, " +
             "           message.author, " +
             "           message.timestamp, " +
@@ -29,9 +32,11 @@ class AppDatabaseView {
             "           level + 1 AS level, " +
             "           cast(pauthor  as varchar(255)) pauthor," +
             "           a2.name, a2.image, " +
+            "           CAST(pname  as varchar(50)) as pname," +
             "           CAST(seq|| '_' || CAST(m2.key AS VARCHAR (50)) AS VARCHAR(50)) AS seq, " +
             "           min(ts,m2.timestamp) as ts, " +
-            "           (select count(*) from message x where x.branch=x.key) as ct," +
+            "           (select count(*) from message x where x.branch=x.key and x.type='post') as replies," +
+            "           (select count(*) from message x where x.branch=x.key and x.type='vote') as votes," +
             "           m2.key," +
             "           m2.author, " +
             "           m2.timestamp, " +
@@ -47,9 +52,13 @@ class AppDatabaseView {
     data class MessageInTree(
         val level: Long,
         val pauthor: String,
+        val name: String?,
+        val image: String?,
+        val pName: String?,
         val seq: String,
         val ts: Long,
-        val ct: Long,
+        val replies: Long,
+        val votes: Long,
         val key: String,
         val author: String,
         val timestamp: Long,
@@ -78,5 +87,8 @@ fun AppDatabaseView.MessageInTree.toMessageViewData() = MessageViewData(
     author = author,
     contentAsText = contentAsText,
     root = root,
-    branch = branch
+    branch = branch,
+    authorName = name,
+    authorImage = image,
+    pName = pName
 )

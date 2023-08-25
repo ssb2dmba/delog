@@ -40,10 +40,11 @@ import coil.compose.rememberAsyncImagePainter
 import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.ssb.*
+import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.keySmall
 import `in`.delog.viewmodel.BottomBarViewModel
-import `in`.delog.viewmodel.IdentViewModel
+import `in`.delog.viewmodel.IdentAndAboutViewModel
 import org.apache.tuweni.io.Base64
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -53,7 +54,7 @@ import java.util.*
 
 
 @Composable
-fun IdentDetailTopBarMenu(navHostController: NavHostController, vm: IdentViewModel) {
+fun IdentDetailTopBarMenu(navHostController: NavHostController, vm: IdentAndAboutViewModel) {
     var showMenu by remember { mutableStateOf(false) }
     IconButton(onClick = { showMenu = !showMenu }) {
         Icon(imageVector = Icons.Outlined.Plumbing, contentDescription = null)
@@ -69,7 +70,7 @@ fun IdentDetailTopBarMenu(navHostController: NavHostController, vm: IdentViewMod
                     enabled = true,
                     onClick = {
                         showMenu = false
-                        navHostController.navigate("${Scenes.FeedDetail.route}/${vm.ident!!.oid}")
+                        navHostController.navigate("${Scenes.FeedDetail.route}/${vm.identAndAbout!!.ident.oid}")
                     },
                     text = { Text(text = stringResource(R.string.network)) }
                 )
@@ -80,7 +81,7 @@ fun IdentDetailTopBarMenu(navHostController: NavHostController, vm: IdentViewMod
                     onClick = {
                         showMenu = false
                         var argUri = URLEncoder.encode(
-                            vm.ident!!.publicKey,
+                            vm.identAndAbout!!.ident.publicKey,
                             Charset.defaultCharset().toString()
                         )
                         navHostController.navigate("${Scenes.AboutEdit.route}/${argUri}")
@@ -114,7 +115,7 @@ fun IdentDetail(
     navHostController: NavHostController,
     id: String
 ) {
-    val vm = koinViewModel<IdentViewModel>(parameters = { parametersOf(id) })
+    val vm = koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(id) })
 
 
     val showDeleteDialogState: Boolean by vm.showDeleteDialog.collectAsState()
@@ -124,7 +125,7 @@ fun IdentDetail(
     LaunchedEffect(id) {
         vm.setCurrentIdent(id)
     }
-    if (vm.ident == null) {
+    if (vm.identAndAbout == null) {
         return
     }
 
@@ -135,7 +136,7 @@ fun IdentDetail(
         IdentDetailExportDialog(vm)
     }
 
-    IdentEdit(ident = vm.ident!!, navHostController, vm)
+    IdentEdit(ident = vm.identAndAbout!!.ident, navHostController, vm)
 
 }
 
@@ -143,7 +144,7 @@ fun IdentDetail(
 @Composable
 fun IdentDetailConfirmDeleteDialog(
     navHostController: NavHostController,
-    viewModel: IdentViewModel
+    viewModel: IdentAndAboutViewModel
 ) {
     AlertDialog(onDismissRequest = { viewModel.onDeleteDialogDismiss() },
         containerColor = MaterialTheme.colorScheme.surface,
@@ -180,7 +181,7 @@ fun IdentDetailConfirmDeleteDialog(
                     .padding(15.dp)
                     .clickable {
                         viewModel.onDeleteDialogDismiss()
-                        viewModel.delete(viewModel.ident!!)
+                        viewModel.delete(viewModel.identAndAbout!!.ident)
                         navHostController.navigate(Scenes.FeedList.route) {
                             popUpTo(Scenes.FeedDetail.route) {
                                 inclusive = true
@@ -195,15 +196,19 @@ fun IdentDetailConfirmDeleteDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewModel) {
+fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAboutViewModel) {
 
-    var alias by remember { mutableStateOf(ident.alias) }
-    var aliasHasError by remember { mutableStateOf(false) }
     var server by remember { mutableStateOf(ident.server) }
-    var serverHasError by remember { mutableStateOf(false) } // TODO improve form
     var port by remember { mutableStateOf(ident.port) }
     var defaultIdent by remember { mutableStateOf(ident.defaultIdent) }
 
+    LaunchedEffect(key1 = ident ) {
+        vm.setCurrentIdentByPk(ident.publicKey)
+    }
+    if (vm.identAndAbout == null) {
+        return
+    }
+    val identAndAbout = vm.identAndAbout
 
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     val title = stringResource(id = R.string.edit)
@@ -214,7 +219,6 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewM
         Spacer(modifier = Modifier.weight(1f))
         ExtendedFloatingActionButton(
             onClick = {
-                ident.alias = alias
                 ident.port = port
                 ident.server = server
                 ident.defaultIdent = defaultIdent
@@ -255,35 +259,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewM
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row {
-                AsyncImage(
-                    model = "https://robohash.org/${ident.publicKey}.png",
-                    placeholder = rememberAsyncImagePainter("https://robohash.org/${ident.publicKey}.png"),
-                    contentDescription = "Profile Image",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(size = 48.dp)
-                        .clip(shape = CircleShape)
-                        .background(MaterialTheme.colorScheme.outline),
-
-                    )
-                // server
-                OutlinedTextField(
-                    value = alias,
-                    onValueChange = { value ->
-                        alias = value
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(id = R.string.alias),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    },
-                    modifier = Modifier.weight(0.8f),
-                    isError = aliasHasError,
-                )
-
-            }
+            IdentityBox(identAndAbout = identAndAbout!!)
 
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -300,8 +276,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewM
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
-                modifier = Modifier.weight(0.8f),
-                isError = aliasHasError, // TODO fixme
+                modifier = Modifier.weight(0.8f)
             )
 
             OutlinedTextField(
@@ -318,8 +293,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewM
                 },
                 modifier = Modifier
                     .width(80.dp)
-                    .padding(start = 8.dp),
-                isError = aliasHasError,
+                    .padding(start = 8.dp)
             )
         }
 
@@ -332,7 +306,6 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewM
             )
             Text(
                 text = stringResource(R.string.default_ident),
-                //color= MaterialTheme.colorScheme.onSecondaryContainer,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(top = 16.dp)
             )
@@ -342,7 +315,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentViewM
 
 @Composable
 fun IdentDetailExportDialog(
-    viewModel: IdentViewModel
+    viewModel: IdentAndAboutViewModel
 ) {
     AlertDialog(onDismissRequest = { viewModel.onExportDialogDismiss() },
         containerColor = MaterialTheme.colorScheme.surface,
@@ -354,7 +327,7 @@ fun IdentDetailExportDialog(
             )
         },
         text = {
-            val entropy: ByteArray = Base64.decode(viewModel.ident!!.privateKey).toArray()
+            val entropy: ByteArray = Base64.decode(viewModel.identAndAbout!!.ident.privateKey).toArray()
             val arr: List<String> = WordList(Locale.ENGLISH).words
             val dict = Dict(arr.toTypedArray())
             var mnemonicCode = secretKeyToMnemonic(entropy, dict)

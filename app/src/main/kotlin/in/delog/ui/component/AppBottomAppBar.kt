@@ -21,9 +21,7 @@ package `in`.delog.ui.component
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Menu
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -43,9 +41,10 @@ fun AppBottomAppBar(onNavIconClick: () -> Job) {
     val actions: (@Composable RowScope.() -> Unit)? by bottomBarViewModel.actions.observeAsState(
         null
     )
+    val title = bottomBarViewModel.title.observeAsState("").value;
 
     BottomAppBar(
-        contentPadding = PaddingValues(start = 24.dp, end = 8.dp),
+        contentPadding = PaddingValues(start = 18.dp, end = 8.dp),
         content = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
                 Row(
@@ -58,7 +57,14 @@ fun AppBottomAppBar(onNavIconClick: () -> Job) {
                     ) {
                         Icon(Icons.Outlined.Menu, contentDescription = "menu")
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        modifier = Modifier.padding(start = 6.dp),
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    //Spacer(modifier = Modifier.width(8.dp))
                     actions?.let { it() }
                 }
             }

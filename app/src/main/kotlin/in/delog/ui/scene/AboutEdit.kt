@@ -18,6 +18,7 @@
 package `in`.delog.ui.scene
 
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,7 +52,8 @@ import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.keySmall
 import `in`.delog.viewmodel.BottomBarViewModel
-import `in`.delog.viewmodel.IdentViewModel
+import `in`.delog.viewmodel.IdentAndAboutViewModel
+import io.vertx.core.http.impl.HttpClientConnection.log
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.util.*
@@ -63,7 +65,7 @@ fun AboutEdit(
     navHostController: NavHostController,
     pubKey: String
 ) {
-    val vm = koinViewModel<IdentViewModel>(parameters = { parametersOf(pubKey) })
+    val vm = koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(pubKey) })
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
@@ -75,13 +77,15 @@ fun AboutEdit(
 
     val title = stringResource(R.string.about)
     LaunchedEffect(dirty) {
+        Log.i("DEBUG", "calling set current ident by pk with " + pubKey)
         vm.setCurrentIdentByPk(pubKey)
         bottomBarViewModel.setTitle(title)
     }
-    if (vm.about == null) {
+    if (vm.identAndAbout == null) {
+        Log.i("DEBUG", "vm.identAndAbout is null !!")
         return
     }
-    val about = vm.about!!
+    val about = vm.identAndAbout!!.about!!
 
     var name by remember { mutableStateOf(about.name) }
     var description by remember { mutableStateOf(about.description) }
@@ -214,11 +218,8 @@ fun AboutEdit(
                     .padding(vertical = 4.dp, horizontal = 8.dp)
             ) {
                 IdentityBox(
-                    about = about,
-                    short = false,
-                    navController = navHostController,
-                    mine = true,
-                    following = false
+                    identAndAbout = vm.identAndAbout!!,
+                    short = false
                 )
             }
         }
@@ -250,7 +251,7 @@ fun AboutEdit(
 @Composable
 fun AboutEditPublishDialog(
     navHostController: NavHostController,
-    viewModel: IdentViewModel,
+    viewModel: IdentAndAboutViewModel,
     about: About
 ) {
     AlertDialog(onDismissRequest = { viewModel.onExportDialogDismiss() },

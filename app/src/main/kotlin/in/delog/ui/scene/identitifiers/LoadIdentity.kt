@@ -69,7 +69,7 @@ fun LoadIdentity(callBack: KFunction2<Identity?, String?, Unit>) {
             modifier = Modifier.padding(12.dp)
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically,
+        Row(verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.Center
         ) {
             Box(

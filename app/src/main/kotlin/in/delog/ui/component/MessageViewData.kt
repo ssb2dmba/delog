@@ -40,7 +40,8 @@ data class MessageViewData(
     var authorName: String? = null,
     var authorImage: String? = null,
     var root: String? = null,
-    var branch: String? = null
+    var branch: String? = null,
+    var pName: String? = null,
 )
 
 fun Message.toMessageViewData() = MessageViewData(
@@ -56,7 +57,7 @@ fun Message.toMessageViewData() = MessageViewData(
 fun Draft.toMessageViewData() = MessageViewData(
     key = "",
     timestamp = timestamp,
-    author = "me",
+    author = author,
     contentAsText = contentAsText
 )
 

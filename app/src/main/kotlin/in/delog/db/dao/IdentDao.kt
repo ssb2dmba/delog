@@ -57,7 +57,7 @@ interface IdentDao {
     fun liveCount(): LiveData<Int>
 
     @Query("SELECT * FROM ident ORDER BY default_ident desc LIMIT 1")
-    fun getDefault(): Flow<IdentAndAbout>
+    fun getDefaultFeed(): Flow<IdentAndAbout>
 
     @Query("UPDATE ident set default_ident = 0 ")
     fun _unsetDefault()
@@ -69,7 +69,7 @@ interface IdentDao {
 }
 
 @Transaction
-fun IdentDao.setDefault(oid: Long) {
+fun IdentDao.setFeedAsDefaultFeed(oid: Long) {
     _unsetDefault()
     _setDefault(oid)
 }
