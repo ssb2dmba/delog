@@ -224,6 +224,7 @@ fun DraftNew(
     }
 }
 
+
 @Composable
 fun ReplyHeader(link: MessageAndAbout?, draftMode: String?) {
     if (link == null || link.about!! == null) return
