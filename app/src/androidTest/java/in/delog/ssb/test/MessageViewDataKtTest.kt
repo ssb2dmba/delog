@@ -17,22 +17,27 @@ class MessageViewDataKtTest {
 
     @Test
     fun draftToMessageViewData() {
-        var draft = Draft(1, "me", 1, "content")
+        var draft = Draft(1, "me", 1, "post","content", "qwerty","12345")
         val mvd = draft.toMessageViewData()
         assertEquals(draft.author, mvd.author)
         assertEquals(draft.contentAsText, mvd.contentAsText)
         assertEquals(draft.timestamp, mvd.timestamp)
+        assertEquals(draft.root, mvd.root)
+        assertEquals(draft.branch, mvd.branch)
     }
 
 
     @Test
     fun messageToMessageViewData() {
-        val msg = Message("#key", "#previous", 1, "@author", 1, "content", "post", "sig.ed25")
+        val msg = Message("#key", "#previous", 1, "@author", 1,
+            "content", "post", "sig.ed25","testr","testb")
         val mvd = msg.toMessageViewData()
         assertEquals(msg.key, mvd.key)
         assertEquals(msg.author, mvd.author)
         assertEquals(msg.contentAsText, mvd.contentAsText)
         assertEquals(msg.timestamp, mvd.timestamp)
+        assertEquals(msg.root, mvd.root)
+        assertEquals(msg.branch, mvd.branch)
     }
 
     @Test

@@ -18,6 +18,7 @@
 package `in`.delog.ui.scene.identitifiers
 
 
+import android.util.Log
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import `in`.delog.db.model.Ident
@@ -48,6 +49,7 @@ fun IdentNew(navController: NavHostController) {
 
     fun setInvite(s: String) {
         invite = s
+        Log.i("invite","invite set to " + s)
     }
 
     fun setIdentity(pIdentity: Identity?, pInviteUrl: String?) {

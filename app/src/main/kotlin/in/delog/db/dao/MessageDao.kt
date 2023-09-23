@@ -63,6 +63,12 @@ interface MessageDao {
     @Query("SELECT * FROM message WHERE author = :author order by sequence desc limit 1")
     fun getLastMessage(author: String): Message?
 
+    @Query("select sequence as seq from message where author= :author\n" +
+            "UNION ALL \n" +
+            "SELECT 0 as seq\n" +
+            "order by seq desc limit 1")
+    fun getLastSequence(author: String): Long
+
     @Query("SELECT * FROM ident WHERE public_key = :pk LIMIT 1")
     fun getFeed(pk: String): IdentAndAbout
 

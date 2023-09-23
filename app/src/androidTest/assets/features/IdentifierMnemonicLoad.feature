@@ -7,8 +7,8 @@ Feature: Onboarding with mnemonic
     Then I open drawer
     Then I click 'identifiers'
     Then I click button 'new_identifier'
-    Then "load new identifier" text is presented
-    Then I click 'Restore from mnemonic'
+    Then "load identifier" text is presented
+    Then I click 'from mnemonic'
     Then "Please select your 24 words mnemonic" text is presented
     Then I fill input with testTag "input_key" with value "abstract"
     Then I fill input with testTag "input_key" with value "panther"

@@ -24,9 +24,7 @@ import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.toJsonResponse
-import `in`.delog.repository.AboutRepository
-import `in`.delog.repository.ContactRepositoryImpl
-import `in`.delog.repository.MessageRepositoryImpl
+import `in`.delog.repository.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -36,20 +34,21 @@ import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClient
 import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClientFactory
 import org.apache.tuweni.scuttlebutt.lib.model.FeedMessage
+import org.apache.tuweni.scuttlebutt.lib.model.toAbout
 import org.apache.tuweni.scuttlebutt.lib.model.toMessage
 import org.apache.tuweni.scuttlebutt.rpc.*
 import org.apache.tuweni.scuttlebutt.rpc.mux.ScuttlebuttStreamHandler
 
 
 class SsbService(
-    messageRepositoryImpl: MessageRepositoryImpl,
-    contactRepositoryImpl: ContactRepositoryImpl,
+    messageRepository: MessageRepository,
+    contactRepository: ContactRepository,
     aboutRepository: AboutRepository
 ) :
-    BaseSsbService(messageRepositoryImpl, contactRepositoryImpl) {
-
-
-    var aboutRepository = aboutRepository
+    BaseSsbService() {
+    val messageRepository = messageRepository
+    val contactRepository = contactRepository
+    val aboutRepository = aboutRepository
 
 
     suspend fun reconnect(pFeed: Ident) {
@@ -72,12 +71,14 @@ class SsbService(
         val myFeed = this.toCanonicalForm()
         GlobalScope.launch {
             try {
+                // let's check our backup, moved device
+                var ourSequence = messageRepository.getLastSequence(myFeed)
+                createHistoryStream(myFeed, ourSequence)
                 // let's call all of our friends
-                createHistoryStream(myFeed, 0)
-               // contactRepositoryImpl.geContacts(myFeed).forEach {
-               //     val ourSequence = messageRepositoryImpl.getLastSequence(it.follow)
-               //     createHistoryStream(it.follow, 0)
-               // }
+                contactRepository.geContacts(myFeed).forEach { // todo implement multiserver
+                    ourSequence = messageRepository.getLastSequence(it.follow)
+                    createHistoryStream(it.follow, ourSequence)
+                }
             } catch (e: Exception) {
                 println(e.message)
             }
@@ -115,7 +116,7 @@ class SsbService(
         var hasMoreResults = true
         var ct = 0
         while (hasMoreResults) {
-            val messages = messageRepositoryImpl.getMessagePage(id, remoteSequence, batchSize)
+            val messages = messageRepository.getMessagePage(id, remoteSequence, batchSize)
             if (messages.size < batchSize) {
                 hasMoreResults = false
             }
@@ -141,29 +142,19 @@ class SsbService(
         Log.d(TAG, "sending endstream for: " + rpcMessage.requestNumber())
         rpcHandler?.endStream(rpcMessage.requestNumber() * -1)
 
+        val pk = this.toCanonicalForm()
         // server has more message than us, that mean that our device is late and can be upgraded
-        val ourSequence = messageRepositoryImpl.getLastSequence(this.toCanonicalForm())
-        Log.i(
-            TAG,
-            "%s our: %s ,theirs: %s".format(this.toCanonicalForm(), ourSequence, remoteSequence)
-        )
+        val ourSequence = messageRepository.getLastSequence(pk)
         if (remoteSequence > ourSequence) {
-            Log.i(TAG, "trying to retrieve messages from other device")
             GlobalScope.launch {
-                createHistoryStream(ourSequence + 1)
+                createHistoryStream(pk,ourSequence + 1)
             }
         }
     }
 
-
-    fun createHistoryStream(sequence: Long) {
-        createHistoryStream(this.toCanonicalForm(), sequence)
-    }
-
-    fun createHistoryStream(id: String, sequence: Long) {
-        Log.i(TAG, "calling remote createHistoryStream(%s, %s)".format(id, sequence))
+    fun createHistoryStream(pk: String, sequence: Long) {
         val params = HashMap<String, Any>()
-        params["id"] = id
+        params["id"] = pk
         params["seq"] = sequence
         params["limit"] = 100
         params["keys"] = true
@@ -201,7 +192,7 @@ class SsbService(
     }
 
     fun routeMessage(message: RPCResponse) {
-
+        Log.i("routeMessage", message.asString())
         var m = message.asJSON(objectMapper, FeedMessage::class.java)
         if (m.type.isPresent) {
             when (m.type.get()) {
@@ -236,48 +227,9 @@ class SsbService(
     private fun storePostMessage(m: FeedMessage) {
         var message: Message = m.toMessage()
         GlobalScope.launch {
-            messageRepositoryImpl.maybeAddMessage(message)
+            messageRepository.maybeAddMessage(message)
         }
     }
 
-
-    open suspend fun connectWithInvite(s: String, feed: Ident, callBack: (RPCResponse) -> Unit) {
-        setIdentity(feed)
-        val invite: Invite = Invite.fromCanonicalForm(s.drop(5));
-        // hack replace invite by our current feed so we can bypass server name for dev/test
-        invite.port = feed.port
-        invite.host = feed.server
-
-        var ssbClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
-            vertx,
-            keyPair!!, invite, networkKeyBytes32
-        )
-
-        val params = HashMap<String, String>()
-        params["feed"] = feed.publicKey
-        val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
-        val rpcMessageAsyncResult = ssbClient.rawRequestService.makeAsyncRequest(asyncRequest)
-        println(rpcMessageAsyncResult.body().toString())
-        callBack(rpcMessageAsyncResult)
-    }
-
 }
 
-private fun FeedMessage.toAbout(): About? {
-    val ssbMe: SsbMessageContent = Json.decodeFromString<SsbMessageContent>(
-        SsbMessageContent.serializer(),
-        this.value.contentAsString
-    )
-    return if (ssbMe.about == null) {
-        null
-    } else {
-        About(
-            about = ssbMe.about!!,
-            description = ssbMe.description,
-            image = ssbMe.image,
-            name = ssbMe.name,
-            dirty = false
-        )
-    }
-
-}

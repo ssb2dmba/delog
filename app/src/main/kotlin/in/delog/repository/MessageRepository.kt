@@ -57,8 +57,7 @@ class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageReposit
     }
 
     override fun getLastSequence(author: String): Long {
-        var m = messageDao.getLastMessage(author)
-        return if (m == null) 0L else m.sequence // todo sql optimize
+        return messageDao.getLastSequence(author)
     }
 
     override suspend fun addMessage(message: Message) {

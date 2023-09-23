@@ -51,12 +51,13 @@ class FeedMessageDeserializer : JsonDeserializer<FeedMessage>() {
     }
 
     private fun getKeyValue(key: String, content: JsonNode): Optional<String> {
-        return if (content.nodeType != JsonNodeType.STRING) {
-            val type = content[key]
-            Optional.of(type.asText())
-        } else {
-            Optional.empty()
+        if (content.nodeType != JsonNodeType.STRING) {
+            val value = content[key]
+            if (value!=null) {
+                return Optional.of(value.asText())
+            }
         }
+        return Optional.empty()
     }
 
 }

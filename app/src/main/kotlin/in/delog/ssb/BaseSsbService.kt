@@ -30,21 +30,20 @@ import org.apache.tuweni.crypto.sodium.Signature
 import org.apache.tuweni.crypto.sodium.Signature.PublicKey
 import org.apache.tuweni.io.Base64
 import org.apache.tuweni.scuttlebutt.Identity
+import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.handshake.vertx.SecureScuttlebuttVertxClient
 import org.apache.tuweni.scuttlebutt.lib.FeedService
+import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClient
+import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClientFactory
 import org.apache.tuweni.scuttlebutt.rpc.*
 import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
 import java.net.ConnectException
 import java.util.*
 
-open class BaseSsbService(
-    messageRepositoryImpl: MessageRepositoryImpl,
-    contactRepositoryImpl: ContactRepositoryImpl
-) {
+open class BaseSsbService {
 
     lateinit var callBack: () -> Unit
-    var messageRepositoryImpl = messageRepositoryImpl
-    var contactRepositoryImpl = contactRepositoryImpl
+
     var rpcHandler: RPCHandler? = null
 
     lateinit var feedService: FeedService
@@ -67,9 +66,36 @@ open class BaseSsbService(
         }
     }
 
+    fun toCanonicalForm(): String {
+        val identity = keyPair?.let { Identity.fromKeyPair(it) }
+        return identity?.toCanonicalForm() ?: "";
+    }
+
+    open suspend fun connectWithInvite(feed: Ident, callBack: (RPCResponse) -> Unit) {
+        setIdentity(feed)
+        if (feed.invite==null) {
+            Log.e("ssb", "attempting to connect with invite but no invite !")
+            return
+        }
+        val inviteString = feed.invite!!
+        val invite: Invite = Invite.fromCanonicalForm(inviteString);
+
+
+        var ssbClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
+            vertx,
+            keyPair!!, invite, networkKeyBytes32
+        )
+
+        val params = HashMap<String, String>()
+        params["feed"] = feed.publicKey
+        val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
+        val rpcMessageAsyncResult = ssbClient.rawRequestService.makeAsyncRequest(asyncRequest)
+        callBack(rpcMessageAsyncResult)
+    }
+
 
     open suspend fun connect(pFeed: Ident, terminationFn: () -> Unit): RPCHandler? {
-        setIdentity(pFeed) // TODO to rework
+        setIdentity(pFeed)
         if (keyPair == null || host.isEmpty()) {
             Log.w(TAG, "attempting to connect but no identity")
             return null
@@ -79,9 +105,9 @@ open class BaseSsbService(
             SecureScuttlebuttVertxClient(vertx, keyPair!!, networkKeyBytes32)
         for (i in 0..1) {
             try {
-                val remotePublicKey =
-                    PublicKey.fromBytes(Base64.decode("YpSbE5/7oWuf7k6zhU/wwbm28EffUggYEwVpDkOAdIg="))
-                rpcHandler = makeRPCHandler(remotePublicKey)
+                val invite: Invite = Invite.fromCanonicalForm(pFeed.invite!!);
+                val remotePublicKey = invite.identity.ed25519PublicKey();
+                rpcHandler = makeRPCHandler(remotePublicKey!!)
                 feedService = FeedService(rpcHandler!!)
                 return rpcHandler
             } catch (e: ConnectException) {
@@ -93,7 +119,7 @@ open class BaseSsbService(
     }
 
     @Throws(Exception::class)
-    suspend fun makeRPCHandler(remotePublicKey: PublicKey): RPCHandler? {
+    private suspend fun makeRPCHandler(remotePublicKey: PublicKey): RPCHandler? {
         rpcHandler = secureScuttlebuttVertxClient
             ?.connectTo(
                 port,
@@ -114,10 +140,11 @@ open class BaseSsbService(
     }
 
     internal open fun onRemoteProcedureCall(rpcMessage: RPCMessage) {
-        assert(false) // todo extract interface
+        // overwritten ...
+        assert(false)
     }
 
-    fun setIdentity(pFeed: Ident) {
+    private fun setIdentity(pFeed: Ident) {
         if (pFeed == null || pFeed.privateKey == null) {
             return
         }
@@ -127,12 +154,6 @@ open class BaseSsbService(
         keyPair = pFeed.asKeyPair()
     }
 
-    fun toCanonicalForm(): String {
-        val identity = keyPair?.let { Identity.fromKeyPair(it) }
-        return identity?.toCanonicalForm() ?: "";
-    }
+
 
 }
-
-@ExperimentalUnsignedTypes // just to make it clear that the experimental unsigned types are used
-fun ByteArray.toHexString() = asUByteArray().joinToString("") { it.toString(16).padStart(2, '0') }
