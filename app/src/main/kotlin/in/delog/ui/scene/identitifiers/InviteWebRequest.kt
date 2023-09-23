@@ -46,7 +46,7 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 Text(
-                    "contacting dmba.info ...",
+                    "contacting $startUrl",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(12.dp)
                 )

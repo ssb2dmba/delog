@@ -17,10 +17,9 @@
  */
 package `in`.delog.ui.scene
 
-import androidx.compose.foundation.background
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -29,14 +28,11 @@ import androidx.compose.material.icons.outlined.Plumbing
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.ssb.*
@@ -202,7 +198,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     var port by remember { mutableStateOf(ident.port) }
     var defaultIdent by remember { mutableStateOf(ident.defaultIdent) }
 
-    LaunchedEffect(key1 = ident ) {
+    LaunchedEffect(key1 = ident) {
         vm.setCurrentIdentByPk(ident.publicKey)
     }
     if (vm.identAndAbout == null) {
@@ -250,12 +246,12 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
             // public key
             Row {
 
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = ident.publicKey,
-                        style = keySmall,
-                    )
-                }
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = ident.publicKey,
+                    style = keySmall,
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -295,6 +291,8 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                     .width(80.dp)
                     .padding(start = 8.dp)
             )
+
+
         }
 
 
@@ -310,8 +308,31 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                 modifier = Modifier.padding(top = 16.dp)
             )
         }
+
+        val context = LocalContext.current
+        if (identAndAbout!!.ident.invite != null) {
+            Row() {
+                Button(
+                    onClick = {
+                        vm.connectWithInvite(identAndAbout.ident) {
+                            Toast.makeText(context, it.asString(), Toast.LENGTH_LONG).show()
+                        }
+
+                    }
+                ) {
+                    Text(text = "redeem invite")
+                }
+            }
+        }
+
+        if (vm.networkError !=null) {
+            Toast.makeText(context, vm.networkError, Toast.LENGTH_LONG).show()
+            //vm.networkError = null
+        }
+
     }
 }
+
 
 @Composable
 fun IdentDetailExportDialog(
@@ -327,7 +348,8 @@ fun IdentDetailExportDialog(
             )
         },
         text = {
-            val entropy: ByteArray = Base64.decode(viewModel.identAndAbout!!.ident.privateKey).toArray()
+            val entropy: ByteArray =
+                Base64.decode(viewModel.identAndAbout!!.ident.privateKey).toArray()
             val arr: List<String> = WordList(Locale.ENGLISH).words
             val dict = Dict(arr.toTypedArray())
             var mnemonicCode = secretKeyToMnemonic(entropy, dict)

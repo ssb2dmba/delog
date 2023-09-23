@@ -64,13 +64,7 @@ fun NavGraph(navController: NavHostController) {
             backStackEntry.arguments?.getString(id)
                 ?.let { AboutEdit(navController, it) }
         }
-        composable(
-            route = Scenes.FeedInit.route + "/{" + id + "}",
-            arguments = listOf(navArgument(id) { type = NavType.StringType })
-        ) { backStackEntry ->
-            backStackEntry.arguments?.getString(id)
-                ?.let { FeedInit(navController, it) }
-        }
+
         composable(route = Scenes.NewFeed.route) {
             IdentNew(navController)
         }

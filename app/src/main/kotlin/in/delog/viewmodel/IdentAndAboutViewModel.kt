@@ -18,6 +18,7 @@
 package `in`.delog.viewmodel
 
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -37,12 +38,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.apache.tuweni.scuttlebutt.rpc.RPCResponse
 
 
 class IdentAndAboutViewModel(
     private val identRepository: IdentRepository,
     private val aboutRepository: AboutRepository,
-    private val messageRepository: MessageRepository
+    private val messageRepository: MessageRepository,
+    private val ssbService: SsbService
 ) : ViewModel() {
 
     var identAndAbout: IdentAndAbout? by mutableStateOf(null)
@@ -172,21 +175,21 @@ class IdentAndAboutViewModel(
 
     }
 
-    var connecting = false;
+    var connecting = false
 
-    fun connectWithInvite(ident: Ident, toCanonicalForm: String, ssbService: SsbService) {
+    var networkError:String? = null
+    fun connectWithInvite(ident: Ident, callBack: (RPCResponse) -> Unit) {
         if (connecting) return
 
         ssbService.rpcHandler?.close()
         viewModelScope.launch {
             connecting = true
             try {
-                ssbService.connectWithInvite(toCanonicalForm, ident, {
-                    // TODO follow up on implementic connect with invite
-                })
+                ssbService.connectWithInvite(ident, callBack)
             } catch (e: Exception) {
-                //Toast.makeText(context,e.message,Toast.LENGTH_LONG).show()
+                networkError = e.message
                 e.printStackTrace();
+                connecting = false
             }
         }
     }

@@ -45,7 +45,7 @@
     <string name="gen_rand_identifier">from entropy</string>
     <string name="setup_end_ok">setup ended ok</string>
     <string name="title_activity_settings">settings</string>
-    <string name="default_invite_url">http://192.168.1.40:8000/invite/</string>
+    <string name="default_invite_url">http://delog.in/invite/</string>
     <string name="cancel">cancel</string>
     <string name="restore_from_mnemonic">from mnemonic</string>
     <string name="get_invite_and_redeem_it">get invite from %s and redeem it</string>

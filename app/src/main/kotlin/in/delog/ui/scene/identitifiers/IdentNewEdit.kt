@@ -14,15 +14,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.Ident
-import `in`.delog.ssb.SsbService
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
-import `in`.delog.viewmodel.IdentListViewModel
 import `in`.delog.viewmodel.IdentAndAboutViewModel
+import `in`.delog.viewmodel.IdentListViewModel
 import org.apache.tuweni.scuttlebutt.Identity
 import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.MalformedInviteCodeException
-import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -56,33 +54,11 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
         if (identAndAboutViewModel.identAndAbout == null) {
             return
         }
-        val ssbService: SsbService = get()
         identAndAboutViewModel.identAndAbout!!.ident.invite?.let {
             identAndAboutViewModel.connectWithInvite(
-                identAndAboutViewModel.identAndAbout!!.ident,
-                it,
-                ssbService
-            )
-        }
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize()
+                identAndAboutViewModel.identAndAbout!!.ident
             ) {
-                Text(stringResource(R.string.setup_end_ok),
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.titleLarge)
-                FilledIconButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                    identListViewModel.reset()
-                    navController.navigate("${Scenes.MainFeed.route}/${identAndAboutViewModel.identAndAbout!!.ident.publicKey}")
-                },
-                    content = { Text("start") }
-                )
+                navController.navigate("${Scenes.FeedList.route}")
             }
         }
         return

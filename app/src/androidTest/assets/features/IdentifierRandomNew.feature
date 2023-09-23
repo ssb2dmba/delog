@@ -6,8 +6,8 @@ Feature: Onboarding with new key
     Then I open drawer
     Then I click 'identifiers'
     Then I click button 'new_identifier'
-    Then "load new identifier" text is presented
-    Then I click 'Generate random identifier'
+    Then "load identifier" text is presented
+    Then I click 'from entropy'
     Then I submit webview passing succesfully the captcha
     Then I fill input with testTag "alias" with value "test random"
     Then I click 'save'

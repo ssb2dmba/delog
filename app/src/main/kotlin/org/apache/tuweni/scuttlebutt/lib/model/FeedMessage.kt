@@ -18,7 +18,10 @@ package org.apache.tuweni.scuttlebutt.lib.model
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import `in`.delog.db.model.About
 import `in`.delog.db.model.Message
+import `in`.delog.ssb.SsbMessageContent
+import kotlinx.serialization.json.Json
 import java.util.*
 
 /**
@@ -41,12 +44,31 @@ fun FeedMessage.toMessage(): Message {
         type = if (this.type.isPresent()) this.type.get() else null,
         previous = this.value.previous,
         signature = this.value.signature,
-        root = getContentValue("root", this.value.content),
-        branch = getContentValue("branch", this.value.content)
+        root = getContentStringValue("root", this.value.content),
+        branch = getContentStringValue("branch", this.value.content)
     )
 }
 
-fun getContentValue(key: String, content: JsonNode): String? {
-    return if (content.has("branch")) content.get("branch").asText() else null
+
+fun FeedMessage.toAbout(): About? {
+    val ssbMe: SsbMessageContent = Json.decodeFromString<SsbMessageContent>(
+        SsbMessageContent.serializer(),
+        this.value.contentAsString
+    )
+    return if (ssbMe.about == null) {
+        null
+    } else {
+        About(
+            about = ssbMe.about!!,
+            description = ssbMe.description,
+            image = ssbMe.image,
+            name = ssbMe.name,
+            dirty = false
+        )
+    }
+
 }
 
+fun getContentStringValue(key: String, content: JsonNode): String? {
+    return if (content.has(key)) content.get(key).asText() else null
+}

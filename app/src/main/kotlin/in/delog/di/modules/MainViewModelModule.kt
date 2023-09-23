@@ -33,7 +33,7 @@ val mainViewModel = module {
     single { FeedRepositoryImpl(get(),get()) }
     factory<IdentRepository> { (FeedRepositoryImpl(get(), get())) }
     single { IdentListViewModel(get(),get()) }
-    viewModel { IdentAndAboutViewModel(get(), get(), get()) }
+    viewModel { IdentAndAboutViewModel(get(), get(), get(), get()) }
     single { MessageRepositoryImpl(get()) }
     factory<MessageRepository> { (MessageRepositoryImpl(get())) }
     factory<MessageTreeRepository> { (MessageTreeRepositoryImpl(get())) }
