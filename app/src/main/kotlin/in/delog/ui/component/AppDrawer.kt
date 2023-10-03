@@ -74,7 +74,7 @@ fun AppDrawer(
                 AsyncImage(
                     model = "https://robohash.org/${feed.ident.publicKey}.png",
                     placeholder = rememberAsyncImagePainter("https://robohash.org/${feed.ident.publicKey}.png"),
-                    contentDescription = feed.about!!.name,
+                    contentDescription = feed.about?.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(size = 120.dp)

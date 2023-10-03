@@ -53,7 +53,6 @@ import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.keySmall
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentAndAboutViewModel
-import io.vertx.core.http.impl.HttpClientConnection.log
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.util.*
@@ -92,7 +91,7 @@ fun AboutEdit(
     var image by remember { mutableStateOf(about.image) }
 
     if (showExportDialogState) {
-        IdentDetailExportDialog(vm)
+        ExportMnemonicDialog(vm, vm::onExportDialogDismiss)
     }
 
     if (showPublishDialogState) {

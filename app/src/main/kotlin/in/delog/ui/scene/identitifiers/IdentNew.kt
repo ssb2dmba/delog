@@ -22,8 +22,8 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import `in`.delog.db.model.Ident
+import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
-import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import org.apache.tuweni.scuttlebutt.Identity
@@ -44,12 +44,11 @@ fun IdentNew(navController: NavHostController) {
     var identity: Identity? by remember { mutableStateOf(null) }
 
     val identListViewModel = koinViewModel<IdentListViewModel>()
-    val insertionState by identListViewModel.insertedIdent.observeAsState(null)
-    var hasNavigated  by remember { mutableStateOf(false) }
+    var hasNavigated by remember { mutableStateOf(false) }
 
     fun setInvite(s: String) {
         invite = s
-        Log.i("invite","invite set to " + s)
+        Log.i("invite", "invite set to " + s)
     }
 
     fun setIdentity(pIdentity: Identity?, pInviteUrl: String?) {
@@ -58,7 +57,7 @@ fun IdentNew(navController: NavHostController) {
     }
 
     fun doneWithoutInvite() {
-        if (hasNavigated==true) return
+        if (hasNavigated == true) return
         hasNavigated = true
         val ident = Ident(
             0,
@@ -70,15 +69,21 @@ fun IdentNew(navController: NavHostController) {
             -1,
             null
         );
-        identListViewModel.insert(ident = ident)
-        navController.navigate("${Scenes.FeedList.route}")
+        val exists = identListViewModel.idents.value!!.any { it.ident.publicKey == ident.publicKey }
+        if (exists) {
+            val argUri = makeArgUri(ident.publicKey)
+            navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+        } else {
+            identListViewModel.insert(ident = ident)
+            navController.navigate("${Scenes.FeedList.route}")
+        }
     }
 
     if (identity == null) {
-        LoadIdentity(::setIdentity)
+        LoadIdentity(identListViewModel, ::setIdentity)
     } else {
         if (invite == null) {
-            if (inviteUrl!=null) {
+            if (inviteUrl != null) {
                 InviteWebRequest(inviteUrl!!, ::setInvite)
             } else {
                 doneWithoutInvite();

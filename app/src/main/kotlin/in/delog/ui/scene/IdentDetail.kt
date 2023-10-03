@@ -41,7 +41,6 @@ import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.keySmall
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentAndAboutViewModel
-import org.apache.tuweni.io.Base64
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.net.URLEncoder
@@ -129,7 +128,7 @@ fun IdentDetail(
         IdentDetailConfirmDeleteDialog(navHostController, vm)
     }
     if (showExportDialogState) {
-        IdentDetailExportDialog(vm)
+        ExportMnemonicDialog(vm, vm::onExportDialogDismiss)
     }
 
     IdentEdit(ident = vm.identAndAbout!!.ident, navHostController, vm)
@@ -334,42 +333,4 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
 }
 
 
-@Composable
-fun IdentDetailExportDialog(
-    viewModel: IdentAndAboutViewModel
-) {
-    AlertDialog(onDismissRequest = { viewModel.onExportDialogDismiss() },
-        containerColor = MaterialTheme.colorScheme.surface,
-        title = {
-            Text(
-                color = MaterialTheme.colorScheme.onSurface,
-                text = stringResource(id = R.string.export_mnemonic),
-                style = MaterialTheme.typography.titleSmall
-            )
-        },
-        text = {
-            val entropy: ByteArray =
-                Base64.decode(viewModel.identAndAbout!!.ident.privateKey).toArray()
-            val arr: List<String> = WordList(Locale.ENGLISH).words
-            val dict = Dict(arr.toTypedArray())
-            var mnemonicCode = secretKeyToMnemonic(entropy, dict)
-            var s = mnemonicCode.joinToString(" ")
-            Text(
-                text = s,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        },
-        dismissButton = {
-            Text(
-                text = stringResource(id = R.string.dismiss),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .padding(15.dp)
-                    .clickable { viewModel.onExportDialogDismiss() }
-            )
-        },
-        confirmButton = {}
-    )
-}
+

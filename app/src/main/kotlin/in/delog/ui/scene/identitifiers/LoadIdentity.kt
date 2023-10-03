@@ -1,6 +1,8 @@
 package `in`.delog.ui.scene.identitifiers
 
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -15,23 +17,35 @@ import androidx.compose.ui.unit.dp
 import `in`.delog.R
 import `in`.delog.db.SettingStore
 import `in`.delog.db.SettingStore.Companion.INVITE_URL
+import `in`.delog.ui.CameraQrCodeScanner
 import `in`.delog.ui.component.EditDialog
+import `in`.delog.viewmodel.IdentListViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.apache.tuweni.crypto.sodium.Signature
+import org.apache.tuweni.io.Base64
 import org.apache.tuweni.scuttlebutt.Identity
+import org.koin.androidx.compose.koinViewModel
 import kotlin.reflect.KFunction2
 
 @Preview
 @Composable
 fun LoadIdentityPreview() {
     @SuppressWarnings
+    val identListViewModel = koinViewModel<IdentListViewModel>()
     fun mockReturn(pIdentity: Identity?, pInviteUrl: String?) {}
-    LoadIdentity(callBack = ::mockReturn)
+    LoadIdentity(
+        identListViewModel = identListViewModel,
+        callBack = ::mockReturn
+    )
 }
 
 @Composable
-fun LoadIdentity(callBack: KFunction2<Identity?, String?, Unit>) {
+fun LoadIdentity(
+    identListViewModel: IdentListViewModel,
+    callBack: KFunction2<Identity?, String?, Unit>
+) {
 
     val context = LocalContext.current
     val store = SettingStore(context)
@@ -42,6 +56,43 @@ fun LoadIdentity(callBack: KFunction2<Identity?, String?, Unit>) {
     var getInvite: Boolean by remember { mutableStateOf(true) }
 
     var showMnemonicForm: Boolean by remember { mutableStateOf(false) }
+
+    var showCameraScanner: Boolean by remember { mutableStateOf(false) }
+
+    fun toastify(message: String) {
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun setPk(input: String) {
+        if (input.length < 85) return;
+        showCameraScanner = false
+        val privateKey = input.split("@")[0]
+
+        var identity: Identity?
+        try {
+            var keyPair = Signature.KeyPair.forSecretKey(
+                Signature.SecretKey.fromBytes(
+                    Base64.decode(privateKey)
+                )
+            )
+            identity = Identity.fromKeyPair(keyPair)
+
+        } catch (e: Exception) {
+            toastify("${e.localizedMessage}: $input")
+            return
+        }
+        // check if exists ...
+        var pk = identity.toCanonicalForm()
+        if (identListViewModel.idents.value!!.any { it.ident.publicKey == pk }) {
+            var preexist =
+                identListViewModel.idents.value!!.filter { it.ident.publicKey == pk }.first()
+            toastify("This identity ${pk} already exists !")
+            identListViewModel.setFeedAsDefaultFeed(preexist.ident)
+        }
+        callBack(identity, null)
+    }
 
     if (showMnemonicForm) {
         MnemonicForm {
@@ -54,10 +105,12 @@ fun LoadIdentity(callBack: KFunction2<Identity?, String?, Unit>) {
         return
     }
 
+    if (showCameraScanner) {
+        CameraQrCodeScanner(::setPk)
+        return
+    }
 
     ElevatedCard(
-        //elevation = CardDefaults.cardElevation(),
-        //shape = RoundedCornerShape(0.dp),
         modifier = Modifier
             .padding(12.dp)
             .fillMaxWidth()
@@ -69,7 +122,8 @@ fun LoadIdentity(callBack: KFunction2<Identity?, String?, Unit>) {
             modifier = Modifier.padding(12.dp)
         )
 
-        Row(verticalAlignment = Alignment.Top,
+        Row(
+            verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.Center
         ) {
             Box(
@@ -93,49 +147,58 @@ fun LoadIdentity(callBack: KFunction2<Identity?, String?, Unit>) {
                     )
                 }
             }
-            Column(
-                //verticalArrangement = Arrangement.Center,
-                //modifier = Modifier
-                //    .wrapContentHeight()
-                //    .background(Color.Red)
-            ) {
+            Column {
 
                 Text(
-                    String.format(stringResource(R.string.get_invite_and_redeem_it),
-                        inviteUrl.value),
+                    String.format(
+                        stringResource(R.string.get_invite_and_redeem_it),
+                        inviteUrl.value
+                    ),
                     style = MaterialTheme.typography.bodySmall
                 )
-            }
-        }
-        Spacer(modifier = Modifier.size(24.dp))
-        Row(
-            modifier = Modifier.padding(16.dp)
-        ) {
 
-            ElevatedButton(
-                modifier = Modifier.padding( end = 8.dp, top = 8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                ),
-                onClick = {
-                    showMnemonicForm = true
-                },
-                content = { Text(stringResource(R.string.restore_from_mnemonic)) }
-            )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            ElevatedButton(
-                modifier = Modifier.padding(start = 8.dp,  top = 8.dp),
-                colors = ButtonDefaults.buttonColors(
+                ElevatedButton(
+                    modifier = Modifier.padding(end = 8.dp, top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                onClick = {
-                    callBack(Identity.random(), if (getInvite) inviteUrl.value else null)
-                },
-                content = { Text(stringResource(R.string.gen_rand_identifier)) }
-            )
+                    ),
+                    onClick = {
+                        showMnemonicForm = true
+                    },
+                    content = { Text(stringResource(R.string.restore_from_mnemonic)) }
+                )
 
+                ElevatedButton(
+                    modifier = Modifier.padding(start = 8.dp, top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    onClick = {
+                        callBack(Identity.random(), if (getInvite) inviteUrl.value else null)
+                    },
+                    content = { Text(stringResource(R.string.gen_rand_identifier)) }
+                )
+
+
+                ElevatedButton(
+                    modifier = Modifier.padding(start = 8.dp, top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    onClick = {
+
+                        showCameraScanner = true
+                    },
+                    content = { Text(stringResource(R.string.fromQRCode)) }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
         }
     }
@@ -143,11 +206,10 @@ fun LoadIdentity(callBack: KFunction2<Identity?, String?, Unit>) {
     if (showInviteUrlDialog) {
         EditDialog(
             title = R.string.edit_default_invite_url,
-            value = if (inviteUrl.value==null) "" else inviteUrl.value!!,
+            value = if (inviteUrl.value == null) "" else inviteUrl.value!!,
             closeDialog = { showInviteUrlDialog = false },
             setValue = {
                 CoroutineScope(Dispatchers.IO).launch {
-                    Log.w("TEST","sabving !!!!!!! " + it)
                     store.saveData(INVITE_URL, it)
                     showInviteUrlDialog = false
                 }

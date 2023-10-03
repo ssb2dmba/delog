@@ -52,4 +52,5 @@
     <string name="edit_default_invite_url">edit default invite url</string>
     <string name="replying_to">Replying to %s</string>
     <string name="empty_list">Message list is empty.</string>
+    <string name="fromQRCode">from QR Code</string>
 </resources>

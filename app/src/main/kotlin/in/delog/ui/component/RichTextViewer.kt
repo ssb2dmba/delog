@@ -58,7 +58,7 @@ fun RichTextViewer(text: String, onClickCallBack: () -> Unit) {
             if (android.util.Patterns.WEB_URL.matcher(paragraph).matches()) {
                 text1 = text.substring(0, i)
                 urlLen = paragraph.length
-                url = text.substring(i, i+ urlLen +1)
+                url = text.substring(i, i+ urlLen)
                 return@forEach;
             }
             i = i + paragraph.length + 1
