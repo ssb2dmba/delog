@@ -24,6 +24,7 @@ import `in`.delog.db.dao.setFeedAsDefaultFeed
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import kotlinx.coroutines.flow.Flow
+import java.security.PrivateKey
 
 
 /**
@@ -41,6 +42,7 @@ interface IdentRepository {
     suspend fun getLive(id: String): LiveData<Ident>
     fun setFeedAsDefaultFeed(it: Ident)
     suspend fun findByPublicKey(pk: String): IdentAndAbout
+
 }
 
 class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: AboutDao) : IdentRepository {

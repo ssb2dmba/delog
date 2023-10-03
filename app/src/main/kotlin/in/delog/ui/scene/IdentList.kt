@@ -40,12 +40,11 @@ import `in`.delog.R
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.ListSpacer
+import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import org.koin.androidx.compose.koinViewModel
-import java.net.URLEncoder
-import java.nio.charset.Charset
 
 @Composable
 fun IdentList(navController: NavHostController) {
@@ -67,12 +66,7 @@ fun IdentList(navController: NavHostController) {
 
     LazyColumn {
         items(idents.value) { identAndAbout ->
-            var argUri = URLEncoder.encode(
-                identAndAbout.ident.publicKey,
-                Charset
-                    .defaultCharset()
-                    .toString()
-            )
+            var argUri = makeArgUri(identAndAbout.ident.publicKey)
             IdentityBox(
                 identAndAbout = identAndAbout,
                 short = true,
