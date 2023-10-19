@@ -48,20 +48,13 @@ fun UrlPreviewCard(
 
         modifier = Modifier
             .clickable { runCatching { uri.openUri(url) } }
-            .clip(shape = RoundedCornerShape(10.dp))
-            .border(1.dp, MaterialTheme.colors.secondaryVariant)
+            .clip(shape = RoundedCornerShape(8.dp))
+            .border(1.dp, MaterialTheme.colors.secondary)
             .background(color = MaterialTheme.colors.surface)
     ) {
         Column {
-            AsyncImage(
-                model = previewInfo.image,
-                contentDescription = "preview",
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth()
-            )
-
             Text(
-                text = previewInfo.title,
+                text = previewInfo.title ,
                 style = MaterialTheme.typography.body2,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -80,6 +73,12 @@ fun UrlPreviewCard(
                 color = MaterialTheme.colors.onSurface,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
+            )
+            AsyncImage(
+                model = previewInfo.image,
+                contentDescription = "preview",
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

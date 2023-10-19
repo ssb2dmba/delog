@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.scene
 
-import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -55,7 +54,6 @@ import `in`.delog.viewmodel.DraftViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DraftNew(
     navController: NavHostController,
@@ -77,7 +75,7 @@ fun DraftNew(
 
     LaunchedEffect(Unit) {
         if (linkedKey != null) {
-            draftViewModel.getLink(linkedKey!!)
+            draftViewModel.getLink(linkedKey)
         }
         bottomBarViewModel.setTitle(title)
         bottomBarViewModel.setActions {
@@ -86,7 +84,7 @@ fun DraftNew(
                     .height(56.dp)
                     .padding(start = 24.dp),
                 onClick = {
-                    navController.popBackStack();
+                    navController.popBackStack()
                 }) {
                 Icon(
                     imageVector = Icons.Filled.Cancel,
@@ -141,8 +139,7 @@ fun DraftNew(
                 navController = navController,
                 message = link!!.message.toMessageViewData(),
                 showToolbar = false,
-                expand = false,
-                hasLine = true,
+                hasDivider = true,
                 onClickCallBack = {}
             )
         }
@@ -176,8 +173,7 @@ fun DraftNew(
 
 
                 Column(modifier = Modifier.fillMaxSize()) {
-                    var showInputField: Boolean
-                    var placeholder = "write your message"
+                    val showInputField: Boolean
                     ReplyHeader(link = link, draftMode = draftMode)
                     when (draftMode) {
                         "repost" -> showInputField = false
@@ -191,19 +187,16 @@ fun DraftNew(
                                 fontSize = 48.sp
 
                             )
-                            EmojiPicker({ contentAsText = it.emoji })
+                            EmojiPicker { contentAsText = it.emoji }
                         }
                         "reply" -> {
                             showInputField = true
-                            placeholder = "write you reply"
                         }
                         else -> showInputField = true
                     }
 
                     if (showInputField) {
                         OutlinedTextField(
-                            label = { placeholder },
-                            placeholder = { placeholder },
                             value = contentAsText,
                             onValueChange = {
                                 contentAsText = it
@@ -227,12 +220,12 @@ fun DraftNew(
 
 @Composable
 fun ReplyHeader(link: MessageAndAbout?, draftMode: String?) {
-    if (link == null || link.about!! == null) return
+    if (link == null) return
     var txt: String? = null
     when (draftMode) {
-        "reply" -> txt = String.format("in reply to %s", link!!.about!!.name)
-        "repost" -> txt = String.format("repost %s message", link!!.about!!.name)
-        "vote" -> txt = String.format("vote for %s message", link!!.about!!.name)
+        "reply" -> txt = String.format("in reply to %s", link.about!!.name)
+        "repost" -> txt = String.format("repost %s message", link.about!!.name)
+        "vote" -> txt = String.format("vote for %s message", link.about!!.name)
     }
     if (txt != null) {
         Text(

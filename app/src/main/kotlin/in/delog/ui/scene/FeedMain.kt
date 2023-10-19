@@ -25,7 +25,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Draw
-import androidx.compose.material3.*
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -67,8 +70,8 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
         }
         bottomBarViewModel.setTitle("main")
     }
-
-    val viewModel = koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
+    val viewModel =
+        koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
 
     val context = LocalContext.current
     val ssbService: SsbService = get()
@@ -89,10 +92,10 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
             identAndAbout = viewModel.identAndAbout!!,
             short = true,
         )
-        if (lazyMessageItems.itemCount==0) {
+        if (lazyMessageItems.itemCount == 0) {
             AppEmptyList()
         }
-        var previous_root: String? = null
+        var previousRoot: String? = null
         LazyVerticalGrid(columns = GridCells.Fixed(1)) {
             items(
                 count = lazyMessageItems.itemCount,
@@ -103,16 +106,18 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
                         navController = navController,
                         message = it.toMessageViewData(),
                         showToolbar = true,
-                        expand = false,
-                        hasLine = if (it.replies > 0 || it.level > 0) true else false,
+                        truncate = it.key != feedToReadKey,
+                        hasDivider = it.replies > 0 || it.level > 0,
                         onClickCallBack = {
-                            navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+                            if (feedToReadKey != it.key) {
+                                navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+                            }
                         }
                     )
-                    if (it.root==null || it.root!=previous_root) {
+                    if (it.root == null || it.root != previousRoot) {
                         ListSpacer()
                     }
-                    previous_root = if (it.root == null) it.key else it.root
+                    previousRoot = it.root ?: it.key
 
                 }
             }
