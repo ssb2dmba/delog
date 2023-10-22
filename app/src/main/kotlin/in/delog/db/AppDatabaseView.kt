@@ -14,7 +14,7 @@ class AppDatabaseView {
             "           a1.name, " +
             "           a1.image, " +
             "           name as pname," +
-            "           CAST(message.key AS varchar(50)) AS seq, " +
+            "           CAST(message.key AS varchar(50)) AS parents, " +
             "           message.timestamp as ts, " +
             "           (select count(*) from message x where x.branch=message.key and x.type='post') as replies, " +
             "           (select count(*) from message x where x.branch=message.key and x.type='vote') as votes, " +
@@ -33,7 +33,7 @@ class AppDatabaseView {
             "           cast(pauthor  as varchar(255)) pauthor," +
             "           a2.name, a2.image, " +
             "           CAST(pname  as varchar(50)) as pname," +
-            "           CAST(seq|| '_' || CAST(m2.key AS VARCHAR (50)) AS VARCHAR(50)) AS seq, " +
+            "           CAST(parents|| '_' || CAST(m2.key AS VARCHAR (50)) AS VARCHAR(50)) AS parents, " +
             "           min(ts,m2.timestamp) as ts, " +
             "           (select count(*) from message x where x.branch=x.key and x.type='post') as replies," +
             "           (select count(*) from message x where x.branch=x.key and x.type='vote') as votes," +
@@ -46,7 +46,7 @@ class AppDatabaseView {
             "       FROM message m2, about a2 " +
             "       JOIN tree_view tv ON m2.branch = tv.key and m2.type=\"post\" " +
             "       WHERE a2.about=m2.author) " +
-            "select * from tree_view order by ts desc, seq asc",
+            "select * from tree_view order by ts desc, parents asc",
         "MessageTree"
     )
     data class MessageInTree(
@@ -55,7 +55,7 @@ class AppDatabaseView {
         val name: String?,
         val image: String?,
         val pName: String?,
-        val seq: String,
+        val parents: String,
         val ts: Long,
         val replies: Long,
         val votes: Long,

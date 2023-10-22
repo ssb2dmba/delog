@@ -44,8 +44,6 @@ class DraftViewModel(
     //signal your view when the coroutine finishes insert
     var inserted: Long? by mutableStateOf(null)
 
-    var dirtyStatus: Boolean by mutableStateOf(false)
-
     var draft: Draft? by mutableStateOf(null)
 
     var link: MessageAndAbout? by mutableStateOf(null)
@@ -63,14 +61,11 @@ class DraftViewModel(
         }
     }
 
-    fun setDirty(d: Boolean) {
-        dirtyStatus = d
-    }
+
 
     fun setCurrentDraft(oid: String) {
         GlobalScope.launch(Dispatchers.IO) {
             draft = draftRepository.getById(oid.toInt())
-            dirtyStatus = false
         }
     }
 

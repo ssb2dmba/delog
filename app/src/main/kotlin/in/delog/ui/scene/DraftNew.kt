@@ -68,7 +68,6 @@ fun DraftNew(
     var link: MessageAndAbout? by remember {
         mutableStateOf(null)
     }
-    draftViewModel.setDirty(true)
 
     var contentAsText by remember { mutableStateOf("") }
     val title = stringResource(id = R.string.drafts)
@@ -115,7 +114,6 @@ fun DraftNew(
                 draftViewModel.insert(draft = draft)
             })
         }
-        //focusRequester.requestFocus()
     }
 
     LaunchedEffect(draftViewModel.inserted) {

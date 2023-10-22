@@ -25,8 +25,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,34 +43,32 @@ fun UrlPreviewCard(
     previewInfo: UrlInfoItem
 ) {
     val uri = LocalUriHandler.current
-
     Row(
-
         modifier = Modifier
             .clickable { runCatching { uri.openUri(url) } }
-            .clip(shape = RoundedCornerShape(8.dp))
-            .border(1.dp, MaterialTheme.colors.secondary)
-            .background(color = MaterialTheme.colors.surface)
+            .clip(shape = RoundedCornerShape(6.dp))
+            .border(1.dp, MaterialTheme.colorScheme.secondary)
+            .background(color = MaterialTheme.colorScheme.surface)
     ) {
         Column {
             Text(
                 text = previewInfo.title ,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 10.dp, end = 10.dp, top = 10.dp),
+                    .padding(12.dp),
                 maxLines = 1,
-                color = MaterialTheme.colors.onSurface,
+                color = MaterialTheme.colorScheme.onPrimary,
                 overflow = TextOverflow.Ellipsis
             )
 
             Text(
                 text = previewInfo.description,
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
-                color = MaterialTheme.colors.onSurface,
+                    .padding(12.dp),
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )

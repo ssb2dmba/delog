@@ -19,8 +19,10 @@ package `in`.delog.ui.scene
 
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
@@ -34,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
@@ -42,10 +45,7 @@ import `in`.delog.R
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.toMessageViewData
 import `in`.delog.ssb.SsbService
-import `in`.delog.ui.component.AppEmptyList
-import `in`.delog.ui.component.IdentityBox
-import `in`.delog.ui.component.ListSpacer
-import `in`.delog.ui.component.MessageItem
+import `in`.delog.ui.component.*
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.MessageListViewModel
@@ -53,8 +53,6 @@ import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import java.net.URLEncoder
-import java.nio.charset.Charset
 
 @Composable
 fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
@@ -72,7 +70,9 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
     }
     val viewModel =
         koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
-
+    if (viewModel.identAndAbout ==null) {
+        return
+    }
     val context = LocalContext.current
     val ssbService: SsbService = get()
     LaunchedEffect(feedToReadKey) {
@@ -94,6 +94,22 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
         )
         if (lazyMessageItems.itemCount == 0) {
             AppEmptyList()
+        } else {
+            val firstMsgInList = lazyMessageItems[0]!!
+            if (firstMsgInList.level > 0) {
+
+                Text("In reply to "
+                        + (firstMsgInList.pName ?: firstMsgInList.pauthor.subSequence(0, 6)
+                        ),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .clickable {
+                            val argUri =
+                                makeArgUri(firstMsgInList.parents.split('-')[(firstMsgInList.level - 1).toInt()])
+                            navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+                        }
+                )
+            }
         }
         var previousRoot: String? = null
         LazyVerticalGrid(columns = GridCells.Fixed(1)) {
@@ -101,7 +117,10 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
                 count = lazyMessageItems.itemCount,
             ) { index ->
                 lazyMessageItems[index]?.let {
-                    val argUri = URLEncoder.encode(it.key, Charset.defaultCharset().toString())
+                    //if (it.pauthor!=null) {
+
+                    //}
+                    val argUri = makeArgUri(it.key)
                     MessageItem(
                         navController = navController,
                         message = it.toMessageViewData(),

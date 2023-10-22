@@ -18,6 +18,7 @@
 package `in`.delog.ui.component
 
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.*
@@ -69,4 +70,11 @@ fun AppScaffold(
                 }
             )
         })
+    if (drawerState.isOpen) {
+        BackHandler() {
+            scope.launch {
+                drawerState.close()
+            }
+        }
+    }
 }

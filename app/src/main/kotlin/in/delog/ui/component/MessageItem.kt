@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,7 +44,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import `in`.delog.R
 import `in`.delog.ssb.BaseSsbService.Companion.format
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
@@ -54,6 +52,94 @@ import java.nio.charset.Charset
 import java.sql.Timestamp
 import java.util.*
 
+
+@Composable
+fun msgToolbar(
+    navController: NavController,
+    message: MessageViewData,
+    onClickCallBack: () -> Unit,
+    truncated: Boolean,
+    ) {
+    Row(
+        horizontalArrangement = Arrangement.End,
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.weight(0.25F)
+        ) {
+            if (truncated) {
+                IconButton(
+                    onClick = {
+                        onClickCallBack.invoke()
+                    }
+                )
+                {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = "show more",
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )// reply
+                }
+            }
+        }
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.weight(0.25F)
+        ) {
+            // Repost
+            IconButton(
+                onClick = {
+                    repost(message.key, navController)
+                }
+            )
+            {
+                Icon(
+                    Icons.Filled.Autorenew,
+                    contentDescription = "",
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )// reply
+            }
+        }
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.weight(0.25F)
+        ) {
+            // Like
+            IconButton(
+                onClick = {
+                    vote(message.key, navController)
+                }
+            )
+            {
+                Icon(
+                    Icons.Filled.Favorite,
+                    contentDescription = "",
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )// reply
+            }
+        }
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.weight(0.25F)
+        ) {
+            // Reply
+            IconButton(
+                onClick = {
+                    reply(message.key, navController)
+                },
+            )
+            {
+                Icon(
+                    Icons.Filled.Reply,
+                    contentDescription = "",
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun MessageItem(
@@ -74,15 +160,17 @@ fun MessageItem(
     }
 
     val shortLength = 240
-    var text  by remember { mutableStateOf(message.content(format).text.toString()) }
-    var truncated = false
+    var text by remember { mutableStateOf(message.content(format).text.toString()) }
+    var truncated by remember {
+        mutableStateOf(false)
+    }
     if (truncate && text.length > shortLength) {
         truncated = true
         text = text.substring(0, shortLength)
     }
     val url = firstUrl(text)
-    if (url!=null) {
-        text = text.replace(url,"")
+    if (url != null) {
+        text = text.replace(url, "")
     }
 
     Card(
@@ -91,7 +179,7 @@ fun MessageItem(
         modifier = Modifier
             .wrapContentHeight()
             .clickable {
-               onClickCallBack()
+                onClickCallBack()
             }
     ) {
         Row(
@@ -127,7 +215,8 @@ fun MessageItem(
                 )
 
             }
-
+            // spacer
+            Column(modifier = Modifier.width(8.dp)) {}
             // Message head
             Column {
                 Row(
@@ -136,9 +225,8 @@ fun MessageItem(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
+
                     Row {
-
-
                         Text(
                             modifier = Modifier
                                 .weight(0.9f),
@@ -157,100 +245,36 @@ fun MessageItem(
                         Text(
                             text = strTimeAgo,
                             style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1                         
-                        )
-                    }
-                    Row {
-                        Text(
-                            text = String.format(stringResource(R.string.replying_to), " TODO"),
-                            style = MaterialTheme.typography.labelSmall,
                             maxLines = 1
                         )
                     }
 
                 }
-                Column {
-                    // Message content
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        RichTextViewer(text) {
-                            onClickCallBack.invoke()
-                        }
+                // row message
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp)
+                ) {
+                    RichTextViewer(text) {
+                        onClickCallBack.invoke()
                     }
                 }
-                Row {
-                    if (truncated || text.length <= shortLength) {
-                        if (url !=null) {
+                // row preview
+                if (truncated || text.length <= shortLength) {
+                    if (url != null) {
+                        Row(modifier = Modifier
+                            .padding(16.dp)
+                            .padding(bottom = 0.dp)
+                            .height(200.dp)) {
                             UrlPreview(url = url, urlText = url)
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
+                //Spacer(modifier = Modifier.height(8.dp))
+                // row toolbar
                 if (showToolbar) {
-                    // toolbar
-                    Row(
-                        horizontalArrangement = Arrangement.End,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        if (truncated) {
-                            IconButton(
-                                onClick = {
-                                    onClickCallBack.invoke()
-                                }
-                            )
-                            {
-                                Icon(
-                                    Icons.Filled.MoreVert,
-                                    contentDescription = "show more",
-                                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                                )// reply
-                            }
-                        }
-                        // Repost
-                        IconButton(
-                            onClick = {
-                                repost(message.key, navController)
-                            }
-                        )
-                        {
-                            Icon(
-                                Icons.Filled.Autorenew,
-                                contentDescription = "",
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                            )// reply
-                        }
-                        // Like
-                        IconButton(
-                            onClick = {
-                                vote(message.key, navController)
-                            }
-                        )
-                        {
-                            Icon(
-                                Icons.Filled.Favorite,
-                                contentDescription = "",
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                            )// reply
-                        }
-                        // Reply
-                        IconButton(
-                            onClick = {
-                                reply(message.key, navController)
-                            },
-                        )
-                        {
-                            Icon(
-                                Icons.Filled.Reply,
-                                contentDescription = "",
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                            )
-                        }
-                    }
+                    msgToolbar(navController = navController, message = message, truncated=truncated, onClickCallBack = onClickCallBack)
                 }
             }
         }
@@ -288,7 +312,7 @@ fun MessageItemPreview() {
         authorName = "Cookie Jar"
     )
     MyTheme(
-        darkTheme = true,
+        darkTheme = false,
         dynamicColor = false
     ) {
         Surface(modifier = Modifier.fillMaxSize()) {
