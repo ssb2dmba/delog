@@ -71,16 +71,15 @@ fun IdentList(navController: NavHostController) {
                 identAndAbout = identAndAbout,
                 short = true,
                 onClick = {
-                    identAndAbout ->
-                        navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
-
+                        identAndAbout -> identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
+                    navController.navigate("${Scenes.MainFeed.route}/${argUri}")
                 },
                 onLongClick = {
                         identAndAbout -> identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
                 },
                 onDblClick = {
-                        identAndAbout -> identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
-                        navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+                        identAndAbout ->
+                    navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
                 }
             )
             ListSpacer()

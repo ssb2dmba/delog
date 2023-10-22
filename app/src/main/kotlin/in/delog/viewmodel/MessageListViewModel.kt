@@ -44,18 +44,19 @@ class MessageListViewModel(
     var identAndAbout: IdentAndAbout? = null
 
     init {
-
         GlobalScope.launch(Dispatchers.IO) {
             if (key.startsWith("%")) {
                 val m: Message? = messageRepository.getMessage(key)
-                if (m != null) key = m.author
+                if (m != null) {
+                    identAndAbout = messageRepository.getFeed(m.author)
+                }
             }
-            identAndAbout = messageRepository.getFeed(key)
+            if (identAndAbout==null) { // fallback to our
+                identAndAbout = messageRepository.getFeed(key)
+            }
         }
 
-
         viewModelScope.launch(Dispatchers.IO) {
-
             messagesPaged = Pager(
                 PagingConfig(
                     pageSize = 10,

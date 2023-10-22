@@ -100,7 +100,7 @@ fun DraftPublishDialog(navHostController: NavHostController, viewModel: DraftVie
                     .clickable {
                         viewModel.onPublishDialogDismiss()
                         viewModel.draft?.let { viewModel.publishDraft(it, viewModel.feed) }
-                        navHostController.navigate("${Scenes.MainFeed.route}")
+                        navHostController.navigate(Scenes.MainFeed.route)
                     }
             )
         }
@@ -158,7 +158,6 @@ fun DraftConfirmDeleteDialog(navHostController: NavHostController, viewModel: Dr
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DraftEdit(navController: NavHostController, draftId: String) {
     val identAndAbout = LocalActiveFeed.current ?: return
@@ -249,8 +248,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                 navController = navController,
                 message = link!!.message.toMessageViewData(),
                 showToolbar = false,
-                expand = false,
-                hasLine = true,
+                hasDivider = true,
                 onClickCallBack = {}
             )
         }
@@ -265,12 +263,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                     .fillMaxSize()
             ) {
                 if (draftViewModel.dirtyStatus) {
-
-                    // edit mode
-                    var placeholder =
-                        if (link!=null) "write your answer" else "write you message"
                     OutlinedTextField(
-                        label = { placeholder },
                         value = contentAsText,
                         onValueChange = {
                             draftViewModel.setDirty(true)
@@ -284,13 +277,12 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                     )
                 } else {
                     // preview mode
-                    val obj: MessageViewData = draftViewModel.draft!!.toMessageViewData();
+                    val obj: MessageViewData = draftViewModel.draft!!.toMessageViewData()
                     MessageItem(
                         navController = navController,
                         message = obj,
                         showToolbar = false,
-                        expand = true,
-                        hasLine = link!=null,
+                        hasDivider = link!=null,
                         onClickCallBack = {
                             draftViewModel.dirtyStatus=!draftViewModel.dirtyStatus
                             focusRequester.requestFocus()

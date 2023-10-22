@@ -22,14 +22,15 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -77,17 +78,18 @@ fun IdentityBox(
         ) {
             Text(
                 text = identAndAbout.ident.publicKey,
-                modifier = Modifier.padding(start = 56.dp)
+                modifier = Modifier
+                    .padding(start = 56.dp)
                     .clickable {
-                    clipboardManager.setText(buildAnnotatedString { append(identAndAbout.ident.publicKey) })
-                    Toast
-                        .makeText(
-                            context,
-                            String.format("%s copied!", identAndAbout.ident.publicKey),
-                            Toast.LENGTH_LONG
-                        )
-                        .show()
-                },
+                        clipboardManager.setText(buildAnnotatedString { append(identAndAbout.ident.publicKey) })
+                        Toast
+                            .makeText(
+                                context,
+                                String.format("%s copied!", identAndAbout.ident.publicKey),
+                                Toast.LENGTH_LONG
+                            )
+                            .show()
+                    },
                 style = keySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -105,7 +107,7 @@ fun IdentityBox(
                         onClick?.let { it(identAndAbout) }
                     },
                     onDoubleClick = {
-                        onDblClick?.let { it(identAndAbout)}
+                        onDblClick?.let { it(identAndAbout) }
                     }
                 )
         ) {
@@ -118,13 +120,16 @@ fun IdentityBox(
                     .size(size = 48.dp)
                     .clip(shape = CircleShape)
                     .background(MaterialTheme.colorScheme.outline),
-                )
+            )
             Column(
                 Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp)
             ) {
-                Row(Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
                     Text(
                         text = identAndAbout.about?.name ?: identAndAbout.ident.publicKey,
                         style = MaterialTheme.typography.headlineSmall,
@@ -132,7 +137,7 @@ fun IdentityBox(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .weight(1f)
-                            .padding(top = 12.dp)
+                            .padding(top = 16.dp)
                     )
                     Spacer(modifier = Modifier.weight(0.2f))
 
@@ -152,11 +157,23 @@ fun IdentityBox(
                             )
                         }
                     }
+                    FilledTonalIconButton(
+                        modifier = Modifier.padding(16.dp),
+                        onClick = {
+                            onDblClick?.invoke(identAndAbout)
+                        }
+                    ) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = "",
+                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
+                    }
                 }
 
-                if (short) {
+                if (short && identAndAbout.about?.description != null)  {
                     Text(
-                        text = if (identAndAbout.about?.description != null) identAndAbout.about!!.description!! else "",
+                        text = identAndAbout.about!!.description!!,
                         style = MaterialTheme.typography.bodySmall,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (short) 2 else Int.MAX_VALUE,

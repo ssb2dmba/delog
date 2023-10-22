@@ -32,10 +32,10 @@ fun UrlPreview(url: String, urlText: String, showUrlIfError: Boolean = true) {
     LaunchedEffect(url) {
         UrlCachedPreviewer.previewInfo(url, object : IUrlPreviewCallback {
             override fun onComplete(urlInfo: UrlInfoItem) {
-                if (urlInfo.allFetchComplete() && urlInfo.url == url)
-                    urlPreviewState = UrlPreviewState.Loaded(urlInfo)
+                urlPreviewState = if (urlInfo.allFetchComplete() && urlInfo.url == url)
+                    UrlPreviewState.Loaded(urlInfo)
                 else
-                    urlPreviewState = UrlPreviewState.Empty
+                    UrlPreviewState.Empty
             }
 
             override fun onFailed(throwable: Throwable) {

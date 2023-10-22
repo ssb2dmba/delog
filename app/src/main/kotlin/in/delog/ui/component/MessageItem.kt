@@ -18,6 +18,7 @@
 package `in`.delog.ui.component
 
 import android.text.format.DateUtils
+import android.util.Patterns
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,7 +27,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,22 +60,29 @@ fun MessageItem(
     navController: NavController,
     message: MessageViewData,
     showToolbar: Boolean = false,
-    expand: Boolean = false,
-    hasLine: Boolean = false,
-    onClickCallBack: () -> Unit
+    hasDivider: Boolean = false,
+    onClickCallBack: () -> Unit,
+    truncate: Boolean = false
 ) {
-    var doExpand by remember { mutableStateOf(expand) }
-    var text by remember { mutableStateOf(message.content(format).text.toString()) }
-    var isLongText by remember { mutableStateOf(text.split("\n").size > 5) }
-    LaunchedEffect(doExpand) {
-        if (isLongText) {
-            if (!doExpand) { // do we show all or only 4 lines?
-                text = text.split("\n").take(5).joinToString("\n")
-                text = text.dropLast(1) + ".."
-            } else {
-                text = message.content(format).text.toString()
-            }
+
+    fun firstUrl(search: String): String? {
+        val matcher = Patterns.WEB_URL.matcher(search)
+        if (matcher.find()) {
+            return matcher.group()
         }
+        return null
+    }
+
+    val shortLength = 240
+    var text  by remember { mutableStateOf(message.content(format).text.toString()) }
+    var truncated = false
+    if (truncate && text.length > shortLength) {
+        truncated = true
+        text = text.substring(0, shortLength)
+    }
+    val url = firstUrl(text)
+    if (url!=null) {
+        text = text.replace(url,"")
     }
 
     Card(
@@ -80,7 +91,7 @@ fun MessageItem(
         modifier = Modifier
             .wrapContentHeight()
             .clickable {
-                onClickCallBack()
+               onClickCallBack()
             }
     ) {
         Row(
@@ -93,7 +104,7 @@ fun MessageItem(
                     .fillMaxHeight()
                     .width(44.dp)
             ) {
-                if (hasLine) {
+                if (hasDivider) {
                     Divider(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
@@ -139,8 +150,8 @@ fun MessageItem(
                             maxLines = 1
                         )
                         val strTimeAgo: String = DateUtils.getRelativeTimeSpanString(
-                            Date(Timestamp(message.timestamp).time).getTime(),
-                            Calendar.getInstance().getTimeInMillis(),
+                            Date(Timestamp(message.timestamp).time).time,
+                            Calendar.getInstance().timeInMillis,
                             DateUtils.MINUTE_IN_MILLIS
                         ).toString()
                         Text(
@@ -149,7 +160,7 @@ fun MessageItem(
                             maxLines = 1                         
                         )
                     }
-                    Row() {
+                    Row {
                         Text(
                             text = String.format(stringResource(R.string.replying_to), " TODO"),
                             style = MaterialTheme.typography.labelSmall,
@@ -164,11 +175,20 @@ fun MessageItem(
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
-                        RichTextViewer(text, onClickCallBack)
+                        RichTextViewer(text) {
+                            onClickCallBack.invoke()
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Row {
+                    if (truncated || text.length <= shortLength) {
+                        if (url !=null) {
+                            UrlPreview(url = url, urlText = url)
+                        }
+                    }
+                }
 
+                Spacer(modifier = Modifier.height(8.dp))
 
                 if (showToolbar) {
                     // toolbar
@@ -177,23 +197,18 @@ fun MessageItem(
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
-                        if (isLongText) {
-                            if (doExpand) {
-                                IconButton(onClick = { doExpand = false }) {
-                                    Icon(
-                                        Icons.Default.ExpandLess,
-                                        contentDescription = "",
-                                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                                    )
+                        if (truncated) {
+                            IconButton(
+                                onClick = {
+                                    onClickCallBack.invoke()
                                 }
-                            } else {
-                                IconButton(onClick = { doExpand = true }) {
-                                    Icon(
-                                        Icons.Default.ExpandMore,
-                                        contentDescription = "",
-                                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                                    )
-                                }
+                            )
+                            {
+                                Icon(
+                                    Icons.Filled.MoreVert,
+                                    contentDescription = "show more",
+                                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                                )// reply
                             }
                         }
                         // Repost
@@ -265,7 +280,7 @@ fun repost(key: String, navController: NavController) {
 @Composable
 fun MessageItemPreview() {
     val navController = rememberNavController()
-    var messageViewData = MessageViewData(
+    val messageViewData = MessageViewData(
         key = "@1234",
         timestamp = 1234, author = "",
         contentAsText = "#title \n we made healthy  \uD83D\uDD25  Wikipedia[note 3] is a #multilingual free online encyclopedia written and maintained by a community of volunteers, known as @Wikipedians, through open collaboration and using a wiki-based editing system called MediaWiki. Wikipedia is the largest and most-read reference work in history.[3] It is consistently one of the 10 most popular websites ranked by Similarweb and formerly Alexa; as of 2022, Wikipedia was ranked the 5th most popular site in the world.[4] It is hosted by the Wikimedia Foundation, an American non-profit organization funded mainly through donations.[5]",
@@ -277,14 +292,15 @@ fun MessageItemPreview() {
         dynamicColor = false
     ) {
         Surface(modifier = Modifier.fillMaxSize()) {
-            Column() {
+            Column {
                 LazyVerticalGrid(columns = GridCells.Fixed(1)) {
                     item {
                         MessageItem(
                             navController = navController,
                             message = messageViewData,
                             showToolbar = true,
-                            onClickCallBack = { }
+                            onClickCallBack = { },
+                            truncate = true
                         )
                     }
                 }
