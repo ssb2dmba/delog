@@ -117,9 +117,6 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
                 count = lazyMessageItems.itemCount,
             ) { index ->
                 lazyMessageItems[index]?.let {
-                    //if (it.pauthor!=null) {
-
-                    //}
                     val argUri = makeArgUri(it.key)
                     MessageItem(
                         navController = navController,
