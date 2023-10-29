@@ -17,14 +17,15 @@
  */
 package `in`.delog.ui.scene
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,7 +40,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.db.model.*
 import `in`.delog.ui.LocalActiveFeed
-import `in`.delog.ui.component.EditDialog
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.ContactListViewModel
@@ -77,12 +77,69 @@ fun ContactList(navController: NavController) {
             contactListViewModel.insert(contact)
             showAddContactDialog = false
         }
-        EditDialog(
-            title = R.string.follow,
-            value = "",
-            closeDialog = { showAddContactDialog = false },
-            setValue = ::addContact
+
+        var publicKey by remember { mutableStateOf("") }
+        var isError by remember { mutableStateOf(false) }
+        fun validate(text: String) {
+            isError = publicKey.length > 5
+        }
+
+        AlertDialog(onDismissRequest = { showAddContactDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Text(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    text = stringResource(id = R.string.follow),
+                    style = MaterialTheme.typography.titleSmall
+                )
+            },
+            text = {
+
+
+                        TextField(
+                            label = { Text("Add contact using an ssb identifier") },
+                            value = publicKey,
+                            onValueChange = {
+                                validate(it)
+                                publicKey = it
+                            },
+                            isError = isError,
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {}
+                                ) {
+                                    Icon(
+                                        Icons.Filled.PhotoCamera,
+                                        contentDescription = "Scan",
+                                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                                    )
+                                }
+                            }
+                        )
+
+            },
+            dismissButton = {
+                Text(
+                    text = stringResource(id = R.string.dismiss),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(15.dp)
+                        .clickable { showAddContactDialog = false }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !isError,
+                    onClick = {
+                        addContact(publicKey)
+                    }
+                ) {
+                    Text(stringResource(id = R.string.follow))
+                }
+            }
         )
+
     }
 
     LazyVerticalGrid(columns = GridCells.Fixed(1)) {
@@ -101,19 +158,21 @@ fun ContactListItem(
     contactAndAbout: ContactAndAbout,
     contactListViewModel: ContactListViewModel,
 ) {
-    if (contactAndAbout.about == null) contactAndAbout.about = About(about = contactAndAbout.contact.follow)
+    if (contactAndAbout.about == null) contactAndAbout.about =
+        About(about = contactAndAbout.contact.follow)
     Box(modifier = Modifier.fillMaxWidth()) {
 
-        val identAndAbout = IdentAndAbout(ident = Ident(
-            -1,
-            publicKey = contactAndAbout.about!!.about,
-            "",
-            -1,
-            "",
-            false,
-            -1,
-            "",
-        ),
+        val identAndAbout = IdentAndAbout(
+            ident = Ident(
+                -1,
+                publicKey = contactAndAbout.about!!.about,
+                "",
+                -1,
+                "",
+                false,
+                -1,
+                "",
+            ),
             about = contactAndAbout.about
         )
         IdentityBox(identAndAbout = identAndAbout)

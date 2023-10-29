@@ -18,15 +18,18 @@
 package `in`.delog.ui.scene
 
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -34,6 +37,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import `in`.delog.R
@@ -46,6 +50,7 @@ import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IdentList(navController: NavHostController) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
@@ -67,22 +72,35 @@ fun IdentList(navController: NavHostController) {
     LazyColumn {
         items(idents.value) { identAndAbout ->
             var argUri = makeArgUri(identAndAbout.ident.publicKey)
-            IdentityBox(
-                identAndAbout = identAndAbout,
-                short = true,
-                onClick = {
-                        identAndAbout -> identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
-                    navController.navigate("${Scenes.MainFeed.route}/${argUri}")
-                },
-                onLongClick = {
-                        identAndAbout -> identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
-                },
-                onDblClick = {
-                        identAndAbout ->
-                    navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
-                }
-            )
-            ListSpacer()
+
+            Card(
+                colors = CardDefaults.cardColors(),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .padding(bottom=0.dp, top=16.dp, start = 16.dp, end=16.dp)
+                    .wrapContentHeight()
+                    .combinedClickable(
+                        onLongClick = {
+                            identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
+                        },
+                        onClick = {
+                            identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
+                            navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+                        },
+                        onDoubleClick = {
+                            navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
+                        }
+                    )
+            ) {
+                IdentityBox(
+                    identAndAbout = identAndAbout,
+                    short = true,
+                    onClick = {
+                        navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
+                    }
+                )
+            }
+            //ListSpacer()
         }
     }
 }

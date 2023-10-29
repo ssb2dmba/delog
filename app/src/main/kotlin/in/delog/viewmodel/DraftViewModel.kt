@@ -44,8 +44,6 @@ class DraftViewModel(
     //signal your view when the coroutine finishes insert
     var inserted: Long? by mutableStateOf(null)
 
-    var dirtyStatus: Boolean by mutableStateOf(false)
-
     var draft: Draft? by mutableStateOf(null)
 
     var link: MessageAndAbout? by mutableStateOf(null)
@@ -63,20 +61,18 @@ class DraftViewModel(
         }
     }
 
-    fun setDirty(d: Boolean) {
-        dirtyStatus = d
-    }
+
 
     fun setCurrentDraft(oid: String) {
         GlobalScope.launch(Dispatchers.IO) {
             draft = draftRepository.getById(oid.toInt())
-            dirtyStatus = false
         }
     }
 
-    fun update(draft: Draft) {
+    fun update(draftParam: Draft) {
         GlobalScope.launch(Dispatchers.IO) {
-            draftRepository.update(draft)
+            draftRepository.update(draftParam)
+            draft = draftRepository.getById(draftParam.oid)
         }
     }
 
@@ -112,16 +108,16 @@ class DraftViewModel(
         GlobalScope.launch(Dispatchers.IO) {
             val ssbSignableMessage = SsbSignableMessage.fromDraft(draft)
             // precise some blockchain info
-            var last: Message? = messageRepository.getLastMessage(draft.author)
+            val last: Message? = messageRepository.getLastMessage(draft.author)
             if (last != null) {
                 ssbSignableMessage.sequence = last.sequence + 1
             } else {
                 ssbSignableMessage.sequence = 1
             }
-            ssbSignableMessage.previous = last?.key;
+            ssbSignableMessage.previous = last?.key
             // sign message
-            ssbSignableMessage.hash = "sha256";
-            var sig = ssbSignableMessage.signMessage(feed)
+            ssbSignableMessage.hash = "sha256"
+            val sig = ssbSignableMessage.signMessage(feed)
 
             // add sig & hash info
             val ssbSignedMessage = SsbSignedMessage(ssbSignableMessage, sig)

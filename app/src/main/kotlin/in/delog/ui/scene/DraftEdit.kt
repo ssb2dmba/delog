@@ -17,7 +17,9 @@
  */
 package `in`.delog.ui.scene
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,7 +30,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusOrder
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -187,7 +192,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
     if (draftViewModel.draft == null) {
         return
     }
-
+    var dirtyStatus by remember { mutableStateOf(true) }
     var contentAsText by remember { mutableStateOf(draftViewModel.draft!!.contentAsText) }
     bottomBarViewModel.setTitle(title)
     bottomBarViewModel.setActions {
@@ -202,7 +207,9 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                 contentDescription = "delete"
             )
         }
-        if (draftViewModel.dirtyStatus) {
+        if (dirtyStatus) {
+            val context = LocalContext.current
+            val toastText = stringResource(R.string.draft_saved_confirmation)
             Spacer(Modifier.weight(1f))
             SaveDraftFab {
                 val draft = Draft(
@@ -214,15 +221,21 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                     root = draftViewModel.draft!!.root,
                     branch = draftViewModel.draft!!.branch
                 )
-                draftViewModel.update(draft = draft)
-                draftViewModel.setDirty(false)
-                navController.navigate("${Scenes.DraftEdit.route}/${draftId}")
+                draftViewModel.update(draft)
+                dirtyStatus = false
+                Toast
+                    .makeText(
+                        context,
+                        toastText,
+                        Toast.LENGTH_LONG
+                    )
+                    .show()
             }
         } else {
             IconButton(
                 modifier = Modifier.height(56.dp),
                 onClick = {
-                    draftViewModel.setDirty(true)
+                    dirtyStatus = true
                 }
             ) {
                 Icon(
@@ -258,35 +271,39 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
             modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
         ) {
             IdentityBox(identAndAbout = identAndAbout)
+            val itemClicked = {
+                dirtyStatus=!dirtyStatus
+                //focusRequester.requestFocus()
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                if (draftViewModel.dirtyStatus) {
+                if (dirtyStatus) {
                     OutlinedTextField(
                         value = contentAsText,
                         onValueChange = {
-                            draftViewModel.setDirty(true)
                             contentAsText = it
                         },
                         modifier = Modifier
                             .focusRequester(focusRequester)
+                            .focusTarget()
                             .fillMaxHeight(0.85f)
                             .padding(16.dp)
                             .fillMaxWidth()
                     )
+
                 } else {
                     // preview mode
                     val obj: MessageViewData = draftViewModel.draft!!.toMessageViewData()
+
                     MessageItem(
                         navController = navController,
                         message = obj,
                         showToolbar = false,
                         hasDivider = link!=null,
-                        onClickCallBack = {
-                            draftViewModel.dirtyStatus=!draftViewModel.dirtyStatus
-                            focusRequester.requestFocus()
-                        })
+                        onClickCallBack = itemClicked)
                 }
             }
         }

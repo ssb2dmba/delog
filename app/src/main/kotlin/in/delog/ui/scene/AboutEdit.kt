@@ -91,7 +91,7 @@ fun AboutEdit(
     var image by remember { mutableStateOf(about.image) }
 
     if (showExportDialogState) {
-        ExportMnemonicDialog(vm, vm::onExportDialogDismiss)
+        ExportMnemonicDialog(identAndAbout = vm.identAndAbout!!, vm::onExportDialogDismiss)
     }
 
     if (showPublishDialogState) {

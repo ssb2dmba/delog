@@ -53,15 +53,17 @@ fun AppBottomAppBar(onNavIconClick: () -> Job) {
                 ) {
                     OutlinedIconButton(
                         modifier = Modifier.testTag("openDrawer"),
-                        onClick = { onNavIconClick() }
+                        onClick = { onNavIconClick() },
                     ) {
-                        Icon(Icons.Outlined.Menu, contentDescription = "menu")
+                        Icon(Icons.Outlined.Menu,
+                            contentDescription = "menu"
+                        )
                     }
                     Text(
                         modifier = Modifier.padding(start = 6.dp),
                         text = title,
                         style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
 
                     //Spacer(modifier = Modifier.width(8.dp))

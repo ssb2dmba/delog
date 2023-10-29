@@ -22,9 +22,9 @@ import androidx.compose.ui.graphics.Color
 // Generated via theme builder
 // https://material-foundation.github.io/material-theme-builder/#/custom
 
-val md_theme_light_primary = Color(0xFF386a20) //0xFF825500)
-val md_theme_light_onPrimary = Color(0xFFffffff)
-val md_theme_light_primaryContainer = Color(0xFF386a20)
+val md_theme_light_primary = Color(0xFF386a20) // os top
+val md_theme_light_onPrimary = Color(0xFF212121)
+val md_theme_light_primaryContainer = Color(0xFFA5D6A7) //81C784) // fab
 val md_theme_light_onPrimaryContainer = Color(0xFF042100)
 val md_theme_light_secondary = Color(0xFF55624c)
 val md_theme_light_onSecondary = Color(0xFFffffff)
@@ -42,7 +42,7 @@ val md_theme_light_background = Color(0xFFFDFDF5)  // app background
 val md_theme_light_onBackground = Color(0xFF1A1C18)
 val md_theme_light_surface = Color(0xFFFDFDF5) // scaffold/surface background
 val md_theme_light_onSurface = Color(0xFFF1A1C18)
-val md_theme_light_surfaceVariant = Color(0xFFf1f1ea)
+val md_theme_light_surfaceVariant = Color(0x99FFFFFF)//0xFFf1f1ea)
 val md_theme_light_onSurfaceVariant = Color(0xFF43483E)
 val md_theme_light_outline = Color(0xFF74796e)
 val md_theme_light_inverseOnSurface = Color(0xFFf1f1ea)
