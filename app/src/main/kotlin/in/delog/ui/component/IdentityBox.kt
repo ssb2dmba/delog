@@ -18,14 +18,16 @@
 package `in`.delog.ui.component
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,9 +44,12 @@ import coil.compose.rememberAsyncImagePainter
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.ui.scene.ExportMnemonicDialog
+import `in`.delog.ui.scene.ExportPublickKeyDialog
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.ui.theme.keySmall
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IdentityBox(
     identAndAbout: IdentAndAbout,
@@ -54,6 +59,14 @@ fun IdentityBox(
 
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+    var showExportDialog by remember { mutableStateOf(false) }
+    
+    if (showExportDialog) {
+        ExportPublickKeyDialog(identAndAbout=identAndAbout, onDismissRequest = {
+            showExportDialog = false
+        })
+        return
+    }
 
     if (identAndAbout.about == null) {
         identAndAbout.about = About(identAndAbout.ident.publicKey)
@@ -83,16 +96,21 @@ fun IdentityBox(
             Text(
                 text = identAndAbout.ident.publicKey,
                 modifier = Modifier
-                    .clickable {
-                        clipboardManager.setText(buildAnnotatedString { append(identAndAbout.ident.publicKey) })
-                        Toast
-                            .makeText(
-                                context,
-                                String.format("%s copied!", identAndAbout.ident.publicKey),
-                                Toast.LENGTH_LONG
-                            )
-                            .show()
-                    },
+                    .combinedClickable(
+                        onClick = {
+                            clipboardManager.setText(buildAnnotatedString { append(identAndAbout.ident.publicKey) })
+                            Toast
+                                .makeText(
+                                    context,
+                                    String.format("%s copied!", identAndAbout.ident.publicKey),
+                                    Toast.LENGTH_LONG
+                                )
+                                .show()
+                        },
+                        onDoubleClick = {
+                            showExportDialog = true
+                        }
+                    ),
                 style = keySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -101,7 +119,9 @@ fun IdentityBox(
         // alias + button
         Row(
             verticalAlignment=Alignment.Bottom,
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
         ) {
             Text(
                 text = identAndAbout.about?.name ?: identAndAbout.ident.publicKey,

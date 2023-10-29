@@ -128,7 +128,7 @@ fun IdentDetail(
         IdentDetailConfirmDeleteDialog(navHostController, vm)
     }
     if (showExportDialogState) {
-        ExportMnemonicDialog(vm, vm::onExportDialogDismiss)
+        ExportMnemonicDialog(identAndAbout = vm.identAndAbout!!, vm::onExportDialogDismiss)
     }
 
     IdentEdit(ident = vm.identAndAbout!!.ident, navHostController, vm)

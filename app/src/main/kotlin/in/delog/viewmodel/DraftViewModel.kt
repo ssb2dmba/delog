@@ -69,9 +69,10 @@ class DraftViewModel(
         }
     }
 
-    fun update(draft: Draft) {
+    fun update(draftParam: Draft) {
         GlobalScope.launch(Dispatchers.IO) {
-            draftRepository.update(draft)
+            draftRepository.update(draftParam)
+            draft = draftRepository.getById(draftParam.oid)
         }
     }
 
@@ -107,16 +108,16 @@ class DraftViewModel(
         GlobalScope.launch(Dispatchers.IO) {
             val ssbSignableMessage = SsbSignableMessage.fromDraft(draft)
             // precise some blockchain info
-            var last: Message? = messageRepository.getLastMessage(draft.author)
+            val last: Message? = messageRepository.getLastMessage(draft.author)
             if (last != null) {
                 ssbSignableMessage.sequence = last.sequence + 1
             } else {
                 ssbSignableMessage.sequence = 1
             }
-            ssbSignableMessage.previous = last?.key;
+            ssbSignableMessage.previous = last?.key
             // sign message
-            ssbSignableMessage.hash = "sha256";
-            var sig = ssbSignableMessage.signMessage(feed)
+            ssbSignableMessage.hash = "sha256"
+            val sig = ssbSignableMessage.signMessage(feed)
 
             // add sig & hash info
             val ssbSignedMessage = SsbSignedMessage(ssbSignableMessage, sig)

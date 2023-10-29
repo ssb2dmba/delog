@@ -53,4 +53,5 @@
     <string name="replying_to">Replying to %s</string>
     <string name="empty_list">Message list is empty.</string>
     <string name="fromQRCode">from QR Code</string>
+    <string name="draft_saved_confirmation">Draft saved, click publish to broadcast</string>
 </resources>

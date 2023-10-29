@@ -17,6 +17,7 @@
  */
 package `in`.delog.ui.scene
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
@@ -32,6 +33,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusOrder
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -190,7 +192,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
     if (draftViewModel.draft == null) {
         return
     }
-    var dirtyStatus by remember { mutableStateOf(false) }
+    var dirtyStatus by remember { mutableStateOf(true) }
     var contentAsText by remember { mutableStateOf(draftViewModel.draft!!.contentAsText) }
     bottomBarViewModel.setTitle(title)
     bottomBarViewModel.setActions {
@@ -206,6 +208,8 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
             )
         }
         if (dirtyStatus) {
+            val context = LocalContext.current
+            val toastText = stringResource(R.string.draft_saved_confirmation)
             Spacer(Modifier.weight(1f))
             SaveDraftFab {
                 val draft = Draft(
@@ -217,9 +221,15 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                     root = draftViewModel.draft!!.root,
                     branch = draftViewModel.draft!!.branch
                 )
-                draftViewModel.update(draft = draft)
+                draftViewModel.update(draft)
                 dirtyStatus = false
-                navController.navigate("${Scenes.DraftEdit.route}/${draftId}")
+                Toast
+                    .makeText(
+                        context,
+                        toastText,
+                        Toast.LENGTH_LONG
+                    )
+                    .show()
             }
         } else {
             IconButton(
@@ -263,7 +273,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
             IdentityBox(identAndAbout = identAndAbout)
             val itemClicked = {
                 dirtyStatus=!dirtyStatus
-                focusRequester.requestFocus()
+                //focusRequester.requestFocus()
             }
 
             Column(

@@ -4,12 +4,10 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,12 +18,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import com.zachklipp.richtext.ui.printing.Printable
 import com.zachklipp.richtext.ui.printing.rememberPrintableController
+import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.ssb.Dict
 import `in`.delog.ssb.WordList
@@ -49,8 +49,8 @@ fun rememberMnemonicText(pk: String): String? {
                 Base64.decode(pk).toArray()
             val arr: List<String> = WordList(Locale.ENGLISH).words
             val dict = Dict(arr.toTypedArray())
-            var mnemonicCode = secretKeyToMnemonic(entropy, dict)
-            var mnemonic = mnemonicCode.joinToString(" ")
+            val mnemonicCode = secretKeyToMnemonic(entropy, dict)
+            val mnemonic = mnemonicCode.joinToString(" ")
             txt = mnemonic
         }
     }
@@ -126,20 +126,27 @@ fun rememberQrBitmapPainter(
 
 @Composable
 fun ExportMnemonicDialog(
-    viewModel: IdentAndAboutViewModel,
+    identAndAbout: IdentAndAbout,
     onDismissRequest: () -> Unit
 ) {
     val printController = rememberPrintableController()
-
-    Dialog(onDismissRequest = { onDismissRequest() }) {
+    Dialog(
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        ),
+        onDismissRequest = { onDismissRequest() }) {
         Card(
             Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(0.dp),
+            colors = CardDefaults.cardColors(),
             shape = RoundedCornerShape(0.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -151,35 +158,37 @@ fun ExportMnemonicDialog(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = viewModel.identAndAbout!!.about!!.name!!,
+                            text = identAndAbout!!.about!!.name!!,
                             modifier = Modifier.padding(16.dp),
                         )
-                        val pk = viewModel.identAndAbout!!.ident.privateKey!!
-                        var atServer =""
-                        if (viewModel.identAndAbout!!.ident.server!=null) {
-                            atServer = "@" +
-                                    viewModel.identAndAbout!!.ident.server +
+                        val pk = identAndAbout!!.ident.privateKey!!
+                        //var atServer =""
+                        val atServer = "@" +
+                                    identAndAbout!!.ident.server +
                                     ":" +
-                                    viewModel.identAndAbout!!.ident.port
-                        }
+                                    identAndAbout!!.ident.port
+
                         val configuration = LocalConfiguration.current
 
                         val screenWidth = configuration.screenWidthDp.dp
                         Image(
                             painter = rememberQrBitmapPainter(
-                                content = pk + atServer,
-                                size= screenWidth - 32.dp
+                                content = if (identAndAbout!!.ident.server.isNotEmpty())
+                                    (pk + atServer)
+                                else
+                                    pk,
+                                size = screenWidth - 32.dp
                             ),
                             contentDescription = "QR Code"
                         )
-                        if (atServer!="") {
+                        if (identAndAbout!!.ident.server.isNotEmpty()) {
                             Text(
                                 text = atServer,
                                 modifier = Modifier.padding(32.dp),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                        rememberMnemonicText(pk = viewModel.identAndAbout!!.ident.privateKey!!)?.let {
+                        rememberMnemonicText(pk = identAndAbout!!.ident.privateKey!!)?.let {
                             Text(
                                 text = it,
                                 modifier = Modifier.padding(32.dp),
@@ -202,7 +211,7 @@ fun ExportMnemonicDialog(
                     }
                     TextButton(
                         onClick = {
-                            printController.print(viewModel.identAndAbout!!.about!!.name!!)
+                            printController.print(identAndAbout!!.about!!.name!!)
                         },
                         modifier = Modifier.padding(8.dp),
                     ) {
@@ -213,5 +222,3 @@ fun ExportMnemonicDialog(
         }
     }
 }
-
-
