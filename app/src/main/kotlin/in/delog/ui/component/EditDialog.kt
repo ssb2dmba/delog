@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -103,7 +104,7 @@ fun EditDialog(
 @Composable
 fun previewEditDialog() {
     EditDialog(title = R.string.edit_default_invite_url,
-        value = stringResource(id = R.string.default_invite_url),
+        value = stringArrayResource(id = R.array.default_servers)[0],
         closeDialog = { },
         setValue = { }
     )

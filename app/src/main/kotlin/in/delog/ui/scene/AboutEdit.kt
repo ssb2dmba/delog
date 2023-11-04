@@ -28,7 +28,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,18 +50,16 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import `in`.delog.R
 import `in`.delog.db.model.About
-import `in`.delog.ssb.*
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
+import `in`.delog.ui.observeAsState
 import `in`.delog.ui.theme.keySmall
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentAndAboutViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import java.util.*
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutEdit(
     navHostController: NavHostController,
@@ -70,13 +71,13 @@ fun AboutEdit(
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
 
     var dirty by remember { mutableStateOf(false) }
-    val showExportDialogState: Boolean by vm.showExportDialog.collectAsState()
-    val showPublishDialogState: Boolean by vm.showPublishDialog.collectAsState()
-    val showDeleteDialogState: Boolean by vm.showDeleteDialog.collectAsState()
-
+    var showExportDialogState by remember { mutableStateOf(false) }
+    var showPublishDialogState by remember { mutableStateOf(false) }
+    var showDeleteDialogState by remember { mutableStateOf(false) }
+    val nickAvailable by vm.networkIdentifierValid.observeAsState(null)
     val title = stringResource(R.string.about)
     LaunchedEffect(dirty) {
-        Log.i("DEBUG", "calling set current ident by pk with " + pubKey)
+        Log.i("DEBUG", "calling set current ident by pk with $pubKey")
         vm.setCurrentIdentByPk(pubKey)
         bottomBarViewModel.setTitle(title)
     }
@@ -88,18 +89,24 @@ fun AboutEdit(
 
     var name by remember { mutableStateOf(about.name) }
     var description by remember { mutableStateOf(about.description) }
-    var image by remember { mutableStateOf(about.image) }
+    val image by remember { mutableStateOf(about.image) }
 
     if (showExportDialogState) {
-        ExportMnemonicDialog(identAndAbout = vm.identAndAbout!!, vm::onExportDialogDismiss)
+        ExportMnemonicDialog(identAndAbout = vm.identAndAbout!!) { showExportDialogState = false }
     }
 
     if (showPublishDialogState) {
-        AboutEditPublishDialog(navHostController, vm, About(pubKey, name, description, image, true))
+        AboutEditPublishDialog(
+            navHostController,
+            vm,
+            About(pubKey, name, description, image, true)
+        ) {
+            showPublishDialogState = false
+        }
     }
 
     if (showDeleteDialogState) {
-        IdentDetailConfirmDeleteDialog(navHostController, vm)
+        IdentDetailConfirmDeleteDialog(navHostController, vm) { showDeleteDialogState = false }
     }
 
     if (!dirty) {
@@ -155,7 +162,8 @@ fun AboutEdit(
                     OutlinedTextField(
                         value = if (name != null) name!! else "",
                         onValueChange = { value ->
-                            name = value
+                            name = value.filter { it.isLetter() }.lowercase().trim()
+                            vm.checkIfValid(name)
                         },
                         label = {
                             Text(
@@ -165,6 +173,16 @@ fun AboutEdit(
                         },
                         modifier = Modifier.weight(0.8f)
                     )
+                }
+            }
+            if (nickAvailable != null) {
+                val idStatusText: String =
+                    if (nickAvailable == true) " available" else "not available"
+                val idStatusIcon =
+                    if (nickAvailable == true) Icons.Default.Done else Icons.Default.Close
+                Row {
+                    Icon(idStatusIcon, contentDescription = idStatusText)
+                    Text(idStatusText)
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -188,12 +206,16 @@ fun AboutEdit(
         }
         // bottom menu bar for edit mode
         bottomBarViewModel.setActions {
-            IdentDetailTopBarMenu(navHostController, vm)
+            IdentDetailTopBarMenu(
+                navHostController,
+                vm,
+                { showExportDialogState = true },
+                { showDeleteDialogState = true })
             Spacer(modifier = Modifier.weight(1f))
             // save
             ExtendedFloatingActionButton(
                 onClick = {
-                    vm.onSavingAbout(About(about.about, name, description, image, true));
+                    vm.onSavingAbout(About(about.about, name, description, image, true))
                     dirty = true
                 },
                 icon = {
@@ -224,7 +246,11 @@ fun AboutEdit(
         }
         // bottom menu bar for review mode
         bottomBarViewModel.setActions {
-            IdentDetailTopBarMenu(navHostController, vm)
+            IdentDetailTopBarMenu(
+                navHostController,
+                vm,
+                { showExportDialogState = true },
+                { showDeleteDialogState = true })
             IconButton(onClick = { dirty = false }) {
                 Icon(imageVector = Icons.Default.Edit, contentDescription = "edit")
             }
@@ -232,12 +258,12 @@ fun AboutEdit(
             // save
             ExtendedFloatingActionButton(
                 onClick = {
-                    //TODO
+                    showPublishDialogState = true
                 },
                 icon = {
                     Icon(
                         imageVector = Icons.Outlined.Send,
-                        contentDescription = stringResource(id = R.string.save)
+                        contentDescription = stringResource(id = R.string.publish_about)
                     )
                 },
                 text = { Text(text = stringResource(id = R.string.save)) }
@@ -251,9 +277,10 @@ fun AboutEdit(
 fun AboutEditPublishDialog(
     navHostController: NavHostController,
     viewModel: IdentAndAboutViewModel,
-    about: About
+    about: About,
+    onDismissRequest: () -> Unit
 ) {
-    AlertDialog(onDismissRequest = { viewModel.onExportDialogDismiss() },
+    AlertDialog(onDismissRequest = onDismissRequest,
         containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Text(
@@ -276,7 +303,7 @@ fun AboutEditPublishDialog(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .padding(15.dp)
-                    .clickable { viewModel.onExportDialogDismiss() }
+                    .clickable { onDismissRequest.invoke() }
             )
         },
         confirmButton = {
@@ -288,7 +315,7 @@ fun AboutEditPublishDialog(
                     .padding(15.dp)
                     .clickable {
                         viewModel.onDoPublishClicked(about)
-                        navHostController.navigate("${Scenes.FeedList.route}")
+                        navHostController.navigate(Scenes.FeedList.route)
                     }
             )
         }

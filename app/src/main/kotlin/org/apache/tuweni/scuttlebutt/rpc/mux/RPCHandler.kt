@@ -108,7 +108,7 @@ open class RPCHandler(
         if (true || BuildConfig.DEBUG) {
             val requestString = rpcMessage.asString()
             val logMessage = String.format(
-                "[%d] Outgoing request: %s",
+                "> [%d]: %s",
                 rpcMessage.requestNumber(),
                 requestString
             )
@@ -155,7 +155,7 @@ open class RPCHandler(
 
     private fun handleRequest(rpcMessage: RPCMessage) {
         if (BuildConfig.DEBUG) {
-            val logMessage = String.format("incoming  RPCMessage: %s", rpcMessage.asString())
+            val logMessage = String.format("< [%s] %s",rpcMessage.requestNumber(), rpcMessage.asString())
             Log.d(TAG, logMessage)
         }
         val rpcFlags = rpcMessage.rpcFlags()

@@ -42,6 +42,7 @@ interface IdentRepository {
     suspend fun getLive(id: String): LiveData<Ident>
     fun setFeedAsDefaultFeed(it: Ident)
     suspend fun findByPublicKey(pk: String): IdentAndAbout
+    suspend fun cleanInvite(newIdent: Ident)
 
 }
 
@@ -59,6 +60,7 @@ class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: A
 
     override suspend fun insert(feed: IdentAndAbout): Long {
         val id= identDao.insert(feed = feed.ident)
+        identDao.setFeedAsDefaultFeed(id)
         aboutDao.insert(feed.about!!)
         return id;
     }
@@ -77,6 +79,10 @@ class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: A
 
     override suspend fun findByPublicKey(pk: String): IdentAndAbout {
         return identDao.findByPublicKey(pk)
+    }
+
+    override suspend fun cleanInvite(newIdent: Ident) {
+        return identDao.cleanInvite(newIdent.oid)
     }
 
     override suspend fun getLive(id: String): LiveData<Ident> {

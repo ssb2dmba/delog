@@ -19,20 +19,17 @@ package `in`.delog.ui.scene
 
 
 import android.widget.Toast
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Draw
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -44,22 +41,26 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.toMessageViewData
-import `in`.delog.ssb.SsbService
 import `in`.delog.ui.component.*
 import `in`.delog.ui.navigation.Scenes
+import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.BottomBarViewModel
+import `in`.delog.viewmodel.FeedMainUIState
 import `in`.delog.viewmodel.MessageListViewModel
 import kotlinx.coroutines.flow.Flow
-import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
+fun FeedMain(navController: NavController, feedToReadKey: String) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     if (feedToReadKey == null) {
         return
     }
+    val viewModel =
+        koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
+    val uiState by viewModel.uiState.observeAsState(FeedMainUIState())
+
 
     LaunchedEffect(feedToReadKey) {
         bottomBarViewModel.setActions {
@@ -68,48 +69,40 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
         }
         bottomBarViewModel.setTitle("main")
     }
-    val viewModel =
-        koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
-    if (viewModel.identAndAbout ==null) {
+
+    if (uiState.identAndAbout == null && !uiState.loaded) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+        }
         return
     }
-    val context = LocalContext.current
-    val ssbService: SsbService = get()
-    LaunchedEffect(feedToReadKey) {
-        try {
-            ssbService.reconnect(viewModel.identAndAbout!!.ident)
-        } catch (e: Exception) {
-            Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
-            e.printStackTrace()
-        }
-    }
-    if (viewModel.messagesPaged == null) return
+
     val fpgMessages: Flow<PagingData<AppDatabaseView.MessageInTree>> = viewModel.messagesPaged!!
     val lazyMessageItems: LazyPagingItems<AppDatabaseView.MessageInTree> =
         fpgMessages.collectAsLazyPagingItems()
+    if (uiState.syncing) {
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    }
     Column {
-        IdentityBox(
-            identAndAbout = viewModel.identAndAbout!!,
-            short = true,
-        )
+        Card(
+            colors = CardDefaults.cardColors(),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier
+                .padding(16.dp)
+                .wrapContentHeight()
+        ) {
+            IdentityBox(
+                identAndAbout = uiState.identAndAbout!!,
+                short = true,
+            )
+        }
+
         if (lazyMessageItems.itemCount == 0) {
             AppEmptyList()
-        } else {
-            val firstMsgInList = lazyMessageItems[0]!!
-            if (firstMsgInList.level > 0) {
-
-                Text("In reply to "
-                        + (firstMsgInList.pName ?: firstMsgInList.pauthor.subSequence(0, 6)
-                        ),
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable {
-                            val argUri =
-                                makeArgUri(firstMsgInList.parents.split('-')[(firstMsgInList.level - 1).toInt()])
-                            navController.navigate("${Scenes.MainFeed.route}/${argUri}")
-                        }
-                )
-            }
         }
         var previousRoot: String? = null
         LazyVerticalGrid(columns = GridCells.Fixed(1)) {
@@ -139,8 +132,18 @@ fun FeedMain(navController: NavController, feedToReadKey: String? = null) {
             }
         }
     }
-}
 
+    if (uiState.error!= null && uiState.error?.message!=null) {
+        val context = LocalContext.current
+        Toast
+            .makeText(
+                context,
+                String.format(uiState.error!!.message!!),
+                Toast.LENGTH_LONG
+            )
+            .show()
+    }
+}
 
 @Composable
 fun NewDraftFab(navController: NavController) {

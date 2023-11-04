@@ -118,7 +118,7 @@ fun DraftNew(
 
     LaunchedEffect(draftViewModel.inserted) {
         if (draftViewModel.inserted != null) {
-            navController.navigate("${Scenes.DraftEdit.route}/${draftViewModel.inserted}")
+            navController.navigate("${Scenes.DraftEdit.route}/${draftViewModel.inserted}/done")
         }
     }
 

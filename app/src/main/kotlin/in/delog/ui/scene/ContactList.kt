@@ -23,8 +23,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -163,16 +161,7 @@ fun ContactListItem(
     Box(modifier = Modifier.fillMaxWidth()) {
 
         val identAndAbout = IdentAndAbout(
-            ident = Ident(
-                -1,
-                publicKey = contactAndAbout.about!!.about,
-                "",
-                -1,
-                "",
-                false,
-                -1,
-                "",
-            ),
+            ident = IdentAndAbout.empty(contactAndAbout.about!!.about),
             about = contactAndAbout.about
         )
         IdentityBox(identAndAbout = identAndAbout)

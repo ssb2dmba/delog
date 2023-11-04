@@ -45,7 +45,7 @@ fun NavGraph(navController: NavHostController) {
                 ?.let { FeedMain(navController, it) }
         }
         composable(route = Scenes.MainFeed.route) {
-            FeedMain(navController, LocalActiveFeed.current?.ident?.publicKey)
+            LocalActiveFeed.current?.ident?.publicKey?.let { it1 -> FeedMain(navController, it1) }
         }
         composable(route = Scenes.FeedList.route) {
             IdentList(navController)
@@ -86,6 +86,14 @@ fun NavGraph(navController: NavHostController) {
             val key = backStackEntry.arguments?.getString(id)
             val draftType = backStackEntry.arguments?.getString(draftType)
             DraftNew(navController = navController, draftMode = draftType, linkedKey = key);
+        }
+
+        composable(
+            route = Scenes.DraftEdit.route + "/{" + id + "}/done",
+            arguments = listOf(navArgument(id) { type = NavType.StringType })
+        ) { backStackEntry ->
+            backStackEntry.arguments?.getString(id)
+                ?.let { DraftEdit(navController, it, true) }
         }
 
         composable(

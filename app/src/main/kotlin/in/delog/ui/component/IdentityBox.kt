@@ -118,14 +118,14 @@ fun IdentityBox(
         }
         // alias + button
         Row(
-            verticalAlignment=Alignment.Bottom,
+            verticalAlignment=Alignment.Top,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp)
         ) {
             Text(
-                text = identAndAbout.about?.name ?: identAndAbout.ident.publicKey,
-                style = MaterialTheme.typography.headlineSmall,
+                text = identAndAbout.getNetworkIdentifier(),
+                style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -171,7 +171,8 @@ fun IdentityCardPreview() {
             "priv",
             false,
             1,
-            ""
+            "",
+            null
         ),
         about = About(
             about = "@YpSbE5/7oWuf7k6zhU/wwbm28EffUggYEwVpDkOAdIg=.ed25519",

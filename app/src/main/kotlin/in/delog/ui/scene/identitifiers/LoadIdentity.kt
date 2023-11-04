@@ -16,7 +16,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import `in`.delog.R
 import `in`.delog.db.SettingStore
-import `in`.delog.db.SettingStore.Companion.INVITE_URL
+import `in`.delog.db.SettingStore.Companion.SERVER_URL
+import `in`.delog.db.model.Ident
 import `in`.delog.ui.CameraQrCodeScanner
 import `in`.delog.ui.component.EditDialog
 import `in`.delog.viewmodel.IdentListViewModel
@@ -49,7 +50,9 @@ fun LoadIdentity(
 
     val context = LocalContext.current
     val store = SettingStore(context)
-    val inviteUrl = store.getData(INVITE_URL).collectAsState(initial = null)
+    val serverUrl = store.getData(SERVER_URL).collectAsState(initial = null)
+    if (serverUrl.value == null) return
+    val serverName = serverUrl.value!!.split(":")[0]
 
     var showInviteUrlDialog by remember { mutableStateOf(false) }
 
@@ -99,7 +102,8 @@ fun LoadIdentity(
             if (it == null) {
                 showMnemonicForm = false;
             } else {
-                callBack(it, if (getInvite) inviteUrl.value else null)
+                val inviteUrl = Ident.getInviteUrl(serverName)
+                callBack(it, if (getInvite) inviteUrl else null)
             }
         }
         return
@@ -152,24 +156,12 @@ fun LoadIdentity(
                 Text(
                     String.format(
                         stringResource(R.string.get_invite_and_redeem_it),
-                        inviteUrl.value
+                        serverName
                     ),
                     style = MaterialTheme.typography.bodySmall
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                ElevatedButton(
-                    modifier = Modifier.padding(end = 8.dp, top = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
-                    onClick = {
-                        showMnemonicForm = true
-                    },
-                    content = { Text(stringResource(R.string.restore_from_mnemonic)) }
-                )
 
                 ElevatedButton(
                     modifier = Modifier.padding(start = 8.dp, top = 8.dp),
@@ -178,7 +170,7 @@ fun LoadIdentity(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ),
                     onClick = {
-                        callBack(Identity.random(), if (getInvite) inviteUrl.value else null)
+                        callBack(Identity.random(), if (getInvite) serverName else null)
                     },
                     content = { Text(stringResource(R.string.gen_rand_identifier)) }
                 )
@@ -197,6 +189,18 @@ fun LoadIdentity(
                     content = { Text(stringResource(R.string.fromQRCode)) }
                 )
 
+                ElevatedButton(
+                    modifier = Modifier.padding(end = 8.dp, top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    onClick = {
+                        showMnemonicForm = true
+                    },
+                    content = { Text(stringResource(R.string.restore_from_mnemonic)) }
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -206,11 +210,11 @@ fun LoadIdentity(
     if (showInviteUrlDialog) {
         EditDialog(
             title = R.string.edit_default_invite_url,
-            value = if (inviteUrl.value == null) "" else inviteUrl.value!!,
+            value = serverName,
             closeDialog = { showInviteUrlDialog = false },
             setValue = {
                 CoroutineScope(Dispatchers.IO).launch {
-                    store.saveData(INVITE_URL, it)
+                    store.saveData(SERVER_URL, it)
                     showInviteUrlDialog = false
                 }
             }

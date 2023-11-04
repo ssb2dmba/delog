@@ -158,7 +158,7 @@ fun ExportMnemonicDialog(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = identAndAbout!!.about!!.name!!,
+                            text = identAndAbout!!.getNetworkIdentifier(),
                             modifier = Modifier.padding(16.dp),
                         )
                         val pk = identAndAbout!!.ident.privateKey!!
@@ -211,7 +211,7 @@ fun ExportMnemonicDialog(
                     }
                     TextButton(
                         onClick = {
-                            printController.print(identAndAbout!!.about!!.name!!)
+                            printController.print(identAndAbout!!.getNetworkIdentifier())
                         },
                         modifier = Modifier.padding(8.dp),
                     ) {

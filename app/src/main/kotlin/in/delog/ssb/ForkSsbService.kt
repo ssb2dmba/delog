@@ -24,8 +24,8 @@ import org.koin.androidx.compose.get
 
 @Composable
 fun ForkSsbService() {
+    /**
     val feed = LocalActiveFeed.current ?: return
-
     val ssbService: SsbService = get()
     LaunchedEffect(feed) {
         try {
@@ -35,4 +35,5 @@ fun ForkSsbService() {
             e.printStackTrace()
         }
     }
+    */
 }

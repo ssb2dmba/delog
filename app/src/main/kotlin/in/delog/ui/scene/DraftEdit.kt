@@ -18,21 +18,17 @@
 package `in`.delog.ui.scene
 
 import android.widget.Toast
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusOrder
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,6 +44,7 @@ import `in`.delog.ui.component.toMessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.DraftViewModel
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -163,8 +160,9 @@ fun DraftConfirmDeleteDialog(navHostController: NavHostController, viewModel: Dr
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DraftEdit(navController: NavHostController, draftId: String) {
+fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean =false) {
     val identAndAbout = LocalActiveFeed.current ?: return
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     val draftViewModel = koinViewModel<DraftViewModel>(parameters = { parametersOf(identAndAbout.ident) })
@@ -192,7 +190,7 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
     if (draftViewModel.draft == null) {
         return
     }
-    var dirtyStatus by remember { mutableStateOf(true) }
+    var dirtyStatus by remember { mutableStateOf(!done) }
     var contentAsText by remember { mutableStateOf(draftViewModel.draft!!.contentAsText) }
     bottomBarViewModel.setTitle(title)
     bottomBarViewModel.setActions {
@@ -281,14 +279,25 @@ fun DraftEdit(navController: NavHostController, draftId: String) {
                     .fillMaxSize()
             ) {
                 if (dirtyStatus) {
+                    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+                    val coroutineScope = rememberCoroutineScope()
                     OutlinedTextField(
                         value = contentAsText,
                         onValueChange = {
                             contentAsText = it
                         },
+                        keyboardOptions= KeyboardOptions(autoCorrect = true),
                         modifier = Modifier
                             .focusRequester(focusRequester)
                             .focusTarget()
+                            .imePadding()
+                            .onFocusEvent { focusState ->
+                                if (focusState.isFocused) {
+                                    coroutineScope.launch {
+                                        bringIntoViewRequester.bringIntoView()
+                                    }
+                                }
+                            }
                             .fillMaxHeight(0.85f)
                             .padding(16.dp)
                             .fillMaxWidth()
