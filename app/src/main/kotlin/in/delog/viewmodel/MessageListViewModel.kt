@@ -30,12 +30,11 @@ import `in`.delog.repository.MessageTreeRepository
 import `in`.delog.ssb.SsbService
 import `in`.delog.ui.component.UrlCachedPreviewer
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 @Immutable
-data class MessageListState(
+data class FeedMainUIState(
     val messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null,
     val identAndAbout: IdentAndAbout? = null,
     val loaded: Boolean = false,
@@ -50,8 +49,8 @@ class MessageListViewModel(
     private val ssbService: SsbService
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MessageListState())
-    val uiState: StateFlow<MessageListState> =_uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(FeedMainUIState())
+    val uiState: StateFlow<FeedMainUIState> =_uiState.asStateFlow()
 
     var messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null
 

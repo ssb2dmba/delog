@@ -31,7 +31,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -46,7 +45,7 @@ import `in`.delog.ui.component.*
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.BottomBarViewModel
-import `in`.delog.viewmodel.MessageListState
+import `in`.delog.viewmodel.FeedMainUIState
 import `in`.delog.viewmodel.MessageListViewModel
 import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
@@ -60,7 +59,7 @@ fun FeedMain(navController: NavController, feedToReadKey: String) {
     }
     val viewModel =
         koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
-    val uiState by viewModel.uiState.observeAsState(MessageListState())
+    val uiState by viewModel.uiState.observeAsState(FeedMainUIState())
 
 
     LaunchedEffect(feedToReadKey) {
