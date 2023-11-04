@@ -75,7 +75,7 @@ fun AppDrawer(
                 AsyncImage(
                     model = "https://robohash.org/${feed.ident.publicKey}.png",
                     placeholder = rememberAsyncImagePainter("https://robohash.org/${feed.ident.publicKey}.png"),
-                    contentDescription = feed.about?.name,
+                    contentDescription = feed.getNetworkIdentifier(),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(size = 120.dp)
@@ -86,10 +86,7 @@ fun AppDrawer(
                 Text(
                     modifier = Modifier
                         .padding(top = 12.dp),
-                    text = if (feed.about!!.name != null)
-                        feed.about!!.name!!
-                    else
-                        feed.ident.publicKey.subSequence(0, 5).toString() + "error",
+                    text = feed.getNetworkIdentifier(),
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.outline

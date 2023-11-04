@@ -65,8 +65,8 @@ interface IdentDao {
 
     @Query("UPDATE ident set default_ident = 1 where oid=:oid ")
     fun _setDefault(oid: Long)
-
-
+    @Query("UPDATE ident set invite = null where oid=:oid ")
+    fun cleanInvite(oid: Long)
 
 }
 

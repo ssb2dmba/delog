@@ -47,10 +47,38 @@ data class Ident(
     var sortOrder: Int,
 
     @ColumnInfo(name = "invite")
-    var invite: String?
+    var invite: String?,
 
-)
+    @ColumnInfo(name = "last_push")
+    var lastPush: Int?,
 
+) {
+    companion object {
+        fun getHttpScheme(server: String): String {
+            var httpScheme = "https://"
+            if (server.endsWith(".onion")
+                || server.endsWith(".bit")
+                || server.startsWith("192.168")) {
+                httpScheme = "http://"
+            }
+            return httpScheme
+        }
+
+        fun getInviteUrl(server: String): String {
+            val httpScheme = getHttpScheme(server)
+            return "${httpScheme}${server}/invite/"
+        }
+
+    }
+}
+
+fun Ident.getHttpScheme(): String {
+    return Ident.getHttpScheme(this.server)
+}
+
+fun Ident.getInviteURl(): String {
+    return Ident.getInviteUrl(this.server)
+}
 
 fun Ident.asKeyPair(): Signature.KeyPair? {
     val privateKey = this.privateKey?.replace(".ed25519", "")

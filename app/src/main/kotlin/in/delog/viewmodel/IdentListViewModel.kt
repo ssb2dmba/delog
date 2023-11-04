@@ -42,14 +42,11 @@ class IdentListViewModel(private val repository: IdentRepository, private val ab
     val default: LiveData<IdentAndAbout> = repository.default.asLiveData()
     val count: LiveData<Int> = repository.count
 
-    fun insert(ident: Ident) {
+    fun insert(ident: Ident, alias: String? = null) {
         GlobalScope.launch(Dispatchers.IO) {
-            if (idents.value?.isEmpty() == true) {
-                ident.defaultIdent = true
-            }
             val about = About(
                 ident.publicKey,
-                name = ident.publicKey.subSequence(0,6).toString(),
+                name = alias ?: ident.publicKey.subSequence(0,6).toString(),
                 dirty = true
             )
             var id = repository.insert(IdentAndAbout(ident,about))

@@ -22,9 +22,11 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.web.LoadingState
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
+import `in`.delog.ssb.BaseSsbService.Companion.TAG
 
 @Composable
 fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
+    Log.d(TAG, "getting invite from ${startUrl}")
     val webViewState = rememberWebViewState(startUrl)
     LaunchedEffect(webViewState.lastLoadedUrl) {
         if (webViewState.lastLoadedUrl != null) {

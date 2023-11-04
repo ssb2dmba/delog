@@ -18,7 +18,6 @@
 package `in`.delog.ui.scene.identitifiers
 
 
-import android.util.Log
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import `in`.delog.db.model.Ident
@@ -33,27 +32,25 @@ import org.koin.androidx.compose.koinViewModel
 fun IdentNew(navController: NavHostController) {
 
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
+    val identListViewModel = koinViewModel<IdentListViewModel>()
 
     LaunchedEffect(Unit) {
         bottomBarViewModel.setTitle("New identity")
         bottomBarViewModel.setActions { }
     }
 
-    var inviteUrl: String? by remember { mutableStateOf(null) }
+    var serverName: String? by remember { mutableStateOf(null) }
     var invite: String? by remember { mutableStateOf(null) }
     var identity: Identity? by remember { mutableStateOf(null) }
-
-    val identListViewModel = koinViewModel<IdentListViewModel>()
     var hasNavigated by remember { mutableStateOf(false) }
 
     fun setInvite(s: String) {
         invite = s
-        Log.i("invite", "invite set to " + s)
     }
 
     fun setIdentity(pIdentity: Identity?, pInviteUrl: String?) {
         identity = pIdentity
-        inviteUrl = pInviteUrl
+        serverName = pInviteUrl
     }
 
     fun doneWithoutInvite() {
@@ -67,6 +64,7 @@ fun IdentNew(navController: NavHostController) {
             identity!!.privateKeyAsBase64String(),
             false,
             -1,
+            null,
             null
         );
         val exists = identListViewModel.idents.value!!.any { it.ident.publicKey == ident.publicKey }
@@ -78,13 +76,12 @@ fun IdentNew(navController: NavHostController) {
             navController.navigate("${Scenes.FeedList.route}")
         }
     }
-
     if (identity == null) {
         LoadIdentity(identListViewModel, ::setIdentity)
     } else {
         if (invite == null) {
-            if (inviteUrl != null) {
-                InviteWebRequest(inviteUrl!!, ::setInvite)
+            if (serverName != null) {
+                InviteWebRequest(Ident.getInviteUrl(serverName!!), ::setInvite)
             } else {
                 doneWithoutInvite();
             }

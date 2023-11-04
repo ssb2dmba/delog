@@ -5,7 +5,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -43,20 +42,20 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     var isValid = (aliasInput.length > 1) && (serverInput.length > 1) && (portInput.length == 4)
     var defaultServer by remember { mutableStateOf(true) }
 
-    val responseState by identListViewModel.insertedIdent.observeAsState(null)
+    val newIdent by identListViewModel.insertedIdent.observeAsState(null)
 
-    if (responseState != null) {
+    if (newIdent != null) {
         val identAndAboutViewModel =
-            koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(responseState!!.oid) })
-        LaunchedEffect(responseState) {
-            identAndAboutViewModel.setCurrentIdent(responseState!!.oid.toString())
+            koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(newIdent!!.oid) })
+        LaunchedEffect(newIdent) {
+            identAndAboutViewModel.setCurrentIdent(newIdent!!.oid.toString())
         }
         if (identAndAboutViewModel.identAndAbout == null) {
             return
         }
-        identAndAboutViewModel.identAndAbout!!.ident.invite?.let {
+        newIdent!!.invite?.let {
             identAndAboutViewModel.connectWithInvite(
-                identAndAboutViewModel.identAndAbout!!.ident
+                newIdent!!
             ) {
                 navController.navigate("${Scenes.FeedList.route}")
             }
@@ -135,7 +134,7 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
-            Button(
+            TextButton(
                 enabled = isValid,
                 onClick = {
                     val ident = Ident(
@@ -146,9 +145,10 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                         privateKey= identity.privateKeyAsBase64String(),
                         invite = inviteString,
                         sortOrder = 1,
-                        defaultIdent = defaultServer
+                        defaultIdent = defaultServer,
+                        lastPush =  null
                     );
-                    identListViewModel.insert(ident = ident)
+                    identListViewModel.insert(ident = ident, aliasInput)
                 },
                 content = { Text(stringResource(id = R.string.save)) }
             )

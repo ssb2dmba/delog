@@ -20,6 +20,7 @@ package `in`.delog.ssb
 import android.util.Log
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
@@ -27,12 +28,8 @@ import `in`.delog.db.model.toJsonResponse
 import `in`.delog.repository.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
-import org.apache.tuweni.scuttlebutt.Invite
-import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClient
-import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClientFactory
 import org.apache.tuweni.scuttlebutt.lib.model.FeedMessage
 import org.apache.tuweni.scuttlebutt.lib.model.toAbout
 import org.apache.tuweni.scuttlebutt.lib.model.toMessage
@@ -50,24 +47,34 @@ class SsbService(
     val contactRepository = contactRepository
     val aboutRepository = aboutRepository
 
+    var connected: Int =0 // 0 disconnected, 1 connected, -1 errored
+
+
+
+    suspend fun synchronize(pFeed: Ident, errorCb: ((Exception) -> Unit)?) {
+        val applicationScope =  MainApplication.getApplicationScope()
+        applicationScope.launch {
+            try {
+                reconnect(pFeed)
+            } catch (e: Exception) {
+                if (errorCb!=null) {
+                    errorCb(e)
+                }
+            }
+        }.join()
+    }
 
     suspend fun reconnect(pFeed: Ident) {
         Log.i(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
-        try {
-            super.connect(pFeed, ::onConnected)
-        } catch (e: Exception) {
-            Log.e(
-                TAG,
-                "error connecting to %s %s : %s ".format(
-                    pFeed.server,
-                    pFeed.publicKey,
-                    e.message.toString()
-                )
-            )
-        }
+        super.connect(pFeed, ::onConnected, ::onError)
+    }
+
+    private fun onError(error:Exception) {
+
     }
 
     private fun onConnected() {
+        connected = 1
         val myFeed = this.toCanonicalForm()
         GlobalScope.launch {
             try {
@@ -82,6 +89,8 @@ class SsbService(
             } catch (e: Exception) {
                 println(e.message)
             }
+
+
         }
 
     }
@@ -112,16 +121,20 @@ class SsbService(
             Log.w(TAG, String.format("pub is requesting the whole history: %s", sequence))
         }
         var remoteSequence = sequence.toLong()
-        val batchSize = Math.min(3, remoteLimit)
+        val batchSize = Math.min(100, remoteLimit) // TODO put in config
         var hasMoreResults = true
         var ct = 0
         while (hasMoreResults) {
             val messages = messageRepository.getMessagePage(id, remoteSequence, batchSize)
             if (messages.size < batchSize) {
+
+            }
+            if (messages.size == 0) {
+                Log.w(TAG, "db return empty: " + ct)
                 hasMoreResults = false
             }
             messages.forEach {
-                Log.d(TAG, "sending:" + it.key)
+                Log.d(TAG, "> [${rpcMessage.requestNumber()}] :" + it.key)
                 val response = RPCCodec.encodeResponse(
                     Bytes.wrap(it.toJsonResponse(format)),
                     rpcMessage.requestNumber(),
@@ -133,23 +146,24 @@ class SsbService(
                 remoteSequence = it.sequence
                 // increment for remote limit & protection
                 ct++
+                updateLastPush(it)
             }
-            if (ct > remoteLimit) {
-                Log.w(TAG, "max remote limit reached: " + ct)
-                break // !!
-            }
+
         }
         Log.d(TAG, "sending endstream for: " + rpcMessage.requestNumber())
         rpcHandler?.endStream(rpcMessage.requestNumber() * -1)
 
-        val pk = this.toCanonicalForm()
-        // server has more message than us, that mean that our device is late and can be upgraded
-        val ourSequence = messageRepository.getLastSequence(pk)
-        if (remoteSequence > ourSequence) {
-            GlobalScope.launch {
-                createHistoryStream(pk,ourSequence + 1)
-            }
+        if (secureScuttlebuttVertxClient!=null) {
+            Thread.sleep(3000)
+            Log.i(TAG, "closing connection")
+            secureScuttlebuttVertxClient!!.stop()
         }
+
+    }
+
+    private fun updateLastPush(it: Message) {
+        // TODO
+        // take it.author feed in database and set lastPush to it.sequence (if lower than)
     }
 
     fun createHistoryStream(pk: String, sequence: Long) {
@@ -158,6 +172,7 @@ class SsbService(
         params["seq"] = sequence
         params["limit"] = 100
         params["keys"] = true
+        Log.i("createHistoryStream", "$pk $sequence")
         createStream("createHistoryStream", params)
     }
 

@@ -40,10 +40,13 @@ val md_theme_light_onError = Color(0xFFFFFFFF)
 val md_theme_light_onErrorContainer = Color(0xFF410001)
 val md_theme_light_background = Color(0xFFFDFDF5)  // app background
 val md_theme_light_onBackground = Color(0xFF1A1C18)
-val md_theme_light_surface = Color(0xFFFDFDF5) // scaffold/surface background
+
+val md_theme_light_surface = Color(0xFFFDFDF5) // drawer/scaffold/surface background
+val md_theme_light_surfaceVariant = Color(0xFFf1f1ea)//0xFFf1f1ea)
+
 val md_theme_light_onSurface = Color(0xFFF1A1C18)
-val md_theme_light_surfaceVariant = Color(0x99FFFFFF)//0xFFf1f1ea)
 val md_theme_light_onSurfaceVariant = Color(0xFF43483E)
+
 val md_theme_light_outline = Color(0xFF74796e)
 val md_theme_light_inverseOnSurface = Color(0xFFf1f1ea)
 val md_theme_light_inverseSurface = Color(0xFF2f312c)

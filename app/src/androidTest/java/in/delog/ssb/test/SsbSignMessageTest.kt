@@ -15,7 +15,8 @@ class SsbSignMessageTest {
         defaultIdent = true,
         server = "",
         sortOrder = -1,
-        invite = null
+        invite = null,
+        lastPush = null
     )
 
     val feed2 = Ident(
@@ -25,7 +26,8 @@ class SsbSignMessageTest {
         defaultIdent = true,
         server = "",
         sortOrder = -1,
-        invite = null
+        invite = null,
+        lastPush = null
     )
 
     @Test

@@ -90,11 +90,12 @@ open class BaseSsbService {
         params["feed"] = feed.publicKey
         val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
         val rpcMessageAsyncResult = ssbClient.rawRequestService.makeAsyncRequest(asyncRequest)
+        Log.i(TAG, rpcMessageAsyncResult.asString())
         callBack(rpcMessageAsyncResult)
     }
 
 
-    open suspend fun connect(pFeed: Ident, terminationFn: () -> Unit): RPCHandler? {
+    open suspend fun connect(pFeed: Ident, terminationFn: () -> Unit, errorFn: (Exception) -> Unit): RPCHandler? {
         setIdentity(pFeed)
         if (keyPair == null || host.isEmpty()) {
             Log.w(TAG, "attempting to connect but no identity")
@@ -103,18 +104,20 @@ open class BaseSsbService {
         callBack = terminationFn
         secureScuttlebuttVertxClient =
             SecureScuttlebuttVertxClient(vertx, keyPair!!, networkKeyBytes32)
-        for (i in 0..1) {
+        for (i in 0..3) {
             try {
                 val invite: Invite = Invite.fromCanonicalForm(pFeed.invite!!);
                 val remotePublicKey = invite.identity.ed25519PublicKey();
                 rpcHandler = makeRPCHandler(remotePublicKey!!)
                 feedService = FeedService(rpcHandler!!)
                 return rpcHandler
-            } catch (e: ConnectException) {
+            } catch (e: Exception) {
                 println(e)
                 Thread.sleep(1000 * i.toLong())
+                if (i>=3) throw e
             }
         }
+
         return null
     }
 

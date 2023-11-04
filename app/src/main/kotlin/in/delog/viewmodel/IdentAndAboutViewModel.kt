@@ -24,21 +24,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import `in`.delog.db.model.About
-import `in`.delog.db.model.Ident
-import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.db.model.Message
+import `in`.delog.db.model.*
 import `in`.delog.repository.AboutRepository
 import `in`.delog.repository.IdentRepository
 import `in`.delog.repository.MessageRepository
 import `in`.delog.ssb.*
+import `in`.delog.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.ssb.BaseSsbService.Companion.objectMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.apache.tuweni.scuttlebutt.lib.model.FeedMessage
+import org.apache.tuweni.scuttlebutt.lib.model.toAbout
 import org.apache.tuweni.scuttlebutt.rpc.RPCResponse
+import java.net.URL
+import kotlin.concurrent.thread
 
 
 class IdentAndAboutViewModel(
@@ -52,14 +55,34 @@ class IdentAndAboutViewModel(
 
     var dirty: Boolean by mutableStateOf(false)
 
-    private val _showExportDialog = MutableStateFlow(false)
-    val showExportDialog: StateFlow<Boolean> = _showExportDialog.asStateFlow()
+    var _networkIdentifierValid: MutableStateFlow<Boolean?> = MutableStateFlow(null)
+    var networkIdentifierValid: StateFlow<Boolean?> = _networkIdentifierValid.asStateFlow()
 
-    private val _showDeleteDialog = MutableStateFlow(false)
-    val showDeleteDialog: StateFlow<Boolean> = _showDeleteDialog.asStateFlow()
-
-    private val _showPublishDialog = MutableStateFlow(false)
-    val showPublishDialog: StateFlow<Boolean> = _showPublishDialog.asStateFlow()
+    fun checkIfValid(name: String?) {
+        if (name.isNullOrEmpty() || identAndAbout?.about == null) return
+        var httpScheme = identAndAbout!!.ident.getHttpScheme()
+        val server = identAndAbout!!.ident.server
+        thread {
+            val jsonResponse: String = try {
+                val url = "${httpScheme}${server}/.well-known/ssb/about/${name}"
+                URL(url).readText()
+            } catch (e: Exception) {
+                Log.e(TAG, e.javaClass.simpleName + " " + e.localizedMessage)
+                return@thread
+            }
+            Log.d(TAG,jsonResponse)
+            try {
+                val m: FeedMessage =
+                    objectMapper.readerFor(FeedMessage::class.java).readValue(jsonResponse)
+                val about = m.toAbout();
+                _networkIdentifierValid.value =
+                    about != null && (about.about == "AVAILABLE" || about.about == identAndAbout!!.ident.publicKey)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            _networkIdentifierValid.value = false
+        }
+    }
 
     fun setCurrentIdent(oid: String) {
         GlobalScope.launch(Dispatchers.IO) {
@@ -67,7 +90,7 @@ class IdentAndAboutViewModel(
             if (identAndAbout == null) return@launch
             if (identAndAbout!!.about == null) {
                 // each ident shall have about
-                val newAbout = About(identAndAbout!!.ident.publicKey,  "","", null, dirty = false)
+                val newAbout = About(identAndAbout!!.ident.publicKey, "", "", null, dirty = false)
                 aboutRepository.insert(newAbout)
                 identAndAbout!!.about = newAbout
             }
@@ -75,14 +98,13 @@ class IdentAndAboutViewModel(
         }
     }
 
-
     fun setCurrentIdentByPk(pk: String) {
         GlobalScope.launch(Dispatchers.IO) {
             identAndAbout = identRepository.findByPublicKey(pk)
             if (identAndAbout == null) return@launch
             if (identAndAbout!!.about == null) {
                 // each ident shall have about
-                val newAbout = About(identAndAbout!!.ident.publicKey,  "","", null, dirty = false)
+                val newAbout = About(identAndAbout!!.ident.publicKey, "", "", null, dirty = false)
                 aboutRepository.insert(newAbout)
                 identAndAbout!!.about = newAbout
             }
@@ -109,45 +131,19 @@ class IdentAndAboutViewModel(
 
     }
 
-
     fun delete(ident: Ident) {
         GlobalScope.launch(Dispatchers.IO) {
             identRepository.delete(ident)
         }
     }
 
-
-    fun onOpenDeleteDialogClicked() {
-        _showDeleteDialog.value = true
-    }
-
-    fun onDeleteDialogDismiss() {
-        _showDeleteDialog.value = false
-    }
-
-    fun onOpenExportDialogClicked() {
-        _showExportDialog.value = true
-    }
-
-    fun onExportDialogDismiss() {
-        _showExportDialog.value = false
-    }
-
-    fun onOpenPublishDialogClicked() {
-        _showPublishDialog.value = true
-    }
-
-    fun onPublishDialogDismiss() {
-        _showPublishDialog.value = false
-    }
-
     fun onDoPublishClicked(about: About) {
         GlobalScope.launch(Dispatchers.IO) {
-            val iAndA : IdentAndAbout = identRepository.findByPublicKey(about.about)
+            val iAndA: IdentAndAbout = identRepository.findByPublicKey(about.about)
             if (iAndA == null) {
                 return@launch
             }
-            val ident =iAndA.ident
+            val ident = iAndA.ident
             val ssbSignableMessage = SsbSignableMessage.fromAbout(about!!)
             // precise some blockchain info
             var last: Message? = messageRepository.getLastMessage(about!!.about)
@@ -177,11 +173,12 @@ class IdentAndAboutViewModel(
 
     var connecting = false
 
-    var networkError:String? = null
+    var networkError: String? = null
     fun connectWithInvite(ident: Ident, callBack: (RPCResponse) -> Unit) {
         if (connecting) return
 
         ssbService.rpcHandler?.close()
+
         viewModelScope.launch {
             connecting = true
             try {
@@ -191,6 +188,12 @@ class IdentAndAboutViewModel(
                 e.printStackTrace();
                 connecting = false
             }
+        }
+    }
+
+    fun cleanInvite(newIdent: Ident) {
+        GlobalScope.launch(Dispatchers.IO) {
+            identRepository.cleanInvite(newIdent)
         }
     }
 }

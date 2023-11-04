@@ -18,6 +18,7 @@
 package `in`.delog.viewmodel
 
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.*
@@ -26,34 +27,58 @@ import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message
 import `in`.delog.repository.MessageRepository
 import `in`.delog.repository.MessageTreeRepository
+import `in`.delog.ssb.SsbService
 import `in`.delog.ui.component.UrlCachedPreviewer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+@Immutable
+data class MessageListState(
+    val messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null,
+    val identAndAbout: IdentAndAbout? = null,
+    val loaded: Boolean = false,
+    var syncing: Boolean = false,
+    var error: Exception? = null
+)
 
 class MessageListViewModel(
     private var key: String,
     private val messageTreeRepository: MessageTreeRepository,
-    private val messageRepository: MessageRepository
+    private val messageRepository: MessageRepository,
+    private val ssbService: SsbService
 ) : ViewModel() {
 
+    private val _uiState = MutableStateFlow(MessageListState())
+    val uiState: StateFlow<MessageListState> =_uiState.asStateFlow()
+
     var messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null
-    var identAndAbout: IdentAndAbout? = null
+
+    fun onError(e: Exception) {
+        _uiState.update {  it.copy(error = e, syncing = false) }
+    }
+    fun synchronize() {
+        viewModelScope.launch {
+            _uiState.update {  it.copy(error = null, syncing = true) }
+            ssbService.synchronize(_uiState.value.identAndAbout!!.ident,::onError)
+            _uiState.update {  it.copy(syncing = false) }
+        }
+    }
+
 
     init {
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             if (key.startsWith("%")) {
                 val m: Message? = messageRepository.getMessage(key)
                 if (m != null) {
-                    identAndAbout = messageRepository.getFeed(m.author)
+                    _uiState.update {  it.copy(identAndAbout = messageRepository.getFeed(m.author)) }
                 }
             }
-            if (identAndAbout==null) { // fallback to our
-                identAndAbout = messageRepository.getFeed(key)
+            if (_uiState.value.identAndAbout==null) { // fallback to our
+                _uiState.update {  it.copy(identAndAbout = messageRepository.getFeed(key)) }
             }
+            synchronize()
         }
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -64,6 +89,7 @@ class MessageListViewModel(
                     enablePlaceholders = false
                 )
             ) {
+
                 if (key.startsWith("@")) {
                     messageTreeRepository.getPagedMessageByAuthor(key)
                 } else { // starts with %
@@ -75,6 +101,7 @@ class MessageListViewModel(
                     msgAndAbout
                 }
             }.cachedIn(viewModelScope)
+            _uiState.update {  it.copy(loaded = true) }
         }
     }
 }

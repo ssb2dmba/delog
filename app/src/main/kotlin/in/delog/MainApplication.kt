@@ -23,12 +23,16 @@ import `in`.delog.di.modules.dataBaseModule
 import `in`.delog.di.modules.mainViewModel
 import `in`.delog.di.modules.ssbModule
 import `in`.delog.libsodium.NaCl
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 
 class MainApplication : Application() {
+
+    val applicationScope = CoroutineScope(SupervisorJob())
     override fun onCreate() {
         super.onCreate()
         NaCl.sodium()
@@ -41,7 +45,6 @@ class MainApplication : Application() {
                 mainViewModel
             )
         }
-
     }
 
     init {
@@ -53,6 +56,10 @@ class MainApplication : Application() {
 
         fun applicationContext(): Context {
             return instance!!.applicationContext
+        }
+
+        fun getApplicationScope():  CoroutineScope {
+            return instance!!.applicationScope
         }
     }
 

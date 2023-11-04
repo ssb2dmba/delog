@@ -49,6 +49,7 @@ class SecureScuttlebuttVertxClient(
 
     private val TAG = "SecureScuttlebuttVertxClient"
 
+
     private inner class NetSocketClientHandler(
         private val socket: NetSocket,
         remotePublicKey: Signature.PublicKey?,
@@ -78,9 +79,7 @@ class SecureScuttlebuttVertxClient(
                     handler!!.streamClosed()
                 }
                 if (!result.isDone) {
-                    Log.w(TAG, "Connection closed before handshake")
-                    //result.complete(null)
-                    result.completeExceptionally(IllegalStateException("Connection closed before handshake"))
+                    result.completeExceptionally(IllegalStateException(CONN_CLOSED_BEFORE_HANDSHAKE))
                 }
             }
             socket.exceptionHandler { e: Throwable ->
@@ -228,6 +227,10 @@ class SecureScuttlebuttVertxClient(
     fun stop(): AsyncCompletion {
         client!!.close()
         return AsyncCompletion.completed()
+    }
+
+    companion object {
+        val CONN_CLOSED_BEFORE_HANDSHAKE: String? = "CONN_CLOSED_BEFORE_HANDSHAKE"
     }
 
 }

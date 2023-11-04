@@ -37,7 +37,10 @@ data class About(
 
     @ColumnInfo(name = "dirty")
     var dirty: Boolean = false,
-)
+
+) {
+}
+
 /*
 WITH RECURSIVE tree_view AS (
 select  m1.*  from message m1
@@ -89,7 +92,30 @@ data class IdentAndAbout(
     )
     var about: About?
 ) {
-    companion object
+
+    fun getNetworkIdentifier():String {
+        if (this.about?.name==null || this.about?.name!!.isEmpty()) {
+            return this.ident.publicKey.subSequence(0,5).toString()
+        }
+        val server = if (this.ident.server.isNullOrEmpty()) "" else "@" + this.ident.server
+        val name = this.about?.name + server
+        return name
+    }
+    companion object {
+        fun empty(about: String): Ident {
+            return Ident(
+                -1,
+                publicKey = about,
+                "",
+                -1,
+                "",
+                false,
+                -1,
+                "",
+                null
+            )
+        }
+    }
 }
 
 data class ContactAndAbout(
