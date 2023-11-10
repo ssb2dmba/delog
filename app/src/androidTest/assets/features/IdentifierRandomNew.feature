@@ -13,7 +13,7 @@ Feature: Onboarding with new key
     Then I click 'save'
     Then I open drawer
     Then I click 'identifiers'
-    Then "test random" text is presented
+    Then "test random@delog.in" text is presented
 
 
 

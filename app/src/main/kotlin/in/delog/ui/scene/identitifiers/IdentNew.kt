@@ -18,14 +18,20 @@
 package `in`.delog.ui.scene.identitifiers
 
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import `in`.delog.db.model.Ident
+import `in`.delog.ssb.BaseSsbService
 import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import org.apache.tuweni.scuttlebutt.Identity
+import org.apache.tuweni.scuttlebutt.Invite
+import org.apache.tuweni.scuttlebutt.MalformedInviteCodeException
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -39,18 +45,25 @@ fun IdentNew(navController: NavHostController) {
         bottomBarViewModel.setActions { }
     }
 
-    var serverName: String? by remember { mutableStateOf(null) }
+    var inviteUrl: String? by remember { mutableStateOf(null) }
     var invite: String? by remember { mutableStateOf(null) }
     var identity: Identity? by remember { mutableStateOf(null) }
     var hasNavigated by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     fun setInvite(s: String) {
+        try {
+            Invite.fromCanonicalForm(s)
+        } catch (e: MalformedInviteCodeException) {
+            Toast.makeText(context, "invite is malformed !", Toast.LENGTH_LONG).show()
+            return
+        }
         invite = s
     }
 
     fun setIdentity(pIdentity: Identity?, pInviteUrl: String?) {
         identity = pIdentity
-        serverName = pInviteUrl
+        inviteUrl = pInviteUrl
     }
 
     fun doneWithoutInvite() {
@@ -80,8 +93,8 @@ fun IdentNew(navController: NavHostController) {
         LoadIdentity(identListViewModel, ::setIdentity)
     } else {
         if (invite == null) {
-            if (serverName != null) {
-                InviteWebRequest(Ident.getInviteUrl(serverName!!), ::setInvite)
+            if (inviteUrl != null) {
+                InviteWebRequest(inviteUrl!!, ::setInvite)
             } else {
                 doneWithoutInvite();
             }

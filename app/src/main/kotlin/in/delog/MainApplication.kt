@@ -19,6 +19,10 @@ package `in`.delog
 
 import android.app.Application
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import `in`.delog.di.modules.dataBaseModule
 import `in`.delog.di.modules.mainViewModel
 import `in`.delog.di.modules.ssbModule
@@ -33,6 +37,7 @@ import org.koin.core.logger.Level
 class MainApplication : Application() {
 
     val applicationScope = CoroutineScope(SupervisorJob())
+    val context = this
     override fun onCreate() {
         super.onCreate()
         NaCl.sodium()
@@ -45,7 +50,9 @@ class MainApplication : Application() {
                 mainViewModel
             )
         }
+
     }
+
 
     init {
         instance = this
@@ -61,7 +68,17 @@ class MainApplication : Application() {
         fun getApplicationScope():  CoroutineScope {
             return instance!!.applicationScope
         }
+
+        fun toastify(message: String) {
+
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(instance!!.context, message, Toast.LENGTH_LONG).show()
+            }
+        }
+
     }
+
+
 
 }
 

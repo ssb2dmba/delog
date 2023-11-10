@@ -71,27 +71,33 @@ open class BaseSsbService {
         return identity?.toCanonicalForm() ?: "";
     }
 
-    open suspend fun connectWithInvite(feed: Ident, callBack: (RPCResponse) -> Unit) {
-        setIdentity(feed)
-        if (feed.invite==null) {
-            Log.e("ssb", "attempting to connect with invite but no invite !")
-            return
+    open suspend fun connectWithInvite(feed: Ident, callBack: (RPCResponse) -> Unit, errorCb: ((Exception) -> Unit)?) {
+        try {
+            setIdentity(feed)
+            if (feed.invite == null) {
+                Log.e("ssb", "attempting to connect with invite but no invite !")
+                return
+            }
+            val inviteString = feed.invite!!
+            val invite: Invite = Invite.fromCanonicalForm(inviteString);
+
+
+            var ssbClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
+                vertx,
+                keyPair!!, invite, networkKeyBytes32
+            )
+
+            val params = HashMap<String, String>()
+            params["feed"] = feed.publicKey
+            val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
+            val rpcMessageAsyncResult = ssbClient.rawRequestService.makeAsyncRequest(asyncRequest)
+            Log.i(TAG, rpcMessageAsyncResult.asString())
+            callBack(rpcMessageAsyncResult)
+        } catch (ex: Exception) {
+            if (errorCb!=null) {
+                errorCb(ex)
+            }
         }
-        val inviteString = feed.invite!!
-        val invite: Invite = Invite.fromCanonicalForm(inviteString);
-
-
-        var ssbClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
-            vertx,
-            keyPair!!, invite, networkKeyBytes32
-        )
-
-        val params = HashMap<String, String>()
-        params["feed"] = feed.publicKey
-        val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
-        val rpcMessageAsyncResult = ssbClient.rawRequestService.makeAsyncRequest(asyncRequest)
-        Log.i(TAG, rpcMessageAsyncResult.asString())
-        callBack(rpcMessageAsyncResult)
     }
 
 

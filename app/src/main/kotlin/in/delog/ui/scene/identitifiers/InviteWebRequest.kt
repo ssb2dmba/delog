@@ -26,7 +26,7 @@ import `in`.delog.ssb.BaseSsbService.Companion.TAG
 
 @Composable
 fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
-    Log.d(TAG, "getting invite from ${startUrl}")
+    Log.i(TAG, "getting invite from ${startUrl}")
     val webViewState = rememberWebViewState(startUrl)
     LaunchedEffect(webViewState.lastLoadedUrl) {
         if (webViewState.lastLoadedUrl != null) {

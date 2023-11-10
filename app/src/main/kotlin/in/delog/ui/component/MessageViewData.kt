@@ -58,8 +58,11 @@ fun Draft.toMessageViewData() = MessageViewData(
     key = "",
     timestamp = timestamp,
     author = author,
-    contentAsText = contentAsText
+    contentAsText = contentAsText,
+    root =root,
+    branch = branch
 )
+
 
 fun MessageViewData.content(format: Json): MessageContent {
     try {

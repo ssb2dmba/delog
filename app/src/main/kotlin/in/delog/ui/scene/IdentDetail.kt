@@ -30,23 +30,26 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Plumbing
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import `in`.delog.MainApplication
 import `in`.delog.R
 import `in`.delog.db.model.Ident
-import `in`.delog.db.model.getHttpScheme
 import `in`.delog.db.model.getInviteURl
 import `in`.delog.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.ssb.SsbService
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
+import `in`.delog.ui.observeAsState
 import `in`.delog.ui.scene.identitifiers.InviteWebRequest
 import `in`.delog.ui.theme.keySmall
+import `in`.delog.viewmodel.AboutUIState
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentAndAboutViewModel
 import kotlinx.coroutines.GlobalScope
@@ -64,6 +67,7 @@ fun IdentDetailTopBarMenu(
     onOpenDeleteDialogClicked: () -> Unit
 
 ) {
+    val uiState by vm.uiState.observeAsState(AboutUIState())
     var showMenu by remember { mutableStateOf(false) }
     IconButton(onClick = { showMenu = !showMenu }) {
         Icon(imageVector = Icons.Outlined.Plumbing, contentDescription = null)
@@ -79,7 +83,7 @@ fun IdentDetailTopBarMenu(
                     enabled = true,
                     onClick = {
                         showMenu = false
-                        navHostController.navigate("${Scenes.FeedDetail.route}/${vm.identAndAbout!!.ident.oid}")
+                        navHostController.navigate("${Scenes.FeedDetail.route}/${uiState.identAndAbout!!.ident.oid}")
                     },
                     text = { Text(text = stringResource(R.string.network)) }
                 )
@@ -89,8 +93,7 @@ fun IdentDetailTopBarMenu(
                     enabled = true,
                     onClick = {
                         showMenu = false
-                        val argUri = makeArgUri(vm.identAndAbout!!.ident.publicKey)
-                        navHostController.navigate("${Scenes.AboutEdit.route}/${argUri}")
+                        navHostController.navigate("${Scenes.AboutEdit.route}/${uiState.identAndAbout!!.ident.oid}")
                     },
                     text = { Text(text = stringResource(R.string.about)) })
             }
@@ -122,27 +125,28 @@ fun IdentDetail(
     id: String
 ) {
     val vm = koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(id) })
+    val uiState by vm.uiState.observeAsState(AboutUIState())
 
-
-    var showDeleteDialogState by remember { mutableStateOf(false) }
-    var showExportDialogState by remember { mutableStateOf(false) }
-
-
-    LaunchedEffect(id) {
-        vm.setCurrentIdent(id)
-    }
-    if (vm.identAndAbout == null) {
+    if (uiState.identAndAbout == null) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+        }
         return
     }
 
-    if (showDeleteDialogState) {
-        IdentDetailConfirmDeleteDialog(navHostController, vm) { showDeleteDialogState = false }
+
+    if (uiState.showDeleteDialogState) {
+        IdentDetailConfirmDeleteDialog(navHostController, vm) { vm.closeDeteDialog() }
     }
-    if (showExportDialogState) {
-        ExportMnemonicDialog(identAndAbout = vm.identAndAbout!!) { showExportDialogState = false }
+    if (uiState.showExportDialogState) {
+        ExportMnemonicDialog(identAndAbout = uiState.identAndAbout!!) { vm.closeExportDialog() }
     }
 
-    IdentEdit(ident = vm.identAndAbout!!.ident, navHostController, vm)
+    IdentEdit(ident = uiState.identAndAbout!!.ident, navHostController, vm)
 
 }
 
@@ -153,6 +157,7 @@ fun IdentDetailConfirmDeleteDialog(
     viewModel: IdentAndAboutViewModel,
     onDismissRequest: () ->Unit
 ) {
+    val uiState by viewModel.uiState.observeAsState(AboutUIState())
     AlertDialog(onDismissRequest = onDismissRequest,
         containerColor = MaterialTheme.colorScheme.surface,
         title = {
@@ -187,7 +192,7 @@ fun IdentDetailConfirmDeleteDialog(
                 modifier = Modifier
                     .padding(15.dp)
                     .clickable {
-                        viewModel.delete(viewModel.identAndAbout!!.ident)
+                        viewModel.delete(uiState.identAndAbout!!.ident)
                         onDismissRequest.invoke()
                         navHostController.navigate(Scenes.FeedList.route) {
                             popUpTo(Scenes.FeedDetail.route) {
@@ -211,13 +216,19 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     var showDeleteDialogState by remember { mutableStateOf(false) }
     var showInviteRequest by remember { mutableStateOf(false) }
 
-    LaunchedEffect(key1 = ident) {
-        vm.setCurrentIdentByPk(ident.publicKey)
+    val uiState by vm.uiState.observeAsState(AboutUIState())
+    val identAndAbout = uiState.identAndAbout
+
+    if (identAndAbout==null) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return
     }
-    if (vm.identAndAbout == null) {
-        return
-    }
-    val identAndAbout = vm.identAndAbout
 
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     val title = stringResource(id = R.string.edit)
@@ -248,19 +259,22 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
         )
 
     }
+    val ssbService: SsbService = get()
 
-    fun toastify(message: String) {
-        Handler(Looper.getMainLooper()).post {
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        }
-    }
 
     fun setUpInvite(invite: String) {
         ident.invite = invite
         vm.onSavingIdent(ident)
-        vm.connectWithInvite(ident) {
-            navHostController.navigate("${Scenes.FeedList.route}")
+        GlobalScope.launch {
+            ssbService.connectWithInvite(ident,
+                {
+                    // everything is going according to the plan
+                },
+                {
+                    MainApplication.toastify(it.message.toString())
+                })
         }
+        navHostController.navigate("${Scenes.FeedList.route}")
     }
 
     if (showInviteRequest) {
@@ -347,23 +361,24 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
             )
         }
 
-        val context = LocalContext.current
+
         if (identAndAbout!!.ident.invite != null) {
             Row {
                 val ssbService: SsbService = get()
                 TextButton(
                     onClick = {
                         GlobalScope.launch {
-                            try {
-                                ssbService.connectWithInvite(identAndAbout.ident, {
-                                    Log.i(TAG, "ok" + it.asString() )
-                                });
-                            } catch (e: Exception) {
-                                Log.e(TAG, e.toString())
-                                toastify(e.message.toString())
-
-                            }
+                            ssbService.connectWithInvite(
+                                identAndAbout.ident,
+                                {
+                                    MainApplication.toastify("ok" + it.asString())
+                                },
+                                {
+                                   MainApplication.toastify(it.message.toString())
+                                }
+                            )
                         }
+                        navHostController.navigate("${Scenes.FeedList.route}")
                     }
                 ) {
                     Text(text = "redeem invite")
@@ -371,6 +386,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                 TextButton(
                     onClick = {
                         vm.cleanInvite(identAndAbout!!.ident)
+                        navHostController.navigate("${Scenes.FeedDetail.route}/${identAndAbout!!.ident.oid}")
                     }
                 ) {
                     Text(text = "delete invite")
@@ -392,14 +408,5 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                 }
             }
         }
-
-        if (vm.networkError !=null) {
-            Toast.makeText(context, vm.networkError, Toast.LENGTH_LONG).show()
-        }
-
     }
 }
-
-
-
-

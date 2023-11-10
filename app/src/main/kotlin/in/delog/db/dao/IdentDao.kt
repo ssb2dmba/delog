@@ -33,7 +33,7 @@ interface IdentDao {
     fun getAllLive(): Flow<List<IdentAndAbout>>
 
     @Query("SELECT * FROM ident WHERE oid = :oid LIMIT 1")
-    fun findById(oid: String): IdentAndAbout
+    fun findByOId(oid: String): IdentAndAbout
 
     @Query("SELECT * FROM ident WHERE public_key = :pk LIMIT 1")
     fun findByPublicKey(pk: String): IdentAndAbout
