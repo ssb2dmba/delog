@@ -18,10 +18,12 @@
 package `in`.delog.viewmodel
 
 
+import android.content.Intent
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.*
+import `in`.delog.MainApplication
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message

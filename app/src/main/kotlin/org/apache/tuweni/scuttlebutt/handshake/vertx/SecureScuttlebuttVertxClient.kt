@@ -95,6 +95,10 @@ class SecureScuttlebuttVertxClient(
             socket.write(Buffer.buffer(handshakeClient.createHello().toArrayUnsafe()))
         }
 
+        fun isGoodbye(message: Bytes): Boolean {
+            return message.size() == 18 && message.numberOfLeadingZeroBytes() == 18
+        }
+
         fun handle(buffer: Buffer?) {
             try {
                 if (handshakeCounter == 0) {
@@ -147,7 +151,7 @@ class SecureScuttlebuttVertxClient(
                         messageBuffer = if (messageBuffer.size() - headerSize >= bodyLength) {
                             val headerAndBodyLength = bodyLength + headerSize
                             val wholeMessage = messageBuffer.slice(0, headerAndBodyLength)
-                            if (SecureScuttlebuttStreamServer.isGoodbye(wholeMessage)) {
+                            if (isGoodbye(wholeMessage)) {
                                 Log.i(TAG, "Goodbye received from remote peer")
                                 socket.close()
                             } else {

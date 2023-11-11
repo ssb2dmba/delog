@@ -14,14 +14,14 @@
 - [x] BIP39 export mnemonic
 - [x] Espresso/Gherkin Behavioral Driven Integration Tests
 - [x] BIP39 import/export mnemonic
-- [ ] multiple relays per identifier
+
 - [ ] blob support
 - [x] hypertext link embedding
 - [.] quotes, reply, vote support
 - [x] Markdown support
 - [x] SSB protocol improvement proposals
 - [ ] draft ordering & support
-- [ ] Tor friendly
+- [x] Tor low-power-integration
 - [ ] ...
 
 ## Build

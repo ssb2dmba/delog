@@ -59,7 +59,7 @@ fun FeedMessage.toAbout(): About? {
         null
     } else {
         About(
-            about = ssbMe.about!!,
+            about = ssbMe.about,
             description = ssbMe.description,
             image = ssbMe.image,
             name = ssbMe.name,
