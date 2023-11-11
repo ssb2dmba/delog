@@ -24,6 +24,7 @@ import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
+import `in`.delog.db.model.isOnion
 import `in`.delog.db.model.toJsonResponse
 import `in`.delog.repository.*
 import kotlinx.coroutines.GlobalScope
@@ -40,7 +41,8 @@ import org.apache.tuweni.scuttlebutt.rpc.mux.ScuttlebuttStreamHandler
 class SsbService(
     messageRepository: MessageRepository,
     contactRepository: ContactRepository,
-    aboutRepository: AboutRepository
+    aboutRepository: AboutRepository,
+    torService: TorService
 ) :
     BaseSsbService() {
     val messageRepository = messageRepository
@@ -48,6 +50,8 @@ class SsbService(
     val aboutRepository = aboutRepository
 
     var connected: Int =0 // 0 disconnected, 1 connected, -1 errored
+
+    val torService = torService
 
 
 
@@ -66,6 +70,9 @@ class SsbService(
 
     suspend fun reconnect(pFeed: Ident) {
         Log.i(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
+        if (pFeed.isOnion()) {
+            torService.start();
+        }
         super.connect(pFeed, ::onConnected, ::onError)
     }
 
@@ -158,6 +165,7 @@ class SsbService(
             Log.i(TAG, "closing connection")
             secureScuttlebuttVertxClient!!.stop()
         }
+        torService.stop();
 
     }
 

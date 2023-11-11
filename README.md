@@ -14,19 +14,18 @@
 - [x] BIP39 export mnemonic
 - [x] Espresso/Gherkin Behavioral Driven Integration Tests
 - [x] BIP39 import/export mnemonic
-
-- [ ] blob support
-- [x] hypertext link embedding
-- [.] quotes, reply, vote support
 - [x] Markdown support
 - [x] SSB protocol improvement proposals
-- [ ] draft ordering & support
+- [x] hypertext link embedding
 - [x] Tor low-power-integration
+- [.] quotes, reply, vote support
+- [ ] blob support
+- [ ] draft ordering & support
 - [ ] ...
 
 ## Build
 
-Project build well with Android Studio Electric Eel.
+Project build well with Android Studio Giraffe | 2022.3.1 Patch 3
 
 You will need an Android NDK and set in the Android Studio env i.e.: 
 ```

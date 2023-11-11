@@ -18,9 +18,11 @@
 package `in`.delog.di.modules
 
 import `in`.delog.ssb.SsbService
+import `in`.delog.ssb.TorService
 import org.koin.dsl.module
 
 val ssbModule = module {
 
-    single { SsbService(get(), get(), get()) }
+    single { SsbService(get(), get(), get(), get()) }
+    single { TorService() }
 }

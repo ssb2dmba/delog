@@ -69,7 +69,13 @@ data class Ident(
             return "${httpScheme}${server}/invite/"
         }
 
+
+
     }
+}
+
+fun Ident.isOnion():Boolean {
+    return this.server.endsWith("onion")
 }
 
 fun Ident.getHttpScheme(): String {

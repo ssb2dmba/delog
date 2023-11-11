@@ -28,6 +28,7 @@ import `in`.delog.di.modules.mainViewModel
 import `in`.delog.di.modules.ssbModule
 import `in`.delog.libsodium.NaCl
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -36,7 +37,7 @@ import org.koin.core.logger.Level
 
 class MainApplication : Application() {
 
-    val applicationScope = CoroutineScope(SupervisorJob())
+    val applicationScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     val context = this
     override fun onCreate() {
         super.onCreate()
