@@ -52,7 +52,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun FeedMain(navController: NavController, feedToReadKey: String) {
+fun MessagesList(navController: NavController, feedToReadKey: String) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     if (feedToReadKey == null) {
         return
@@ -70,7 +70,7 @@ fun FeedMain(navController: NavController, feedToReadKey: String) {
         bottomBarViewModel.setTitle("main")
     }
 
-    if (uiState.identAndAbout == null && !uiState.loaded) {
+    if (uiState.identAndAbout == null || !uiState.loaded) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -84,7 +84,7 @@ fun FeedMain(navController: NavController, feedToReadKey: String) {
     val fpgMessages: Flow<PagingData<AppDatabaseView.MessageInTree>> = viewModel.messagesPaged!!
     val lazyMessageItems: LazyPagingItems<AppDatabaseView.MessageInTree> =
         fpgMessages.collectAsLazyPagingItems()
-    if (uiState.syncing) {
+    if (uiState.syncing || uiState.identAndAbout == null) {
         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
     }
     Column {

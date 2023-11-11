@@ -57,11 +57,9 @@ fun IdentList(navController: NavHostController) {
     val identListViewModel = koinViewModel<IdentListViewModel>()
 
     val idents: State<List<IdentAndAbout>> = identListViewModel.idents.observeAsState(listOf())
-    var strIdents = stringResource(R.string.identifiers)
 
     LaunchedEffect(Unit) {
         bottomBarViewModel.setActions {}
-        bottomBarViewModel.setTitle(strIdents)
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
             IdentListFab(navController = navController)
@@ -71,7 +69,7 @@ fun IdentList(navController: NavHostController) {
 
     LazyColumn {
         items(idents.value) { identAndAbout ->
-            var argUri = makeArgUri(identAndAbout.ident.publicKey)
+            var argUri = identAndAbout.ident.oid
 
             Card(
                 colors = CardDefaults.cardColors(),

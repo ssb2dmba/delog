@@ -41,13 +41,16 @@ android {
         versionName "1.0"
         applicationId  "in.delog.ssb"
         testApplicationId  "in.delog.ssb.test"
-        //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        testInstrumentationRunner "in.delog.ssb.test.Instrumentation"
-        testInstrumentationRunnerArguments = [
-         cucumberUseAndroidJUnitRunner: getProperty("cucumberUseAndroidJUnitRunner"),
-         //uncomment this to clear app data before each test when running with orchestrator
-         clearPackageData: 'true'
-        ]
+        if (!getProperty("cucumberUseAndroidJUnitRunner")) {
+            testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        } else {
+            testInstrumentationRunner "in.delog.ssb.test.Instrumentation"
+            testInstrumentationRunnerArguments = [
+                    cucumberUseAndroidJUnitRunner: getProperty("cucumberUseAndroidJUnitRunner"),
+                    //uncomment this to clear app data before each test when running with orchestrator
+                    clearPackageData             : 'true'
+            ]
+        }
 
         // 2) Connect JUnit 5 to the runner
         //testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder"

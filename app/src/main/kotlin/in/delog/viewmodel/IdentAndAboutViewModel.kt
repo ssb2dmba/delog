@@ -18,97 +18,62 @@
 package `in`.delog.viewmodel
 
 
-import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import `in`.delog.db.model.*
 import `in`.delog.repository.AboutRepository
+import `in`.delog.repository.DidRepository
 import `in`.delog.repository.IdentRepository
 import `in`.delog.repository.MessageRepository
 import `in`.delog.ssb.*
-import `in`.delog.ssb.BaseSsbService.Companion.TAG
-import `in`.delog.ssb.BaseSsbService.Companion.objectMapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.apache.tuweni.scuttlebutt.lib.model.FeedMessage
-import org.apache.tuweni.scuttlebutt.lib.model.toAbout
-import org.apache.tuweni.scuttlebutt.rpc.RPCResponse
-import java.net.URL
-import kotlin.concurrent.thread
 
+@Immutable
+data class AboutUIState(
+    val identAndAbout: IdentAndAbout? = null,
+    val dirty: Boolean = false,
+    val didValid: Boolean? = null,
+    val showExportDialogState: Boolean = false,
+    val showPublishDialogState: Boolean = false,
+    val showDeleteDialogState: Boolean = false,
+    val image: String = "",
+    val error: String = "",
+    val alias: String = "",
+    val description: String = ""
+    )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class IdentAndAboutViewModel(
+    private var pubKey: String,
     private val identRepository: IdentRepository,
     private val aboutRepository: AboutRepository,
     private val messageRepository: MessageRepository,
-    private val ssbService: SsbService
+    private val didRepository: DidRepository,
 ) : ViewModel() {
 
-    var identAndAbout: IdentAndAbout? by mutableStateOf(null)
+    val _uiState: MutableStateFlow<AboutUIState> = MutableStateFlow(AboutUIState())
+    val uiState: StateFlow<AboutUIState> = _uiState.asStateFlow()
 
-    var dirty: Boolean by mutableStateOf(false)
-
-    var _networkIdentifierValid: MutableStateFlow<Boolean?> = MutableStateFlow(null)
-    var networkIdentifierValid: StateFlow<Boolean?> = _networkIdentifierValid.asStateFlow()
-
-    fun checkIfValid(name: String?) {
-        if (name.isNullOrEmpty() || identAndAbout?.about == null) return
-        var httpScheme = identAndAbout!!.ident.getHttpScheme()
-        val server = identAndAbout!!.ident.server
-        thread {
-            val jsonResponse: String = try {
-                val url = "${httpScheme}${server}/.well-known/ssb/about/${name}"
-                URL(url).readText()
-            } catch (e: Exception) {
-                Log.e(TAG, e.javaClass.simpleName + " " + e.localizedMessage)
-                return@thread
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            val iAndA = identRepository.findById(pubKey)
+            _uiState.update {
+                it.copy(
+                    identAndAbout = iAndA,
+                    alias = iAndA.about?.name ?: "",
+                    description = iAndA.about?.description ?: ""
+                )
             }
-            Log.d(TAG,jsonResponse)
-            try {
-                val m: FeedMessage =
-                    objectMapper.readerFor(FeedMessage::class.java).readValue(jsonResponse)
-                val about = m.toAbout();
-                _networkIdentifierValid.value =
-                    about != null && (about.about == "AVAILABLE" || about.about == identAndAbout!!.ident.publicKey)
-            } catch (e: Exception) {
-                e.printStackTrace()
+            uiState.value.identAndAbout?.about?.name?.let {
+                checkName(uiState.value.identAndAbout,
+                    it
+                )
             }
-            _networkIdentifierValid.value = false
-        }
-    }
-
-    fun setCurrentIdent(oid: String) {
-        GlobalScope.launch(Dispatchers.IO) {
-            identAndAbout = identRepository.findById(oid)
-            if (identAndAbout == null) return@launch
-            if (identAndAbout!!.about == null) {
-                // each ident shall have about
-                val newAbout = About(identAndAbout!!.ident.publicKey, "", "", null, dirty = false)
-                aboutRepository.insert(newAbout)
-                identAndAbout!!.about = newAbout
-            }
-            dirty = false
-        }
-    }
-
-    fun setCurrentIdentByPk(pk: String) {
-        GlobalScope.launch(Dispatchers.IO) {
-            identAndAbout = identRepository.findByPublicKey(pk)
-            if (identAndAbout == null) return@launch
-            if (identAndAbout!!.about == null) {
-                // each ident shall have about
-                val newAbout = About(identAndAbout!!.ident.publicKey, "", "", null, dirty = false)
-                aboutRepository.insert(newAbout)
-                identAndAbout!!.about = newAbout
-            }
-            dirty = false
         }
     }
 
@@ -118,17 +83,21 @@ class IdentAndAboutViewModel(
             if (ident.defaultIdent) {
                 identRepository.setFeedAsDefaultFeed(ident)
             }
-            dirty = false
+            setDirty(false)
         }
     }
-
 
     fun onSavingAbout(about: About) {
         GlobalScope.launch(Dispatchers.IO) {
             aboutRepository.insertOrUpdate(about)
-            dirty = false
+            setDirty(true)
         }
+    }
 
+    fun cleanInvite(newIdent: Ident) {
+        GlobalScope.launch(Dispatchers.IO) {
+            identRepository.cleanInvite(newIdent)
+        }
     }
 
     fun delete(ident: Ident) {
@@ -171,29 +140,74 @@ class IdentAndAboutViewModel(
 
     }
 
-    var connecting = false
 
-    var networkError: String? = null
-    fun connectWithInvite(ident: Ident, callBack: (RPCResponse) -> Unit) {
-        if (connecting) return
+    fun setDirty(b: Boolean) {
+        _uiState.update { it.copy(dirty = b) }
+    }
 
-        ssbService.rpcHandler?.close()
+    // text fields
+    fun updateAlias(newValue: String) {
+        _uiState.update { newUiState ->
+            checkName(uiState.value.identAndAbout, newValue)
+            newUiState.copy(
+                alias = newValue.filter { it.isLetter() }.lowercase().trim()
+            )
 
-        viewModelScope.launch {
-            connecting = true
-            try {
-                ssbService.connectWithInvite(ident, callBack)
-            } catch (e: Exception) {
-                networkError = e.message
-                e.printStackTrace();
-                connecting = false
-            }
         }
     }
 
-    fun cleanInvite(newIdent: Ident) {
-        GlobalScope.launch(Dispatchers.IO) {
-            identRepository.cleanInvite(newIdent)
+    private fun checkName(identAndAbout: IdentAndAbout?, newValue: String) {
+        viewModelScope.launch {
+            val r = didRepository.checkIfValid(identAndAbout, newValue)
+            if (r.error != null) {
+                _uiState.update { it.copy(error = r.error) }
+            }
+            _uiState.update { it.copy(didValid = r.valid) }
         }
+    }
+
+    val aliasHasError: StateFlow<Boolean> =
+        snapshotFlow { uiState.value.alias }
+            .mapLatest {
+                val r = didRepository.checkIfValid(uiState.value.identAndAbout, it)
+                if (r.error != null) {
+                    _uiState.update { it.copy(error = r.error) }
+                }
+                !r.valid
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = false
+            )
+
+    fun updateDescription(value: String) {
+        _uiState.update { it.copy(description = value.trim()) }
+    }
+
+    // Dialogs
+    fun closeExportDialog() {
+        _uiState.update { it.copy(showExportDialogState = false) }
+    }
+
+    fun closePublishDialog() {
+        _uiState.update { it.copy(showPublishDialogState = false) }
+    }
+
+    fun closeDeteDialog() {
+        _uiState.update { it.copy(showDeleteDialogState = false) }
+    }
+
+
+    fun openExportDialog() {
+        _uiState.update { it.copy(showExportDialogState = true) }
+    }
+
+    fun openDeleteDialog() {
+        _uiState.update { it.copy(showDeleteDialogState = true) }
+    }
+
+    fun showPublishDialog() {
+        _uiState.update { it.copy(showPublishDialogState = true) }
     }
 }

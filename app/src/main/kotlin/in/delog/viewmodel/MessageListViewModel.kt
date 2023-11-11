@@ -38,8 +38,8 @@ data class FeedMainUIState(
     val messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null,
     val identAndAbout: IdentAndAbout? = null,
     val loaded: Boolean = false,
-    var syncing: Boolean = false,
-    var error: Exception? = null
+    val syncing: Boolean = false,
+    val error: Exception? = null
 )
 
 class MessageListViewModel(
@@ -50,18 +50,19 @@ class MessageListViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FeedMainUIState())
-    val uiState: StateFlow<FeedMainUIState> =_uiState.asStateFlow()
+    val uiState: StateFlow<FeedMainUIState> = _uiState.asStateFlow()
 
     var messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null
 
     fun onError(e: Exception) {
-        _uiState.update {  it.copy(error = e, syncing = false) }
+        _uiState.update { it.copy(error = e, syncing = false) }
     }
+
     fun synchronize() {
         viewModelScope.launch {
-            _uiState.update {  it.copy(error = null, syncing = true) }
-            ssbService.synchronize(_uiState.value.identAndAbout!!.ident,::onError)
-            _uiState.update {  it.copy(syncing = false) }
+            _uiState.update { it.copy(error = null, syncing = true) }
+            ssbService.synchronize(_uiState.value.identAndAbout!!.ident, ::onError)
+            _uiState.update { it.copy(syncing = false) }
         }
     }
 
@@ -71,11 +72,11 @@ class MessageListViewModel(
             if (key.startsWith("%")) {
                 val m: Message? = messageRepository.getMessage(key)
                 if (m != null) {
-                    _uiState.update {  it.copy(identAndAbout = messageRepository.getFeed(m.author)) }
+                    _uiState.update { it.copy(identAndAbout = messageRepository.getFeed(m.author)) }
                 }
             }
-            if (_uiState.value.identAndAbout==null) { // fallback to our
-                _uiState.update {  it.copy(identAndAbout = messageRepository.getFeed(key)) }
+            if (_uiState.value.identAndAbout == null) { // fallback to our
+                _uiState.update { it.copy(identAndAbout = messageRepository.getFeed(key)) }
             }
             synchronize()
         }
@@ -100,7 +101,7 @@ class MessageListViewModel(
                     msgAndAbout
                 }
             }.cachedIn(viewModelScope)
-            _uiState.update {  it.copy(loaded = true) }
+            _uiState.update { it.copy(loaded = true) }
         }
     }
 }

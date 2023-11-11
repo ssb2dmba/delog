@@ -1,25 +1,32 @@
 package `in`.delog.ui.scene.identitifiers
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import `in`.delog.MainApplication
 import `in`.delog.R
 import `in`.delog.db.model.Ident
+import `in`.delog.ssb.SsbService
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.IdentAndAboutViewModel
 import `in`.delog.viewmodel.IdentListViewModel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.tuweni.scuttlebutt.Identity
 import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.MalformedInviteCodeException
+import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -34,29 +41,30 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
         e.printStackTrace();
         return
     }
-
+    val ssbService: SsbService = get()
     val identListViewModel = koinViewModel<IdentListViewModel>()
     var aliasInput by remember { mutableStateOf("") }
     var serverInput by remember { mutableStateOf(invite.host) }
     var portInput by remember { mutableStateOf(invite.port.toString()) }
     var isValid = (aliasInput.length > 1) && (serverInput.length > 1) && (portInput.length == 4)
     var defaultServer by remember { mutableStateOf(true) }
+    val context = LocalContext.current
 
     val newIdent by identListViewModel.insertedIdent.observeAsState(null)
 
     if (newIdent != null) {
-        val identAndAboutViewModel =
-            koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(newIdent!!.oid) })
-        LaunchedEffect(newIdent) {
-            identAndAboutViewModel.setCurrentIdent(newIdent!!.oid.toString())
-        }
-        if (identAndAboutViewModel.identAndAbout == null) {
-            return
-        }
-        newIdent!!.invite?.let {
-            identAndAboutViewModel.connectWithInvite(
-                newIdent!!
-            ) {
+        LaunchedEffect(key1 = Unit ) {
+            newIdent!!.invite?.let {
+                GlobalScope.launch {
+                    ssbService.connectWithInvite(
+                        newIdent!!,
+                        {
+
+                        },
+                        {
+                            it.message?.let { it1 -> MainApplication.toastify(it1) };
+                        })
+                }
                 navController.navigate("${Scenes.FeedList.route}")
             }
         }

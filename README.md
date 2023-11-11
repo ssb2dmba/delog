@@ -13,14 +13,13 @@
 - [x] multiple identities
 - [x] BIP39 export mnemonic
 - [x] Espresso/Gherkin Behavioral Driven Integration Tests
-- [ ] BIP39 import mnemonic
+- [x] BIP39 import/export mnemonic
 - [ ] multiple relays per identifier
-- [ ] clean architecture
 - [ ] blob support
-- [ ] hypertext link embedding
-- [ ] quotes, reply, vote support
-- [ ] Markdown support
-- [ ] SSB protocol improvement proposals
+- [x] hypertext link embedding
+- [.] quotes, reply, vote support
+- [x] Markdown support
+- [x] SSB protocol improvement proposals
 - [ ] draft ordering & support
 - [ ] Tor friendly
 - [ ] ...

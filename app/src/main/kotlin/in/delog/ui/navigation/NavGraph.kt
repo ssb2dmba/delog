@@ -42,10 +42,10 @@ fun NavGraph(navController: NavHostController) {
             arguments = listOf(navArgument(id) { type = NavType.StringType })
         ) { backStackEntry ->
             backStackEntry.arguments?.getString(id)
-                ?.let { FeedMain(navController, it) }
+                ?.let { MessagesList(navController, it) }
         }
         composable(route = Scenes.MainFeed.route) {
-            LocalActiveFeed.current?.ident?.publicKey?.let { it1 -> FeedMain(navController, it1) }
+            LocalActiveFeed.current?.ident?.publicKey?.let { it1 -> MessagesList(navController, it1) }
         }
         composable(route = Scenes.FeedList.route) {
             IdentList(navController)

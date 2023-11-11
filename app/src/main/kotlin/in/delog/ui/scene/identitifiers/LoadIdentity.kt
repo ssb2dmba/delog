@@ -2,6 +2,7 @@ package `in`.delog.ui.scene.identitifiers
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -18,6 +19,7 @@ import `in`.delog.R
 import `in`.delog.db.SettingStore
 import `in`.delog.db.SettingStore.Companion.SERVER_URL
 import `in`.delog.db.model.Ident
+import `in`.delog.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.ui.CameraQrCodeScanner
 import `in`.delog.ui.component.EditDialog
 import `in`.delog.viewmodel.IdentListViewModel
@@ -170,7 +172,8 @@ fun LoadIdentity(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ),
                     onClick = {
-                        callBack(Identity.random(), if (getInvite) serverName else null)
+                        val inviteUrl = Ident.getInviteUrl(serverName)
+                        callBack(Identity.random(), if (getInvite) inviteUrl else null)
                     },
                     content = { Text(stringResource(R.string.gen_rand_identifier)) }
                 )

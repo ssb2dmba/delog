@@ -24,7 +24,6 @@ import `in`.delog.db.dao.setFeedAsDefaultFeed
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import kotlinx.coroutines.flow.Flow
-import java.security.PrivateKey
 
 
 /**
@@ -74,7 +73,7 @@ class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: A
     }
 
     override suspend fun findById(id: String): IdentAndAbout {
-        return identDao.findById(id)
+        return identDao.findByOId(id)
     }
 
     override suspend fun findByPublicKey(pk: String): IdentAndAbout {

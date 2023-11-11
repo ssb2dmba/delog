@@ -42,4 +42,4 @@ Feature: Onboarding with mnemonic
     Then I open drawer
     Then I click 'identifiers'
     Then I open drawer
-    Then "test_mnemonic" text is presented
+    Then "test_mnemonic@delog.in" text is presented

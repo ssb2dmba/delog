@@ -18,7 +18,6 @@
 package `in`.delog.ui.scene
 
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,6 +34,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -54,6 +54,7 @@ import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.ui.theme.keySmall
+import `in`.delog.viewmodel.AboutUIState
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentAndAboutViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -61,55 +62,55 @@ import org.koin.core.parameter.parametersOf
 
 
 @Composable
+//@OptIn(ExperimentalLifecycleComposeApi::class)
 fun AboutEdit(
     navHostController: NavHostController,
     pubKey: String
 ) {
-    val vm = koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(pubKey) })
+    val viewModel = koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(pubKey) })
+    val uiState by viewModel.uiState.observeAsState(AboutUIState())
+    val aliasHasError by viewModel.aliasHasError.collectAsState()
+
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-
-    var dirty by remember { mutableStateOf(false) }
-    var showExportDialogState by remember { mutableStateOf(false) }
-    var showPublishDialogState by remember { mutableStateOf(false) }
-    var showDeleteDialogState by remember { mutableStateOf(false) }
-    val nickAvailable by vm.networkIdentifierValid.observeAsState(null)
     val title = stringResource(R.string.about)
-    LaunchedEffect(dirty) {
-        Log.i("DEBUG", "calling set current ident by pk with $pubKey")
-        vm.setCurrentIdentByPk(pubKey)
+    LaunchedEffect(Unit) {
         bottomBarViewModel.setTitle(title)
     }
-    if (vm.identAndAbout == null) {
-        Log.i("DEBUG", "vm.identAndAbout is null !!")
+    if (uiState.identAndAbout == null) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+        }
         return
     }
-    val about = vm.identAndAbout!!.about!!
 
-    var name by remember { mutableStateOf(about.name) }
-    var description by remember { mutableStateOf(about.description) }
-    val image by remember { mutableStateOf(about.image) }
+    val identAndAbout = uiState.identAndAbout!!
+    val about = uiState.identAndAbout!!.about!!
 
-    if (showExportDialogState) {
-        ExportMnemonicDialog(identAndAbout = vm.identAndAbout!!) { showExportDialogState = false }
+    if (uiState.showExportDialogState) {
+        ExportMnemonicDialog(identAndAbout = identAndAbout) { viewModel.closeExportDialog() }
     }
 
-    if (showPublishDialogState) {
+    if (uiState.showPublishDialogState) {
         AboutEditPublishDialog(
             navHostController,
-            vm,
-            About(pubKey, name, description, image, true)
+            viewModel,
+            about
         ) {
-            showPublishDialogState = false
+            viewModel.closePublishDialog()
         }
     }
 
-    if (showDeleteDialogState) {
-        IdentDetailConfirmDeleteDialog(navHostController, vm) { showDeleteDialogState = false }
+    if (uiState.showDeleteDialogState) {
+        IdentDetailConfirmDeleteDialog(navHostController, viewModel) { viewModel.closeDeteDialog() }
     }
 
-    if (!dirty) {
+    if (!uiState.dirty) {
         Card(
             elevation = CardDefaults.cardElevation(),
             //shape = RoundedCornerShape(0.dp),
@@ -160,10 +161,8 @@ fun AboutEdit(
 
                     // name
                     OutlinedTextField(
-                        value = if (name != null) name!! else "",
-                        onValueChange = { value ->
-                            name = value.filter { it.isLetter() }.lowercase().trim()
-                            vm.checkIfValid(name)
+                        value = uiState.alias,
+                        onValueChange = { newValue -> viewModel.updateAlias(newValue)
                         },
                         label = {
                             Text(
@@ -175,22 +174,26 @@ fun AboutEdit(
                     )
                 }
             }
-            if (nickAvailable != null) {
-                val idStatusText: String =
-                    if (nickAvailable == true) " available" else "not available"
-                val idStatusIcon =
-                    if (nickAvailable == true) Icons.Default.Done else Icons.Default.Close
-                Row {
-                    Icon(idStatusIcon, contentDescription = idStatusText)
-                    Text(idStatusText)
+
+            if (uiState.didValid!=null) {
+                var idStatusText = "${uiState.alias}@${uiState.identAndAbout!!.ident.server}"
+                var idStatusIcon = Icons.Default.Done
+                var didColor = MaterialTheme.colorScheme.primary
+                if (!uiState.didValid!!) {
+                    didColor = MaterialTheme.colorScheme.error
+                    idStatusText = "${uiState.alias}@${uiState.identAndAbout!!.ident.server} is not not available"
+                    idStatusIcon = Icons.Default.Close
+                }
+                Row(modifier = Modifier.fillMaxWidth().padding(start = 68.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Icon(idStatusIcon, contentDescription = idStatusText, tint= didColor)
+                    Text(idStatusText, modifier= Modifier.padding(start= 8.dp),color=didColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
             // description
             OutlinedTextField(
-                value = if (description != null) description!! else "",
-                onValueChange = { value ->
-                    description = value
+                value = uiState.description,
+                onValueChange = { value -> viewModel.updateDescription(value)
                 },
                 label = {
                     Text(
@@ -208,15 +211,14 @@ fun AboutEdit(
         bottomBarViewModel.setActions {
             IdentDetailTopBarMenu(
                 navHostController,
-                vm,
-                { showExportDialogState = true },
-                { showDeleteDialogState = true })
+                viewModel,
+                { viewModel.openExportDialog()  },
+                { viewModel.openDeleteDialog()  })
             Spacer(modifier = Modifier.weight(1f))
             // save
             ExtendedFloatingActionButton(
                 onClick = {
-                    vm.onSavingAbout(About(about.about, name, description, image, true))
-                    dirty = true
+                    viewModel.onSavingAbout(about)
                 },
                 icon = {
                     Icon(
@@ -239,7 +241,7 @@ fun AboutEdit(
                     .padding(vertical = 4.dp, horizontal = 8.dp)
             ) {
                 IdentityBox(
-                    identAndAbout = vm.identAndAbout!!,
+                    identAndAbout = identAndAbout,
                     short = false
                 )
             }
@@ -248,17 +250,17 @@ fun AboutEdit(
         bottomBarViewModel.setActions {
             IdentDetailTopBarMenu(
                 navHostController,
-                vm,
-                { showExportDialogState = true },
-                { showDeleteDialogState = true })
-            IconButton(onClick = { dirty = false }) {
+                viewModel,
+                { viewModel.openExportDialog()},
+                { viewModel.openDeleteDialog() })
+            IconButton(onClick = { viewModel.setDirty(false) }) {
                 Icon(imageVector = Icons.Default.Edit, contentDescription = "edit")
             }
             Spacer(modifier = Modifier.weight(1f))
             // save
             ExtendedFloatingActionButton(
                 onClick = {
-                    showPublishDialogState = true
+                    viewModel.showPublishDialog()
                 },
                 icon = {
                     Icon(
