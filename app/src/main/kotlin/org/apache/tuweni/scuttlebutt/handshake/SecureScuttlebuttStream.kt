@@ -28,7 +28,7 @@ internal class SecureScuttlebuttStream(
     clientToServerNonce: Bytes,
     serverToClientKey: SHA256Hash.Hash?,
     serverToClientNonce: Bytes
-) : SecureScuttlebuttStreamClient, SecureScuttlebuttStreamServer {
+) : SecureScuttlebuttStreamClient {
     private val clientToServerKey: SecretBox.Key
     private val clientToServerNonce: MutableBytes
     private val serverToClientKey: SecretBox.Key
@@ -47,21 +47,6 @@ internal class SecureScuttlebuttStream(
     @Synchronized
     override fun readFromServer(message: Bytes): Bytes {
         return decrypt(message, serverToClientKey, serverToClientNonce, false)
-    }
-
-    @Synchronized
-    override fun sendToClient(message: Bytes): Bytes {
-        return encrypt(message, serverToClientKey, serverToClientNonce)
-    }
-
-    @Synchronized
-    override fun sendGoodbyeToClient(): Bytes {
-        return sendToClient(Bytes.wrap(ByteArray(18)))
-    }
-
-    @Synchronized
-    override fun readFromClient(message: Bytes): Bytes {
-        return decrypt(message, clientToServerKey, clientToServerNonce, true)
     }
 
     private var clientToServerBuffer = Bytes.EMPTY

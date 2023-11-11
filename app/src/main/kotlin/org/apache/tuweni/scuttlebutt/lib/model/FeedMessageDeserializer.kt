@@ -33,8 +33,6 @@ class FeedMessageDeserializer : JsonDeserializer<FeedMessage>() {
         val value = node["value"]
         val content = value["content"]
         val type = getKeyValue("type", content)
-        val root = getKeyValue("root", content)
-        val branch = getKeyValue("branch", content)
         return FeedMessage(key, type, toFeedValue(value))
     }
 

@@ -19,7 +19,6 @@ package org.apache.tuweni.scuttlebutt.rpc.mux
 import android.util.Log
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import `in`.delog.BuildConfig
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import org.apache.tuweni.bytes.Bytes
@@ -105,7 +104,6 @@ open class RPCHandler(
     }
 
     private fun logOutgoingRequest(rpcMessage: RPCMessage) {
-        if (true || BuildConfig.DEBUG) {
             val requestString = rpcMessage.asString()
             val logMessage = String.format(
                 "> [%d]: %s",
@@ -113,7 +111,6 @@ open class RPCHandler(
                 requestString
             )
             Log.d(TAG, logMessage)
-        }
     }
 
     override fun close() {
@@ -154,10 +151,8 @@ open class RPCHandler(
     }
 
     private fun handleRequest(rpcMessage: RPCMessage) {
-        if (BuildConfig.DEBUG) {
-            val logMessage = String.format("< [%s] %s",rpcMessage.requestNumber(), rpcMessage.asString())
-            Log.d(TAG, logMessage)
-        }
+        val logMessage = String.format("< [%s] %s",rpcMessage.requestNumber(), rpcMessage.asString())
+        Log.d(TAG, logMessage)
         val rpcFlags = rpcMessage.rpcFlags()
         val isStream = RPCFlag.Stream.STREAM.isApplied(rpcFlags)
         if (!isStream) {
@@ -178,11 +173,9 @@ open class RPCHandler(
 
     private fun handleResponse(response: RPCMessage) {
         val requestNumber = response.requestNumber() * -1
-        if (BuildConfig.DEBUG) {
-            val logMessage =
-                String.format("[%d] incoming response: %s", requestNumber, response.asString())
-            Log.d(TAG, logMessage)
-        }
+        val logMessage =
+            String.format("[%d] incoming response: %s", requestNumber, response.asString())
+        Log.d(TAG, logMessage)
 
         val rpcFlags = response.rpcFlags()
         val isStream = RPCFlag.Stream.STREAM.isApplied(rpcFlags)
@@ -251,6 +244,7 @@ open class RPCHandler(
                 val streamEnd = encodeStreamEndRequest(requestNumber)
                 streamHandler.onStreamEnd()
                 val logMessage = String.format("[%d] Sending close stream message.", requestNumber)
+                Log.d(TAG,logMessage)
                 sendBytes(streamEnd)
             }
         } catch (e: JsonProcessingException) {

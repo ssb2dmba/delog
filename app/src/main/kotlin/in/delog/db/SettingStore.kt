@@ -15,6 +15,7 @@ class SettingStore(private val context: Context) {
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("settings")
         val SERVER_URL:  Preferences.Key<String> = stringPreferencesKey("invite_url")
+        val TOR_SOCK_PROXY_PORT:  Preferences.Key<String> = stringPreferencesKey("tor_sock_proxy_port")
     }
 
     fun getData(key: Preferences.Key<String>): Flow<String?>  = context.dataStore.data
@@ -29,10 +30,9 @@ class SettingStore(private val context: Context) {
     }
 
     private fun getAppDefault(key: Preferences.Key<String>): String? {
-        // todo UX to select a default server from stru
-        val d = context.resources.getStringArray(R.array.default_servers)
         return when (key) {
-            SERVER_URL -> d[0]
+            SERVER_URL -> context.resources.getStringArray(R.array.default_servers)[0]
+            TOR_SOCK_PROXY_PORT -> context.resources.getString(R.string.tor_sock_proxy_port)
             else -> null
         }
     }

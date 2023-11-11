@@ -19,9 +19,7 @@ package org.apache.tuweni.scuttlebutt.handshake.vertx
 import android.util.Log
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.net.NetClient
-import io.vertx.core.net.NetClientOptions
-import io.vertx.core.net.NetSocket
+import io.vertx.core.net.*
 import io.vertx.kotlin.coroutines.await
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.bytes.Bytes32
@@ -97,6 +95,10 @@ class SecureScuttlebuttVertxClient(
             socket.write(Buffer.buffer(handshakeClient.createHello().toArrayUnsafe()))
         }
 
+        fun isGoodbye(message: Bytes): Boolean {
+            return message.size() == 18 && message.numberOfLeadingZeroBytes() == 18
+        }
+
         fun handle(buffer: Buffer?) {
             try {
                 if (handshakeCounter == 0) {
@@ -149,7 +151,7 @@ class SecureScuttlebuttVertxClient(
                         messageBuffer = if (messageBuffer.size() - headerSize >= bodyLength) {
                             val headerAndBodyLength = bodyLength + headerSize
                             val wholeMessage = messageBuffer.slice(0, headerAndBodyLength)
-                            if (SecureScuttlebuttStreamServer.isGoodbye(wholeMessage)) {
+                            if (isGoodbye(wholeMessage)) {
                                 Log.i(TAG, "Goodbye received from remote peer")
                                 socket.close()
                             } else {
@@ -208,7 +210,13 @@ class SecureScuttlebuttVertxClient(
         invite: Invite?,
         handlerFactory: (sender: (Bytes) -> Unit, terminationFunction: () -> Unit) -> ClientHandler
     ): ClientHandler {
-        client = vertx.createNetClient(NetClientOptions().setTcpKeepAlive(true))
+        val netClientOptions = NetClientOptions().setTcpKeepAlive(true)
+        if (host.endsWith(".onion")) {
+            netClientOptions.setProxyOptions(
+                ProxyOptions().setType(ProxyType.SOCKS5).setHost("127.0.0.1").setPort(9050)
+            );
+        }
+        client = vertx.createNetClient(netClientOptions)
         val socket = client!!.connect(port, host).await()
         val h = NetSocketClientHandler(
             socket,
