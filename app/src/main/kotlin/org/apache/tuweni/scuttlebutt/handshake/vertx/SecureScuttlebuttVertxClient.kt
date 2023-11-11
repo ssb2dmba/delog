@@ -19,9 +19,7 @@ package org.apache.tuweni.scuttlebutt.handshake.vertx
 import android.util.Log
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.net.NetClient
-import io.vertx.core.net.NetClientOptions
-import io.vertx.core.net.NetSocket
+import io.vertx.core.net.*
 import io.vertx.kotlin.coroutines.await
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.bytes.Bytes32
@@ -208,7 +206,13 @@ class SecureScuttlebuttVertxClient(
         invite: Invite?,
         handlerFactory: (sender: (Bytes) -> Unit, terminationFunction: () -> Unit) -> ClientHandler
     ): ClientHandler {
-        client = vertx.createNetClient(NetClientOptions().setTcpKeepAlive(true))
+        val netClientOptions = NetClientOptions().setTcpKeepAlive(true)
+        if (host.endsWith(".onion")) {
+            netClientOptions.setProxyOptions(
+                ProxyOptions().setType(ProxyType.SOCKS5).setHost("127.0.0.1").setPort(9050)
+            );
+        }
+        client = vertx.createNetClient(netClientOptions)
         val socket = client!!.connect(port, host).await()
         val h = NetSocketClientHandler(
             socket,
