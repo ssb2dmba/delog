@@ -45,6 +45,9 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import `in`.delog.ssb.BaseSsbService.Companion.format
+import `in`.delog.ui.component.preview.url.UrlPreview
+import `in`.delog.ui.component.richtext.RichTextViewer
+
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
 import java.net.URLEncoder
@@ -61,7 +64,7 @@ fun msgToolbar(
     truncated: Boolean,
     ) {
     Row(
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.Start,
         modifier = Modifier
             .fillMaxWidth()
     ) {
@@ -159,19 +162,55 @@ fun MessageItem(
         return null
     }
 
-    val shortLength = 240
-    var text by remember { mutableStateOf(message.content(format).text.toString()) }
+    val content: String by remember {
+        mutableStateOf(message.content(format).text.toString())
+    }
+
+    val SHORT_TEXT_LENGTH = 240
+    val SHORTEN_AFTER_LINES = 6
+
+    val whereToCut = remember(content) {
+        // Cuts the text in the first space or new line after SHORT_TEXT_LENGTH characters
+        val firstSpaceAfterCut = content.indexOf(' ', SHORT_TEXT_LENGTH).let { if (it < 0) content.length else it }
+        val firstNewLineAfterCut = content.indexOf('\n', SHORT_TEXT_LENGTH).let { if (it < 0) content.length else it }
+
+        // or after SHORTEN_AFTER_LINES lines
+        val numberOfLines = content.count { it == '\n' }
+
+        var charactersInLines = minOf(firstSpaceAfterCut, firstNewLineAfterCut)
+
+        if (numberOfLines > SHORTEN_AFTER_LINES) {
+            val shortContent = content.lines().take(SHORTEN_AFTER_LINES)
+            charactersInLines = 0
+            for (line in shortContent) {
+                // +1 because new line character is omitted from .lines
+                charactersInLines += (line.length + 1)
+            }
+        }
+
+        minOf(firstSpaceAfterCut, firstNewLineAfterCut, charactersInLines)
+    }
+
+
     var truncated by remember {
         mutableStateOf(false)
     }
-    if (truncate && text.length > shortLength) {
-        truncated = true
-        text = text.substring(0, shortLength)
+
+
+    val text:String by remember(content) {
+        derivedStateOf {
+            if (!truncate) {
+                content
+            } else {
+                truncated = whereToCut < content.length
+                content.take(whereToCut)
+            }
+        }
     }
-    val url = firstUrl(text)
-    if (url != null) {
-        text = text.replace(url, "")
-    }
+
+
+
+
 
     Card(
         colors = CardDefaults.cardColors(),
@@ -184,7 +223,7 @@ fun MessageItem(
     ) {
         Row(
             modifier = Modifier
-                .height(IntrinsicSize.Max)
+                //.height(IntrinsicSize.Max)
                 .padding(8.dp)
         ) {
             Box(
@@ -256,21 +295,20 @@ fun MessageItem(
                         .fillMaxWidth()
                         .padding(top = 20.dp)
                 ) {
-                    RichTextViewer(text) {
-                        onClickCallBack.invoke()
-                    }
+                    val maxLines = if (truncate) 6 else Int.MAX_VALUE
+                    RichTextViewer(text, { onClickCallBack.invoke() }, maxLines)
                 }
-                // row preview
-                if (truncated || text.length <= shortLength) {
-                    if (url != null) {
-                        Row(modifier = Modifier
-                            .padding(16.dp)
-                            .padding(bottom = 0.dp)
-                            .height(200.dp)) {
-                            UrlPreview(url = url, urlText = url)
-                        }
-                    }
-                }
+//                // row preview
+//                if (truncated || text.length <= shortLength) {
+//                    if (url != null) {
+//                        Row(modifier = Modifier
+//                            .padding(16.dp)
+//                            .padding(bottom = 0.dp)
+//                            .height(200.dp)) {
+//                            UrlPreview(url = url, urlText = url)
+//                        }
+//                    }
+//                }
                 //Spacer(modifier = Modifier.height(8.dp))
                 // row toolbar
                 if (showToolbar) {

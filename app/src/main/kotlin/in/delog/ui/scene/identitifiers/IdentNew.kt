@@ -41,7 +41,6 @@ fun IdentNew(navController: NavHostController) {
     val identListViewModel = koinViewModel<IdentListViewModel>()
 
     LaunchedEffect(Unit) {
-        bottomBarViewModel.setTitle("New identity")
         bottomBarViewModel.setActions { }
     }
 

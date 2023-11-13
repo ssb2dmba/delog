@@ -44,6 +44,7 @@ import `in`.delog.R
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.ListSpacer
+import `in`.delog.ui.component.MainActionButton
 import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
@@ -104,12 +105,11 @@ fun IdentList(navController: NavHostController) {
 
 @Composable
 fun IdentListFab(navController: NavController) {
-    ExtendedFloatingActionButton(
+    MainActionButton(
         modifier = Modifier.testTag("new_identifier"),
         onClick = {
             navController.navigate(Scenes.NewFeed.route)
         },
-        icon = { Icon(Icons.Filled.Add, "", tint = MaterialTheme.colorScheme.onPrimary) },
-        text = { Text(text = stringResource(R.string.identifier)) }
+        text = stringResource(R.string.identifier)
     )
 }

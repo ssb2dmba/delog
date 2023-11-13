@@ -18,20 +18,28 @@
 package `in`.delog.ui.scene
 
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -48,6 +56,7 @@ import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.FeedMainUIState
 import `in`.delog.viewmodel.MessageListViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -67,7 +76,6 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
             Spacer(modifier = Modifier.weight(1f))
             NewDraftFab(navController)
         }
-        bottomBarViewModel.setTitle("main")
     }
 
     if (uiState.identAndAbout == null || !uiState.loaded) {
@@ -81,34 +89,45 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
         return
     }
 
+    val JumpToBottomThreshold = 56.dp
+    val scrollState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
     val fpgMessages: Flow<PagingData<AppDatabaseView.MessageInTree>> = viewModel.messagesPaged!!
     val lazyMessageItems: LazyPagingItems<AppDatabaseView.MessageInTree> =
         fpgMessages.collectAsLazyPagingItems()
     if (uiState.syncing || uiState.identAndAbout == null) {
         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
     }
-    Column {
-        Card(
-            colors = CardDefaults.cardColors(),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .padding(16.dp)
-                .wrapContentHeight()
-        ) {
-            IdentityBox(
-                identAndAbout = uiState.identAndAbout!!,
-                short = true,
-            )
-        }
+    Box {
 
-        if (lazyMessageItems.itemCount == 0) {
-            AppEmptyList()
-        }
         var previousRoot: String? = null
-        LazyVerticalGrid(columns = GridCells.Fixed(1)) {
+        LazyColumn(
+            state = scrollState,
+            modifier = Modifier.fillMaxSize()
+        ) {
             items(
                 count = lazyMessageItems.itemCount,
             ) { index ->
+                if (lazyMessageItems.itemCount == 0) {
+                    AppEmptyList()
+                }
+
+                if (index == 0) {
+                    Card(
+                        colors = CardDefaults.cardColors(),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .wrapContentHeight()
+                    ) {
+                        IdentityBox(
+                            identAndAbout = uiState.identAndAbout!!,
+                            short = true,
+                        )
+                    }
+                }
+
                 lazyMessageItems[index]?.let {
                     val argUri = makeArgUri(it.key)
                     MessageItem(
@@ -129,8 +148,41 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                     previousRoot = it.root ?: it.key
 
                 }
+
+
+
+
             }
         }
+
+
+        // Jump to bottom button shows up when user scrolls past a threshold.
+        // Convert to pixels:
+        val jumpThreshold = with(LocalDensity.current) {
+            JumpToBottomThreshold.toPx()
+        }
+
+        // Show the button if the first visible item is not the first one or if the offset is
+        // greater than the threshold.
+        val jumpToBottomButtonEnabled by remember {
+            derivedStateOf {
+                scrollState.firstVisibleItemIndex != 0 ||
+                        scrollState.firstVisibleItemScrollOffset > jumpThreshold
+            }
+        }
+        Log.i("SCROLL", scrollState.firstVisibleItemScrollOffset.toString())
+        GoToTop(
+            // Only show if the scroller is not at the bottom
+            enabled = jumpToBottomButtonEnabled,
+            onClicked = {
+                scope.launch {
+                    scrollState.animateScrollToItem(0)
+                }
+            },
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+
+
     }
 
     if (uiState.error!= null && uiState.error?.message!=null) {
@@ -147,18 +199,10 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
 
 @Composable
 fun NewDraftFab(navController: NavController) {
-
-    ExtendedFloatingActionButton(
+    MainActionButton(
         onClick = {
             navController.navigate(Scenes.DraftNew.route)
         },
-        icon = {
-            Icon(
-                Icons.Filled.Draw,
-                "",
-                tint = MaterialTheme.colorScheme.onPrimary,
-            )
-        },
-        text = { Text(text = stringResource(id = R.string.compose)) }
+        text = stringResource(id = R.string.compose)
     )
 }

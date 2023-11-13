@@ -28,7 +28,6 @@ import `in`.delog.db.model.Message
 import `in`.delog.repository.MessageRepository
 import `in`.delog.repository.MessageTreeRepository
 import `in`.delog.ssb.SsbService
-import `in`.delog.ui.component.UrlCachedPreviewer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -95,9 +94,10 @@ class MessageListViewModel(
                 } else { // starts with %
                     messageTreeRepository.getPagedMessageByKey(key)
                 }
-            }.flow.map { pagingData ->
+            }
+                .flow.map { pagingData ->
                 pagingData.map { msgAndAbout ->
-                    UrlCachedPreviewer.preloadPreviewsFor(msgAndAbout)
+                    //UrlCachedPreviewer. preloadPreviewsFor(msgAndAbout)
                     msgAndAbout
                 }
             }.cachedIn(viewModelScope)

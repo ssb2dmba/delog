@@ -30,6 +30,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -38,6 +39,7 @@ import `in`.delog.db.model.Draft
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.MainActionButton
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.component.toMessageViewData
@@ -51,16 +53,10 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun PublishDraftFab(onClick: () -> Unit) {
-    ExtendedFloatingActionButton(
+    MainActionButton(
+        modifier = Modifier.testTag("new_contact"),
         onClick = onClick,
-        icon = {
-            Icon(
-                Icons.Filled.Send,
-                "send",
-                tint = MaterialTheme.colorScheme.onPrimary,
-            )
-        },
-        text = { Text(text = stringResource(id = R.string.publish)) }
+        text = stringResource(id = R.string.publish)
     )
 }
 
@@ -173,8 +169,7 @@ fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean =
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(draftId) {
-        draftViewModel.setCurrentDraft(draftId)
-        bottomBarViewModel.setTitle(title)
+        draftViewModel.setCurrentDraft(draftId) // TODO pass as viewmodel parameter
     }
 
     LaunchedEffect(draftViewModel.draft) {
@@ -192,7 +187,6 @@ fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean =
     }
     var dirtyStatus by remember { mutableStateOf(!done) }
     var contentAsText by remember { mutableStateOf(draftViewModel.draft!!.contentAsText) }
-    bottomBarViewModel.setTitle(title)
     bottomBarViewModel.setActions {
         IconButton(
             modifier = Modifier.height(56.dp),

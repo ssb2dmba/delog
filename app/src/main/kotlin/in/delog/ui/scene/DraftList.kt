@@ -53,13 +53,11 @@ import org.koin.core.parameter.parametersOf
 fun DraftList(navController: NavHostController) {
     val identAndAbout = LocalActiveFeed.current ?: return
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    val title = stringResource(id = R.string.drafts)
     LaunchedEffect(Unit) {
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
             NewDraftFab(navController = navController)
         }
-        bottomBarViewModel.setTitle(title)
     }
 
     val draftListViewModel =

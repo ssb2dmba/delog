@@ -59,4 +59,6 @@
     <string name="draft_saved_confirmation">Draft saved, click publish to broadcast</string>
     <string name="conn_refused">Connection refused</string>
     <string name="tor_sock_proxy_port">9050</string>
+    <string name="copy_url_to_clipboard">copy url to clipboard</string>
+    <string name="goToTop">Go to top</string>
 </resources>

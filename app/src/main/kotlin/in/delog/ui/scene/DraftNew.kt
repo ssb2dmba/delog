@@ -46,6 +46,7 @@ import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.EmojiPicker
 import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.MainActionButton
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.toMessageViewData
 import `in`.delog.ui.navigation.Scenes
@@ -70,13 +71,11 @@ fun DraftNew(
     }
 
     var contentAsText by remember { mutableStateOf("") }
-    val title = stringResource(id = R.string.drafts)
 
     LaunchedEffect(Unit) {
         if (linkedKey != null) {
             draftViewModel.getLink(linkedKey)
         }
-        bottomBarViewModel.setTitle(title)
         bottomBarViewModel.setActions {
             IconButton(
                 modifier = Modifier
@@ -236,13 +235,8 @@ fun ReplyHeader(link: MessageAndAbout?, draftMode: String?) {
 
 @Composable
 fun SaveDraftFab(onClick: () -> Unit) {
-    ExtendedFloatingActionButton(onClick = onClick,
-        icon = {
-            Icon(
-                Icons.Filled.Save,
-                "",
-                tint = MaterialTheme.colorScheme.onPrimary,
-            )
-        },
-        text = { Text(stringResource(id = R.string.save)) })
+    MainActionButton(
+        onClick = onClick,
+        text = stringResource(id = R.string.save)
+    )
 }

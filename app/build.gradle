@@ -52,7 +52,7 @@ android {
     }
 
     defaultConfig {
-        minSdk 24
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -109,19 +109,14 @@ android {
         jniLibs.useLegacyPackaging = true
         resources {
             excludes += ['META-INF/INDEX.LIST', 'META-INF/*.md', 'META-INF/io.netty.versions.properties']
-            //pickFirsts += "**/*"
         }
     }
 
     testOptions {
         unitTests.returnDefaultValues = true
         animationsDisabled true
-//        uncomment this to run tests with orchestrator
         execution 'ANDROIDX_TEST_ORCHESTRATOR'
     }
-
-
-    //buildToolsVersion '33.0.1'
 
     buildFeatures {
         compose true
@@ -133,9 +128,6 @@ android {
 }
 
 task nativeLibsToJar(type: Jar, description: 'create a jar archive of the native libs') {
-
-    //destinationDir file("$buildDir/native-libs")
-    //baseName 'native-libs'
     from fileTree(dir: 'libs', include: '**/*.so')
     into 'lib/'
 }
@@ -203,9 +195,17 @@ dependencies {
     implementation('io.vertx:vertx-lang-kotlin-coroutines:4.4.1')
     implementation('org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0')
     // link preview
-    implementation 'tw.com.oneup.www:Baha-UrlPreview:1.0.1'
-    // Load images from the web.
+    implementation 'com.linkedin.urls:url-detector:0.1.17'
+    implementation 'org.jsoup:jsoup:1.16.1'
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.6")
     implementation 'io.coil-kt:coil-compose:2.3.0'
+    implementation "net.engawapg.lib:zoomable:1.5.2"
+    implementation "androidx.media3:media3-exoplayer:1.2.0-rc01"
+    implementation "androidx.media3:media3-ui:1.2.0-rc01"
+    implementation "androidx.media3:media3-session:1.2.0-rc01"
+    implementation "androidx.media3:media3-datasource-okhttp:1.2.0-rc01"
+    implementation "androidx.media3:media3-exoplayer-hls:1.2.0-rc01"
+    implementation 'com.github.lincollincol:compose-audiowaveform:1.1.1'
     // Rendering clickable text
     implementation 'com.google.accompanist:accompanist-flowlayout:0.30.0'
     implementation 'com.google.accompanist:accompanist-webview:0.30.0'
@@ -265,7 +265,6 @@ gradle.projectsEvaluated {
         [input_arch: 'x86', output_arch: 'android-i686', ndk_platform: 'android-19'],
         [input_arch: 'x86_64', output_arch: 'android-westmere', ndk_platform: 'android-21'],
 ].each { opts ->
-
     def taskname = "compileNative_${opts['output_arch']}"
 
     task(taskname) {
@@ -304,9 +303,6 @@ gradle.projectsEvaluated {
 }
 
 apply plugin: "c"
-
-// ====
-
 
 task cleanLibsodium {
     doLast {

@@ -39,6 +39,8 @@ import `in`.delog.R
 import `in`.delog.db.model.*
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.MainActionButton
+import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.ContactListViewModel
 import kotlinx.coroutines.flow.Flow
@@ -51,12 +53,10 @@ fun ContactList(navController: NavController) {
     val feed = LocalActiveFeed.current ?: return
 
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    val bottomBarTitle = stringResource(id = R.string.contacts)
     var showAddContactDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         bottomBarViewModel.setActions {}
-        bottomBarViewModel.setTitle(bottomBarTitle)
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
             ContactListFab({ showAddContactDialog = true })
@@ -184,12 +184,11 @@ fun ContactListItem(
 
 @Composable
 fun ContactListFab(callback: () -> Unit) {
-    ExtendedFloatingActionButton(
+
+    MainActionButton(
         modifier = Modifier.testTag("new_contact"),
-        onClick = {
-            callback()
-        },
-        icon = { Icon(Icons.Filled.Add, "", tint = MaterialTheme.colorScheme.onPrimary) },
-        text = { Text(text = stringResource(R.string.follow)) }
+        onClick = callback,
+        text = stringResource(R.string.follow)
     )
+
 }

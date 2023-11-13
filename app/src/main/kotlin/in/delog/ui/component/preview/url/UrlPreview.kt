@@ -15,34 +15,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ui.component
+package `in`.delog.ui.component.preview.url
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
-import com.baha.url.preview.IUrlPreviewCallback
-import com.baha.url.preview.UrlInfoItem
+import `in`.delog.ui.component.richtext.ClickableUrl
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 @Composable
-fun UrlPreview(url: String, urlText: String, showUrlIfError: Boolean = true) {
-    var urlPreviewState by remember { mutableStateOf<UrlPreviewState>(UrlPreviewState.Loading) }
+fun UrlPreview(url: String, urlText: String) {
+    var urlPreviewState by remember(url) {
+        mutableStateOf(
+            UrlCachedPreviewer.cache.get(url)?.let { it } ?: UrlPreviewState.Loading
+        )
+    }
 
     // Doesn't use a viewModel because of viewModel reusing issues (too many UrlPreview are created).
-    LaunchedEffect(url) {
-        UrlCachedPreviewer.previewInfo(url, object : IUrlPreviewCallback {
-            override fun onComplete(urlInfo: UrlInfoItem) {
-                urlPreviewState = if (urlInfo.allFetchComplete() && urlInfo.url == url)
-                    UrlPreviewState.Loaded(urlInfo)
-                else
-                    UrlPreviewState.Empty
+    if (urlPreviewState == UrlPreviewState.Loading) {
+        LaunchedEffect(url) {
+            launch(Dispatchers.IO) {
+                UrlCachedPreviewer.previewInfo(url) {
+                    launch(Dispatchers.Main) {
+                        urlPreviewState = it
+                    }
+                }
             }
-
-            override fun onFailed(throwable: Throwable) {
-                urlPreviewState =
-                    UrlPreviewState.Error("Error parsing preview for ${url}: ${throwable.message}")
-            }
-        })
+        }
     }
 
     Crossfade(targetState = urlPreviewState, animationSpec = tween(durationMillis = 100)) { state ->
@@ -51,12 +52,9 @@ fun UrlPreview(url: String, urlText: String, showUrlIfError: Boolean = true) {
                 UrlPreviewCard(url, state.previewInfo)
             }
             else -> {
-                if (showUrlIfError) {
-                    ClickableUrl(urlText, url)
-                }
+                ClickableUrl(urlText, url)
             }
         }
     }
-
 }
 

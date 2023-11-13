@@ -15,13 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ui.component
+package `in`.delog.ui.component.preview.url
 
-import com.baha.url.preview.UrlInfoItem
+import androidx.compose.runtime.Immutable
 
+
+@Immutable
 sealed class UrlPreviewState {
+
+    @Immutable
     object Loading : UrlPreviewState()
+
+    @Immutable
     class Loaded(val previewInfo: UrlInfoItem) : UrlPreviewState()
+
+    @Immutable
     object Empty : UrlPreviewState()
+
+    @Immutable
     class Error(val errorMessage: String) : UrlPreviewState()
 }

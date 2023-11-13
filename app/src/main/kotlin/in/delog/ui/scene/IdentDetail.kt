@@ -231,8 +231,6 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     }
 
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    val title = stringResource(id = R.string.edit)
-    bottomBarViewModel.setTitle(title)
 
     bottomBarViewModel.setActions {
         IdentDetailTopBarMenu(

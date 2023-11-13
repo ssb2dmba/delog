@@ -74,10 +74,7 @@ fun AboutEdit(
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    val title = stringResource(R.string.about)
-    LaunchedEffect(Unit) {
-        bottomBarViewModel.setTitle(title)
-    }
+
     if (uiState.identAndAbout == null) {
         Column(
             modifier = Modifier.fillMaxSize(),

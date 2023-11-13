@@ -25,12 +25,6 @@ import androidx.lifecycle.ViewModel
 
 class BottomBarViewModel() : ViewModel() {
 
-    private val _title = MutableLiveData<String>("")
-    val title: LiveData<String> = _title
-    fun setTitle(newTitle: String) {
-        _title.value = newTitle
-    }
-
     val dummy: (@Composable RowScope.() -> Unit)? = { }
     var _actions = MutableLiveData(dummy)
     val actions: MutableLiveData<@Composable() (RowScope.() -> Unit)?> get() = _actions

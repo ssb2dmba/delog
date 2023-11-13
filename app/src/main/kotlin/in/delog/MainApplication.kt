@@ -22,11 +22,11 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 import `in`.delog.di.modules.dataBaseModule
 import `in`.delog.di.modules.mainViewModel
 import `in`.delog.di.modules.ssbModule
 import `in`.delog.libsodium.NaCl
+import `in`.delog.ui.component.preview.videos.VideoCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,7 +51,6 @@ class MainApplication : Application() {
                 mainViewModel
             )
         }
-
     }
 
 
@@ -79,7 +78,11 @@ class MainApplication : Application() {
 
     }
 
-
+    val videoCache: VideoCache by lazy {
+        val newCache = VideoCache()
+        newCache.initFileCache(this)
+        newCache
+    }
 
 }
 

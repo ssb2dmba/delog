@@ -15,18 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ui.component
+package `in`.delog.ui.component.richtext
 
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun ClickableUrl(urlText: String, url: String) {
     val uri = LocalUriHandler.current
 
     ClickableText(
+        style=  TextStyle(
+            color = MaterialTheme.colorScheme.onTertiary,
+            fontWeight = FontWeight.Bold
+        ),
         text = AnnotatedString("$urlText "),
         onClick = { runCatching { uri.openUri(url) } },
 

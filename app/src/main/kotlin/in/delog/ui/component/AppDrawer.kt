@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -84,9 +85,10 @@ fun AppDrawer(
                 )
                 // user's name
                 Text(
-                    modifier = Modifier
-                        .padding(top = 12.dp),
+                    modifier = Modifier.padding(16.dp),
                     text = feed.getNetworkIdentifier(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.outline

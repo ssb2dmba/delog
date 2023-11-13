@@ -41,34 +41,29 @@ fun AppBottomAppBar(onNavIconClick: () -> Job) {
     val actions: (@Composable RowScope.() -> Unit)? by bottomBarViewModel.actions.observeAsState(
         null
     )
-    val title = bottomBarViewModel.title.observeAsState("").value;
 
     BottomAppBar(
-        contentPadding = PaddingValues(start = 18.dp, end = 8.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
         content = {
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().wrapContentHeight()
                 ) {
                     OutlinedIconButton(
                         modifier = Modifier.testTag("openDrawer"),
                         onClick = { onNavIconClick() },
                     ) {
                         Icon(Icons.Outlined.Menu,
-                            contentDescription = "menu"
+                            contentDescription = "menu",
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(56.dp)
                         )
                     }
-                    Text(
-                        modifier = Modifier.padding(start = 6.dp),
-                        text = title,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
 
                     //Spacer(modifier = Modifier.width(8.dp))
                     actions?.let { it() }
                 }
-            }
+
         })
 }
