@@ -61,4 +61,8 @@
     <string name="tor_sock_proxy_port">9050</string>
     <string name="copy_url_to_clipboard">copy url to clipboard</string>
     <string name="goToTop">Go to top</string>
+    <string name="prefs">preferences</string>
+    <string name="always_use_tor_proxy">0</string>
+    <string name="proxy_tor">proxy Tor</string>
+    <string name="always_uses_tor_proxy">Always uses Tor proxy</string>
 </resources>

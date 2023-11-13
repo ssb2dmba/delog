@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -46,7 +45,7 @@ import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.EmojiPicker
 import `in`.delog.ui.component.IdentityBox
-import `in`.delog.ui.component.MainActionButton
+import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.toMessageViewData
 import `in`.delog.ui.navigation.Scenes
@@ -235,7 +234,7 @@ fun ReplyHeader(link: MessageAndAbout?, draftMode: String?) {
 
 @Composable
 fun SaveDraftFab(onClick: () -> Unit) {
-    MainActionButton(
+    BottomBarMainButton(
         onClick = onClick,
         text = stringResource(id = R.string.save)
     )

@@ -39,7 +39,7 @@ import `in`.delog.db.model.Draft
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.IdentityBox
-import `in`.delog.ui.component.MainActionButton
+import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.component.toMessageViewData
@@ -53,7 +53,7 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun PublishDraftFab(onClick: () -> Unit) {
-    MainActionButton(
+    BottomBarMainButton(
         modifier = Modifier.testTag("new_contact"),
         onClick = onClick,
         text = stringResource(id = R.string.publish)

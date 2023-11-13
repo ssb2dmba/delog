@@ -79,6 +79,10 @@ fun NavGraph(navController: NavHostController) {
             DraftNew(navController)
         }
 
+        composable(route = Scenes.Preferences.route) {
+            PreferencesEdit(navController)
+        }
+
         composable(
             route = Scenes.DraftNew.route + "/{" + draftType +"}" + "/{" + id + "}",
             arguments = listOf(navArgument(id) { type = NavType.StringType }, navArgument(draftType) { type = NavType.StringType})
@@ -106,3 +110,5 @@ fun NavGraph(navController: NavHostController) {
 
     }
 }
+
+

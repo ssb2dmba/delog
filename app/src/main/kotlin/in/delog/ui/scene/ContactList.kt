@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,11 +38,12 @@ import `in`.delog.R
 import `in`.delog.db.model.*
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.IdentityBox
-import `in`.delog.ui.component.MainActionButton
-import `in`.delog.ui.navigation.Scenes
+import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.ContactListViewModel
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -75,14 +75,13 @@ fun ContactList(navController: NavController) {
             contactListViewModel.insert(contact)
             showAddContactDialog = false
         }
-
         var publicKey by remember { mutableStateOf("") }
         var isError by remember { mutableStateOf(false) }
         fun validate(text: String) {
             isError = publicKey.length > 5
         }
-
-        AlertDialog(onDismissRequest = { showAddContactDialog = false },
+        AlertDialog(
+            onDismissRequest = { showAddContactDialog = false },
             containerColor = MaterialTheme.colorScheme.surface,
             title = {
                 Text(
@@ -92,8 +91,6 @@ fun ContactList(navController: NavController) {
                 )
             },
             text = {
-
-
                         TextField(
                             label = { Text("Add contact using an ssb identifier") },
                             value = publicKey,
@@ -114,25 +111,21 @@ fun ContactList(navController: NavController) {
                                 }
                             }
                         )
-
             },
             dismissButton = {
-                Text(
-                    text = stringResource(id = R.string.dismiss),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(15.dp)
-                        .clickable { showAddContactDialog = false }
-                )
+                Button(
+                    onClick = {
+                        showAddContactDialog = false
+                    }) {
+                    Text(stringResource(id = R.string.dismiss))
+                }
             },
             confirmButton = {
-                TextButton(
+                Button(
                     enabled = !isError,
                     onClick = {
                         addContact(publicKey)
-                    }
-                ) {
+                    }) {
                     Text(stringResource(id = R.string.follow))
                 }
             }
@@ -185,7 +178,7 @@ fun ContactListItem(
 @Composable
 fun ContactListFab(callback: () -> Unit) {
 
-    MainActionButton(
+    BottomBarMainButton(
         modifier = Modifier.testTag("new_contact"),
         onClick = callback,
         text = stringResource(R.string.follow)

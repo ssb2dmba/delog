@@ -28,4 +28,6 @@ sealed class Scenes(val route: String) {
     object DraftNew : Scenes("draft_new")
     object DraftEdit : Scenes("draft_edit")
     object ContactList : Scenes("contact_list")
+    object Preferences : Scenes("preferences")
+
 }

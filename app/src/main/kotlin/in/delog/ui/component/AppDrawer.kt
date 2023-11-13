@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Drafts
 import androidx.compose.material.icons.rounded.DynamicFeed
 import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material.icons.rounded.People
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -181,6 +182,14 @@ private fun prepareNavigationDrawerItems(): List<NavigationDrawerItem> {
             route = Scenes.ContactList.route
         )
     )
+    itemsList.add(
+        NavigationDrawerItem(
+            image = rememberVectorPainter(Icons.Rounded.Settings),
+            label = stringResource(R.string.prefs),
+            route = Scenes.Preferences.route
+        )
+    )
+
     return itemsList
 }
 

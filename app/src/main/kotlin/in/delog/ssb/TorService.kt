@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LiveData
 import `in`.delog.MainApplication
+import `in`.delog.R
 import `in`.delog.db.SettingStore
 import `in`.delog.db.SettingStore.Companion.TOR_SOCK_PROXY_PORT
 import io.matthewnelson.kmp.tor.TorConfigProviderAndroid
@@ -67,12 +68,17 @@ class TorService {
 
     private val listener = TorListener()
 
-    var torProxyPort = -1
+    var torProxyPort = MainApplication.applicationContext().resources.getString(R.string.tor_sock_proxy_port).toInt()
+
     init {
         val store = SettingStore(MainApplication.applicationContext())
+
         MainApplication.getApplicationScope().launch {
             store.getData(TOR_SOCK_PROXY_PORT).collect {
-                torProxyPort = it!!.toInt()
+                if (it !=null && it!!.toIntOrNull()!=null) {
+                    torProxyPort = it.toInt()
+                }
+                torProxyPort = torProxyPort
                 manager.debug(true)
                 manager.addListener(listener)
                 listener.addLine(TorServiceConfig.getMetaData(MainApplication.applicationContext()).toString())

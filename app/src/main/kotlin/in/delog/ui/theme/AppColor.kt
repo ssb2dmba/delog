@@ -24,7 +24,7 @@ import kotlinx.collections.immutable.toImmutableList
 // https://material-foundation.github.io/material-theme-builder/#/custom
 
 val md_theme_light_primary = Color(0xFF386a20) // os top
-val md_theme_light_onPrimary = Color(0xFF212121)
+val md_theme_light_onPrimary = Color(0xFFFFFFFF)
 val md_theme_light_primaryContainer = Color(0xFFA5D6A7) //81C784) // fab
 val md_theme_light_onPrimaryContainer = Color(0xFF042100)
 val md_theme_light_secondary = Color(0xFF55624c)
