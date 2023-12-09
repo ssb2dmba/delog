@@ -68,6 +68,7 @@ class MessageListViewModel(
 
     fun synchronize() {
         viewModelScope.launch {
+            if (_uiState.value.identAndAbout==null) return@launch
             _uiState.update { it.copy(error = null, syncing = true) }
             ssbService.synchronize(_uiState.value.identAndAbout!!.ident, ::onError)
             _uiState.update { it.copy(syncing = false) }

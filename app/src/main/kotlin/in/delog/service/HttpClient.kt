@@ -1,5 +1,11 @@
 package `in`.delog.service
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import `in`.delog.MainApplication
+import `in`.delog.db.SettingStore
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -7,17 +13,11 @@ import java.time.Duration
 
 object HttpClient {
     private var proxy: Proxy? = null
-    private var useProxy: Boolean = false
-
-    var proxyChangeListeners = ArrayList<() -> Unit>()
-
-    fun start() {
-    }
 
     fun getHttpClient(): OkHttpClient {
-        val seconds = if (useProxy) 40L else 10L
+        val seconds = 40L
         val duration = Duration.ofSeconds(seconds)
-        proxy = initProxy(false,"127.0.0.1", 9090)
+        proxy = getProxy()
         return OkHttpClient.Builder()
             .proxy(proxy)
             .readTimeout(duration)
@@ -27,7 +27,12 @@ object HttpClient {
     }
 
     fun getProxy(): Proxy? {
-        return proxy
+        val context = MainApplication.applicationContext()
+        val store = SettingStore(context)
+        val alwaysTorProxy = runBlocking { store.getData(SettingStore.ALWAYS_TOR_PROXY).first() }
+        val torProxyPort = runBlocking { store.getData(SettingStore.TOR_SOCK_PROXY_PORT).first() }
+        var port = if (torProxyPort!=null) { torProxyPort.toInt() } else { 9090 }
+        return initProxy(alwaysTorProxy== "1","127.0.0.1",  port)
     }
 
     fun initProxy(useProxy: Boolean, hostname: String, port: Int): Proxy? {

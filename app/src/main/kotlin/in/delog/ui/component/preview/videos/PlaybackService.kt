@@ -72,31 +72,7 @@ class PlaybackService : MediaSessionService() {
         return newInstance
     }
 
-    // Create your Player and MediaSession in the onCreate lifecycle event
-    @OptIn(UnstableApi::class)
-    override fun onCreate() {
-        super.onCreate()
-
-        // Stop all videos and recreates all managers when the proxy changes.
-        HttpClient.proxyChangeListeners.add(this@PlaybackService::onProxyUpdated)
-    }
-
-    private fun onProxyUpdated() {
-        val toDestroyHls = managerHls
-        val toDestroyProgressive = managerProgressive
-
-        managerHls = MultiPlayerPlaybackManager(newHslDataSource(), videoViewedPositionCache)
-        managerProgressive =
-            MultiPlayerPlaybackManager(newProgressiveDataSource(), videoViewedPositionCache)
-
-        toDestroyHls?.releaseAppPlayers()
-        toDestroyProgressive?.releaseAppPlayers()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-    }
-
     override fun onDestroy() {
-        HttpClient.proxyChangeListeners.remove(this@PlaybackService::onProxyUpdated)
-
         managerHls?.releaseAppPlayers()
         managerLocal?.releaseAppPlayers()
         managerProgressive?.releaseAppPlayers()
@@ -115,8 +91,6 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
-        // Updates any new player ready
-
         // Overrides the notification with any player actually playing
         managerHls?.playingContent()?.forEach {
             super.onUpdateNotification(session, startInForegroundRequired)
