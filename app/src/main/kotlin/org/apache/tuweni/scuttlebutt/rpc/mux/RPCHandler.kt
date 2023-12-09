@@ -104,13 +104,13 @@ open class RPCHandler(
     }
 
     private fun logOutgoingRequest(rpcMessage: RPCMessage) {
-            val requestString = rpcMessage.asString()
-            val logMessage = String.format(
-                "> [%d]: %s",
-                rpcMessage.requestNumber(),
-                requestString
-            )
-            Log.d(TAG, logMessage)
+        val requestString = rpcMessage.asString()
+        val logMessage = String.format(
+            "> [%d]: %s",
+            rpcMessage.requestNumber(),
+            requestString
+        )
+        Log.d(TAG, logMessage)
     }
 
     override fun close() {
@@ -151,7 +151,8 @@ open class RPCHandler(
     }
 
     private fun handleRequest(rpcMessage: RPCMessage) {
-        val logMessage = String.format("< [%s] %s",rpcMessage.requestNumber(), rpcMessage.asString())
+        val logMessage =
+            String.format("< [%s] %s", rpcMessage.requestNumber(), rpcMessage.asString())
         Log.d(TAG, logMessage)
         val rpcFlags = rpcMessage.rpcFlags()
         val isStream = RPCFlag.Stream.STREAM.isApplied(rpcFlags)
@@ -244,7 +245,7 @@ open class RPCHandler(
                 val streamEnd = encodeStreamEndRequest(requestNumber)
                 streamHandler.onStreamEnd()
                 val logMessage = String.format("[%d] Sending close stream message.", requestNumber)
-                Log.d(TAG,logMessage)
+                Log.d(TAG, logMessage)
                 sendBytes(streamEnd)
             }
         } catch (e: JsonProcessingException) {

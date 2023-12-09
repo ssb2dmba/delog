@@ -18,9 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import in.delog.libsodium.NaCl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import in.delog.libsodium.NaCl;
 
 class DiffieHelmanTest {
 

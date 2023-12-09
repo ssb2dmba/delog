@@ -43,7 +43,8 @@ fun UrlPreviewCard(
     val uri = LocalUriHandler.current
 
     Column(
-        modifier = Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.secondaryContainer)
             .clickable {
                 runCatching { uri.openUri(url) }
             }
@@ -60,8 +61,10 @@ fun UrlPreviewCard(
         Text(
             text = previewInfo.verifiedUrl?.host ?: previewInfo.url,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.fillMaxWidth().padding(start=16.dp,end=16.dp),
-            color =  MaterialTheme.colorScheme.onSecondary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp),
+            color = MaterialTheme.colorScheme.onSecondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -69,7 +72,9 @@ fun UrlPreviewCard(
         Text(
             text = previewInfo.title,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.fillMaxWidth().padding(start=16.dp,end=16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -77,7 +82,9 @@ fun UrlPreviewCard(
         Text(
             text = previewInfo.description,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.fillMaxWidth().padding(start=16.dp,end=16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp),
             color = MaterialTheme.colorScheme.onSecondary,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis

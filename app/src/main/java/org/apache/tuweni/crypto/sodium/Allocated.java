@@ -13,10 +13,11 @@
 package org.apache.tuweni.crypto.sodium;
 
 import org.apache.tuweni.bytes.Bytes;
-import in.delog.libsodium.SodiumUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.security.auth.Destroyable;
+
+import in.delog.libsodium.SodiumUtils;
 
 /**
  * Allocated objects track allocation of memory using Sodium.

@@ -18,13 +18,16 @@
 package `in`.delog.ui.scene.identitifiers
 
 
-import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import `in`.delog.db.model.Ident
-import `in`.delog.ssb.BaseSsbService
 import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel

@@ -19,7 +19,12 @@ package `in`.delog.ui.component.preview.url
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import `in`.delog.ui.component.richtext.ClickableUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,6 +56,7 @@ fun UrlPreview(url: String, urlText: String) {
             is UrlPreviewState.Loaded -> {
                 UrlPreviewCard(url, state.previewInfo)
             }
+
             else -> {
                 ClickableUrl(urlText, url)
             }

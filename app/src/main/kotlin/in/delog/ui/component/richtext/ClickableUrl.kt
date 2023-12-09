@@ -30,7 +30,7 @@ fun ClickableUrl(urlText: String, url: String) {
     val uri = LocalUriHandler.current
 
     ClickableText(
-        style=  TextStyle(
+        style = TextStyle(
             color = MaterialTheme.colorScheme.onTertiary,
             fontWeight = FontWeight.Bold
         ),

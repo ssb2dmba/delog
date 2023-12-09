@@ -1,9 +1,9 @@
 package `in`.delog.ssb.test
 
-import `in`.delog.ssb.Dict
-import `in`.delog.ssb.WordList
-import `in`.delog.ssb.mnemonicToSignature
-import `in`.delog.ssb.secretKeyToMnemonic
+import `in`.delog.service.ssb.Dict
+import `in`.delog.service.ssb.WordList
+import `in`.delog.service.ssb.mnemonicToSignature
+import `in`.delog.service.ssb.secretKeyToMnemonic
 import org.apache.tuweni.io.Base64
 import org.junit.Assert.assertEquals
 import org.junit.Test

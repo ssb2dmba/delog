@@ -1,6 +1,5 @@
 package `in`.delog.ui.scene.identitifiers
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,10 +15,9 @@ import androidx.navigation.NavHostController
 import `in`.delog.MainApplication
 import `in`.delog.R
 import `in`.delog.db.model.Ident
-import `in`.delog.ssb.SsbService
+import `in`.delog.service.ssb.SsbService
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
-import `in`.delog.viewmodel.IdentAndAboutViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -28,7 +26,6 @@ import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.MalformedInviteCodeException
 import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +50,7 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     val newIdent by identListViewModel.insertedIdent.observeAsState(null)
 
     if (newIdent != null) {
-        LaunchedEffect(key1 = Unit ) {
+        LaunchedEffect(key1 = Unit) {
             newIdent!!.invite?.let {
                 GlobalScope.launch {
                     ssbService.connectWithInvite(
@@ -146,15 +143,15 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                 enabled = isValid,
                 onClick = {
                     val ident = Ident(
-                        oid =0,
+                        oid = 0,
                         publicKey = identity.toCanonicalForm(),
                         server = serverInput,
                         port = portInput.toInt(),
-                        privateKey= identity.privateKeyAsBase64String(),
+                        privateKey = identity.privateKeyAsBase64String(),
                         invite = inviteString,
                         sortOrder = 1,
                         defaultIdent = defaultServer,
-                        lastPush =  null
+                        lastPush = null
                     );
                     identListViewModel.insert(ident = ident, aliasInput)
                 },

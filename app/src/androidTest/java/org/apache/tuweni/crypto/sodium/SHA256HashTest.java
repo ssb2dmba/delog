@@ -18,9 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.Hash;
-import in.delog.libsodium.NaCl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import in.delog.libsodium.NaCl;
 
 class SHA256HashTest {
 

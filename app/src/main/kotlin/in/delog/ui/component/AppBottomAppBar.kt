@@ -18,10 +18,18 @@
 package `in`.delog.ui.component
 
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Menu
-import androidx.compose.material3.*
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -45,25 +53,28 @@ fun AppBottomAppBar(onNavIconClick: () -> Job) {
     BottomAppBar(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
         content = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().wrapContentHeight()
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+            ) {
+                OutlinedIconButton(
+                    modifier = Modifier.testTag("openDrawer"),
+                    onClick = { onNavIconClick() },
                 ) {
-                    OutlinedIconButton(
-                        modifier = Modifier.testTag("openDrawer"),
-                        onClick = { onNavIconClick() },
-                    ) {
-                        Icon(Icons.Outlined.Menu,
-                            contentDescription = "menu",
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(56.dp)
-                        )
-                    }
-
-                    //Spacer(modifier = Modifier.width(8.dp))
-                    actions?.let { it() }
+                    Icon(
+                        Icons.Outlined.Menu,
+                        contentDescription = "menu",
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .size(56.dp)
+                    )
                 }
+
+                //Spacer(modifier = Modifier.width(8.dp))
+                actions?.let { it() }
+            }
 
         })
 }

@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.HomeRepairService
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,7 +60,7 @@ fun PreferencesEdit(navController: NavHostController) {
 
     val context = LocalContext.current
     val store = SettingStore(context)
-    val openDialog = remember { mutableStateOf(false)  }
+    val openDialog = remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -82,7 +81,11 @@ fun PreferencesEdit(navController: NavHostController) {
             TOR_SOCK_PROXY_PORT,
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
-        PreferencesCheckBox(store = store, title = stringResource(R.string.always_uses_tor_proxy), key = ALWAYS_TOR_PROXY)
+        PreferencesCheckBox(
+            store = store,
+            title = stringResource(R.string.always_uses_tor_proxy),
+            key = ALWAYS_TOR_PROXY
+        )
     }
 
     // bottom bar setup
@@ -96,7 +99,10 @@ fun PreferencesEdit(navController: NavHostController) {
             contentDescription = "reset"
         )
         Spacer(modifier = Modifier.weight(1f))
-        BottomBarMainButton(onClick = { navController.navigate(Scenes.MainFeed.route) }, text = "quit")
+        BottomBarMainButton(
+            onClick = { navController.navigate(Scenes.MainFeed.route) },
+            text = "quit"
+        )
     }
 
     // confirm dialog setup
@@ -108,7 +114,7 @@ fun PreferencesEdit(navController: NavHostController) {
             text = {
                 Text("Reset preference to application defaults")
             },
-            onDismissRequest = { openDialog.value = false},
+            onDismissRequest = { openDialog.value = false },
             confirmButton = {
                 Button(
                     onClick = {
@@ -157,8 +163,8 @@ private fun PreferencesCheckBox(
             checked = innerValue.value,
             onCheckedChange = { innerValue.value = it },
             enabled = dirty,
-            modifier = Modifier.clickable{
-                if (!dirty) dirty=true
+            modifier = Modifier.clickable {
+                if (!dirty) dirty = true
             }
         )
         Text(title, modifier = Modifier.clickable {

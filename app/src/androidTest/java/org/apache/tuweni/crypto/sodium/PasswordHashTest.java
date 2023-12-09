@@ -25,10 +25,11 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.sodium.PasswordHash.Algorithm;
 import org.apache.tuweni.crypto.sodium.PasswordHash.Salt;
 import org.apache.tuweni.crypto.sodium.PasswordHash.VerificationResult;
-import in.delog.libsodium.NaCl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+
+import in.delog.libsodium.NaCl;
 
 @RunWith(AndroidJUnit4.class)
 class PasswordHashTest {

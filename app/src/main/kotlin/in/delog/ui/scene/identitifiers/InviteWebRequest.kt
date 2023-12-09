@@ -8,7 +8,11 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.web.LoadingState
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
-import `in`.delog.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 
 @Composable
 fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {

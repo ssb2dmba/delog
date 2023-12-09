@@ -1,5 +1,5 @@
 Feature: Onboarding with new key
-    As a user, I want to be able to join the network
+  As a user, I want to be able to join the network
 
   Scenario: Generate random identifier
     When I open application

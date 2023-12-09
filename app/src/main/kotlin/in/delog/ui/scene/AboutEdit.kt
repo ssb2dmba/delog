@@ -21,7 +21,15 @@ package `in`.delog.ui.scene
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,8 +40,19 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Send
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -159,7 +178,8 @@ fun AboutEdit(
                     // name
                     OutlinedTextField(
                         value = uiState.alias,
-                        onValueChange = { newValue -> viewModel.updateAlias(newValue)
+                        onValueChange = { newValue ->
+                            viewModel.updateAlias(newValue)
                         },
                         label = {
                             Text(
@@ -172,25 +192,36 @@ fun AboutEdit(
                 }
             }
 
-            if (uiState.didValid!=null) {
+            if (uiState.didValid != null) {
                 var idStatusText = "${uiState.alias}@${uiState.identAndAbout!!.ident.server}"
                 var idStatusIcon = Icons.Default.Done
                 var didColor = MaterialTheme.colorScheme.primary
                 if (!uiState.didValid!!) {
                     didColor = MaterialTheme.colorScheme.error
-                    idStatusText = "${uiState.alias}@${uiState.identAndAbout!!.ident.server} is not not available"
+                    idStatusText =
+                        "${uiState.alias}@${uiState.identAndAbout!!.ident.server} is not not available"
                     idStatusIcon = Icons.Default.Close
                 }
-                Row(modifier = Modifier.fillMaxWidth().padding(start = 68.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Icon(idStatusIcon, contentDescription = idStatusText, tint= didColor)
-                    Text(idStatusText, modifier= Modifier.padding(start= 8.dp),color=didColor, style = MaterialTheme.typography.labelSmall)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 68.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(idStatusIcon, contentDescription = idStatusText, tint = didColor)
+                    Text(
+                        idStatusText,
+                        modifier = Modifier.padding(start = 8.dp),
+                        color = didColor,
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             }
             // description
             OutlinedTextField(
                 value = uiState.description,
-                onValueChange = { value -> viewModel.updateDescription(value)
+                onValueChange = { value ->
+                    viewModel.updateDescription(value)
                 },
                 label = {
                     Text(
@@ -209,8 +240,8 @@ fun AboutEdit(
             IdentDetailTopBarMenu(
                 navHostController,
                 viewModel,
-                { viewModel.openExportDialog()  },
-                { viewModel.openDeleteDialog()  })
+                { viewModel.openExportDialog() },
+                { viewModel.openDeleteDialog() })
             Spacer(modifier = Modifier.weight(1f))
             // save
             ExtendedFloatingActionButton(
@@ -248,7 +279,7 @@ fun AboutEdit(
             IdentDetailTopBarMenu(
                 navHostController,
                 viewModel,
-                { viewModel.openExportDialog()},
+                { viewModel.openExportDialog() },
                 { viewModel.openDeleteDialog() })
             IconButton(onClick = { viewModel.setDirty(false) }) {
                 Icon(imageVector = Icons.Default.Edit, contentDescription = "edit")

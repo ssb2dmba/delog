@@ -20,7 +20,6 @@ package `in`.delog.ui.component
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -44,7 +43,6 @@ import coil.compose.rememberAsyncImagePainter
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.ui.scene.ExportMnemonicDialog
 import `in`.delog.ui.scene.ExportPublickKeyDialog
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.ui.theme.keySmall
@@ -60,9 +58,9 @@ fun IdentityBox(
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
     var showExportDialog by remember { mutableStateOf(false) }
-    
+
     if (showExportDialog) {
-        ExportPublickKeyDialog(identAndAbout=identAndAbout, onDismissRequest = {
+        ExportPublickKeyDialog(identAndAbout = identAndAbout, onDismissRequest = {
             showExportDialog = false
         })
         return
@@ -72,89 +70,89 @@ fun IdentityBox(
         identAndAbout.about = About(identAndAbout.ident.publicKey)
     }
     Row(modifier = Modifier.padding(16.dp)) {
-    // column image
-    Column(modifier = Modifier.width(56.dp)) {
-        AsyncImage(
-            model = "https://robohash.org/${identAndAbout.about!!.about}.png",
-            placeholder = rememberAsyncImagePainter("https://robohash.org/${identAndAbout.about!!.about}.png"),
-            contentDescription = "Profile Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(size = 48.dp)
-                .clip(shape = CircleShape)
-                .background(MaterialTheme.colorScheme.outline),
-        )
-    }
-    // spacer
-    Column(modifier = Modifier.width(8.dp)) {}
-    // column text
-    Column() {
-        // private Key
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = identAndAbout.ident.publicKey,
+        // column image
+        Column(modifier = Modifier.width(56.dp)) {
+            AsyncImage(
+                model = "https://robohash.org/${identAndAbout.about!!.about}.png",
+                placeholder = rememberAsyncImagePainter("https://robohash.org/${identAndAbout.about!!.about}.png"),
+                contentDescription = "Profile Image",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .combinedClickable(
-                        onClick = {
-                            clipboardManager.setText(buildAnnotatedString { append(identAndAbout.ident.publicKey) })
-                            Toast
-                                .makeText(
-                                    context,
-                                    String.format("%s copied!", identAndAbout.ident.publicKey),
-                                    Toast.LENGTH_LONG
-                                )
-                                .show()
-                        },
-                        onDoubleClick = {
-                            showExportDialog = true
-                        }
-                    ),
-                style = keySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                    .size(size = 48.dp)
+                    .clip(shape = CircleShape)
+                    .background(MaterialTheme.colorScheme.outline),
             )
         }
-        // alias + button
-        Row(
-            verticalAlignment=Alignment.Top,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        ) {
-            Text(
-                text = identAndAbout.getNetworkIdentifier(),
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-            if (identAndAbout.ident.defaultIdent && onClick!=null) {
-                FilledTonalIconButton(
-                    onClick = {
-                        onClick.invoke(identAndAbout)
+        // spacer
+        Column(modifier = Modifier.width(8.dp)) {}
+        // column text
+        Column() {
+            // private Key
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = identAndAbout.ident.publicKey,
+                    modifier = Modifier
+                        .combinedClickable(
+                            onClick = {
+                                clipboardManager.setText(buildAnnotatedString { append(identAndAbout.ident.publicKey) })
+                                Toast
+                                    .makeText(
+                                        context,
+                                        String.format("%s copied!", identAndAbout.ident.publicKey),
+                                        Toast.LENGTH_LONG
+                                    )
+                                    .show()
+                            },
+                            onDoubleClick = {
+                                showExportDialog = true
+                            }
+                        ),
+                    style = keySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            // alias + button
+            Row(
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                Text(
+                    text = identAndAbout.getNetworkIdentifier(),
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                if (identAndAbout.ident.defaultIdent && onClick != null) {
+                    FilledTonalIconButton(
+                        onClick = {
+                            onClick.invoke(identAndAbout)
+                        }
+                    ) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = "",
+                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
                     }
-                ) {
-                    Icon(
-                        Icons.Filled.Settings,
-                        contentDescription = "",
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                    )
                 }
             }
-        }
 
-        // biography
-        if (identAndAbout.about?.description != null && identAndAbout.about?.description != "") {
-            Text(
-                text = identAndAbout.about!!.description!!,
-                style = MaterialTheme.typography.bodySmall,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = if (short) 2 else Int.MAX_VALUE,
-            )
+            // biography
+            if (identAndAbout.about?.description != null && identAndAbout.about?.description != "") {
+                Text(
+                    text = identAndAbout.about!!.description!!,
+                    style = MaterialTheme.typography.bodySmall,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = if (short) 2 else Int.MAX_VALUE,
+                )
+            }
         }
-    }
     }
 }
 

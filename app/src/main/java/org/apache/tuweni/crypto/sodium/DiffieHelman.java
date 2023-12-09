@@ -17,12 +17,13 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import org.apache.tuweni.bytes.Bytes;
-import in.delog.libsodium.Sodium;
-import in.delog.libsodium.SodiumUtils;
 
 import java.util.Objects;
 
 import javax.security.auth.Destroyable;
+
+import in.delog.libsodium.Sodium;
+import in.delog.libsodium.SodiumUtils;
 
 /**
  * Sodium provides an API to perform scalar multiplication of elliptic curve points.

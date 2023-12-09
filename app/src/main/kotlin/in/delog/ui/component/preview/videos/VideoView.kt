@@ -1,3 +1,20 @@
+/**
+ * Delog
+ * Copyright (C) 2023 dmba.info
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package `in`.delog.ui.component.preview.videos
 
 import android.content.ComponentName
@@ -19,6 +36,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -68,6 +86,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
@@ -76,7 +95,7 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.google.common.util.concurrent.MoreExecutors
 import com.linc.audiowaveform.infiniteLinearGradient
-import `in`.delog.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.ui.component.preview.images.ImageUrlWithDownloadButton
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.Dispatchers
@@ -87,7 +106,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.math.abs
 
-public var DefaultMutedSetting = mutableStateOf(true)
+var DefaultMutedSetting = mutableStateOf(true)
 
 
 object PlaybackClientController {
@@ -106,7 +125,8 @@ object PlaybackClientController {
             bundle.putString("uri", videoUri)
             bundle.putString("callbackUri", callbackUri)
 
-            val sessionTokenLocal = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+            val sessionTokenLocal =
+                SessionToken(context, ComponentName(context, PlaybackService::class.java))
             val controllerFuture = MediaController
                 .Builder(context, sessionTokenLocal)
                 .setConnectionHints(bundle)
@@ -138,7 +158,7 @@ fun VideoView(
     waveform: ImmutableList<Int>? = null,
     artworkUri: String? = null,
     authorName: String? = null,
-    nostrUriCallback: String? = null,
+    uriCallback: String? = null,
     onDialog: ((Boolean) -> Unit)? = null,
     onControllerVisibilityChanged: ((Boolean) -> Unit)? = null,
     alwaysShowVideo: Boolean = true
@@ -155,7 +175,7 @@ fun VideoView(
         waveform = waveform,
         artworkUri = artworkUri,
         authorName = authorName,
-        nostrUriCallback = nostrUriCallback,
+        uriCallback = uriCallback,
         alwaysShowVideo = alwaysShowVideo,
         onControllerVisibilityChanged = onControllerVisibilityChanged,
         onDialog = onDialog
@@ -174,13 +194,13 @@ fun VideoViewInner(
     waveform: ImmutableList<Int>? = null,
     artworkUri: String? = null,
     authorName: String? = null,
-    nostrUriCallback: String? = null,
+    uriCallback: String? = null,
     alwaysShowVideo: Boolean = true,
     onControllerVisibilityChanged: ((Boolean) -> Unit)? = null,
     onDialog: ((Boolean) -> Unit)? = null
 ) {
     val automaticallyStartPlayback = remember {
-        mutableStateOf<Boolean>(false) // read from preference video auto load
+        mutableStateOf(false) // read from preference video auto load
     }
 
     if (!alwaysShowVideo) {
@@ -188,7 +208,6 @@ fun VideoViewInner(
     } else {
         VideoPlayerActiveMutex(videoUri) { modifier, activeOnScreen ->
             val mediaItem = remember(videoUri) {
-                Log.e("ZZZZZ", videoUri)
                 mutableStateOf(
                     MediaItem.Builder()
                         .setMediaId(videoUri)
@@ -205,7 +224,6 @@ fun VideoViewInner(
                                             null
                                         }
                                     } catch (e: Exception) {
-                                        Log.e(TAG, "VideoView:" + e)
                                         null
                                     }
                                 )
@@ -219,10 +237,28 @@ fun VideoViewInner(
                 mediaItem = mediaItem,
                 videoUri = videoUri,
                 defaultToStart = defaultToStart,
-                nostrUriCallback = nostrUriCallback
+                uriCallback = uriCallback
             ) { controller, keepPlaying ->
-                if (controller.playerError!=null) {
-                    Text("Error")
+                val hasError: MutableState<String?> = remember {
+                    mutableStateOf(null) // read from preference video auto load
+                }
+                controller.addListener(object: Player.Listener{
+                    override fun onPlayerError(error: PlaybackException) {
+                        super.onPlayerError(error)
+                        hasError.value = error.message
+                    }
+                })
+                if (hasError.value!=null) {
+                    Column() {
+                        ImageUrlWithDownloadButton(
+                            url = videoUri,
+                            showImage = automaticallyStartPlayback
+                        )
+                        Text(
+                            color = MaterialTheme.colorScheme.error ,
+                            text = hasError.value!!
+                        )
+                    }
                 } else {
                     RenderVideoPlayer(
                         controller = controller,
@@ -236,6 +272,7 @@ fun VideoViewInner(
                         onControllerVisibilityChanged = onControllerVisibilityChanged,
                         onDialog = onDialog
                     )
+
                 }
             }
         }
@@ -248,7 +285,7 @@ fun GetVideoController(
     mediaItem: MutableState<MediaItem>,
     videoUri: String,
     defaultToStart: Boolean = false,
-    nostrUriCallback: String? = null,
+    uriCallback: String? = null,
     inner: @Composable (controller: MediaController, keepPlaying: MutableState<Boolean>) -> Unit
 ) {
     val context = LocalContext.current
@@ -280,7 +317,7 @@ fun GetVideoController(
                 PlaybackClientController.prepareController(
                     uid,
                     videoUri,
-                    nostrUriCallback,
+                    uriCallback,
                     context
                 ) {
                     scope.launch(Dispatchers.Main) {
@@ -330,10 +367,6 @@ fun GetVideoController(
         } else {
             controller.value?.let {
                 scope.launch(Dispatchers.Main) {
-                    if (it.playerError!=null) {
-                        Log.e("HE4EE", it.playerError.toString())
-
-                    }
                     if (it.playbackState == Player.STATE_IDLE || it.playbackState == Player.STATE_ENDED) {
                         if (it.isPlaying) {
                             // There is a video playing, start this one on mute.
@@ -353,10 +386,10 @@ fun GetVideoController(
 
         onDispose {
             //if (!keepPlaying.value) {
-                // Stops and releases the media.
-                controller.value?.stop()
-                controller.value?.release()
-                controller.value = null
+            // Stops and releases the media.
+            controller.value?.stop()
+            controller.value?.release()
+            controller.value = null
             //}
         }
     }
@@ -373,7 +406,7 @@ fun GetVideoController(
                         PlaybackClientController.prepareController(
                             uid,
                             videoUri,
-                            nostrUriCallback,
+                            uriCallback,
                             context
                         ) {
                             scope.launch(Dispatchers.Main) {
@@ -444,7 +477,10 @@ class VisibilityData() {
  * the screen wins the mutex.
  */
 @Composable
-fun VideoPlayerActiveMutex(videoUri: String, inner: @Composable (Modifier, MutableState<Boolean>) -> Unit) {
+fun VideoPlayerActiveMutex(
+    videoUri: String,
+    inner: @Composable (Modifier, MutableState<Boolean>) -> Unit
+) {
     val myCache = remember(videoUri) {
         VisibilityData()
     }
@@ -683,6 +719,15 @@ fun Waveform(
                     restartFlow.value += 1
                 }
             }
+
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                super.onPlayWhenReadyChanged(playWhenReady, reason)
+                Log.i(TAG, "got itttttttttttt2!" + playWhenReady + reason)
+            }
+            override fun onPlayerError(error: PlaybackException) {
+                Log.i(TAG, "got itttttttttttt!")
+                super.onPlayerError(error)
+            }
         }
 
         controller.addListener(listener)
@@ -699,7 +744,11 @@ fun Waveform(
 }
 
 @Composable
-fun DrawWaveform(waveform: ImmutableList<Int>, waveformProgress: MutableState<Float>, modifier: Modifier) {
+fun DrawWaveform(
+    waveform: ImmutableList<Int>,
+    waveformProgress: MutableState<Float>,
+    modifier: Modifier
+) {
     AudioWaveformReadOnly(
         modifier = modifier.padding(start = 10.dp, end = 10.dp),
         amplitudes = waveform,
@@ -831,9 +880,11 @@ private fun MuteButton(
         enter = remember { fadeIn() },
         exit = remember { fadeOut() }
     ) {
-        Box(modifier = Modifier
-            .size(70.dp)
-            .padding(10.dp)) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .padding(10.dp)
+        ) {
             Box(
                 Modifier
                     .clip(CircleShape)
@@ -875,9 +926,11 @@ private fun KeepPlayingButton(
         enter = remember { fadeIn() },
         exit = remember { fadeOut() }
     ) {
-        Box(modifier = Modifier
-            .size(70.dp)
-            .padding(10.dp)) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .padding(10.dp)
+        ) {
             Box(
                 Modifier
                     .clip(CircleShape)

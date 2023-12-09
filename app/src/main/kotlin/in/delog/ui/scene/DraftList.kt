@@ -18,7 +18,6 @@
 package `in`.delog.ui.scene
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -31,16 +30,17 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import `in`.delog.R
 import `in`.delog.db.model.Draft
 import `in`.delog.ui.LocalActiveFeed
-import `in`.delog.ui.component.*
+import `in`.delog.ui.component.AppEmptyList
+import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.MessageItem
+import `in`.delog.ui.component.toMessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.DraftListViewModel
@@ -67,7 +67,7 @@ fun DraftList(navController: NavHostController) {
 
     Column {
         IdentityBox(identAndAbout = identAndAbout)
-        if (lazyMessageItems.itemCount==0) {
+        if (lazyMessageItems.itemCount == 0) {
             AppEmptyList()
         }
         LazyVerticalGrid(columns = GridCells.Fixed(1)) {
@@ -79,22 +79,22 @@ fun DraftList(navController: NavHostController) {
                         colors = CardDefaults.cardColors(),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
-                            .padding(bottom=0.dp, top=16.dp, start = 16.dp, end=16.dp)
+                            .padding(bottom = 0.dp, top = 16.dp, start = 16.dp, end = 16.dp)
                             .wrapContentHeight()
                             .clickable {
                                 navController.navigate("${Scenes.DraftEdit.route}/${it.oid}")
                             }
                     ) {
-                    MessageItem(
-                        navController = navController,
-                        message = it.toMessageViewData(),
-                        showToolbar = false,
-                        truncate = true,
-                        onClickCallBack = {
-                            navController.navigate("${Scenes.DraftEdit.route}/${it.oid}")
-                        }
-                    )
-                }
+                        MessageItem(
+                            navController = navController,
+                            message = it.toMessageViewData(),
+                            showToolbar = false,
+                            truncate = true,
+                            onClickCallBack = {
+                                navController.navigate("${Scenes.DraftEdit.route}/${it.oid}")
+                            }
+                        )
+                    }
                 }
             }
         }

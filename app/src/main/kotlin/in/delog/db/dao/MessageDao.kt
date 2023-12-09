@@ -34,10 +34,12 @@ interface MessageDao {
     @Query("SELECT * FROM message WHERE type='post' and author = :author or author IN (select follow from contact where author = :author and value = 1) order by oid desc")
     fun getPagedPosts(author: String): PagingSource<Int, MessageAndAbout>
 
-    @Query("select m1.*  from message m1\n" +
-            "left join message  m2 on m2.`key`=m1.root \n" +
-            "where  m1.author = :author or m1.author IN (select follow from contact where author = :author  and value = 1)\n" +
-            "order by min(coalesce(m2.timestamp ,9223372036854775807),m1.timestamp) desc, m2.timestamp asc\n")
+    @Query(
+        "select m1.*  from message m1\n" +
+                "left join message  m2 on m2.`key`=m1.root \n" +
+                "where  m1.author = :author or m1.author IN (select follow from contact where author = :author  and value = 1)\n" +
+                "order by min(coalesce(m2.timestamp ,9223372036854775807),m1.timestamp) desc, m2.timestamp asc\n"
+    )
     fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout>
 
 
@@ -63,10 +65,12 @@ interface MessageDao {
     @Query("SELECT * FROM message WHERE author = :author order by sequence desc limit 1")
     fun getLastMessage(author: String): Message?
 
-    @Query("select sequence as seq from message where author= :author\n" +
-            "UNION ALL \n" +
-            "SELECT 0 as seq\n" +
-            "order by seq desc limit 1")
+    @Query(
+        "select sequence as seq from message where author= :author\n" +
+                "UNION ALL \n" +
+                "SELECT 0 as seq\n" +
+                "order by seq desc limit 1"
+    )
     fun getLastSequence(author: String): Long
 
     @Query("SELECT * FROM ident WHERE public_key = :pk LIMIT 1")

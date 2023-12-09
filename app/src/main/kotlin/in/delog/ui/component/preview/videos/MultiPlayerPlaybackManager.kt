@@ -1,3 +1,20 @@
+/**
+ * Delog
+ * Copyright (C) 2023 dmba.info
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package `in`.delog.ui.component.preview.videos
 
 import android.app.PendingIntent
@@ -5,10 +22,8 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.util.LruCache
-import android.view.TextureView
 import androidx.core.net.toUri
 import androidx.media3.common.C
-import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Player.STATE_IDLE
@@ -18,10 +33,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.session.MediaSession
 import `in`.delog.MainActivity
+import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.io.IOException
 import kotlin.math.abs
 
 class MultiPlayerPlaybackManager(
@@ -32,7 +49,8 @@ class MultiPlayerPlaybackManager(
     private val playingMap = mutableMapOf<String, MediaSession>()
 
     private val cache =
-        object : LruCache<String, MediaSession>(10) { // up to 10 videos in the screen at the same time
+        object :
+            LruCache<String, MediaSession>(10) { // up to 10 videos in the screen at the same time
             override fun entryRemoved(
                 evicted: Boolean,
                 key: String?,
@@ -40,7 +58,7 @@ class MultiPlayerPlaybackManager(
                 newValue: MediaSession?
             ) {
                 super.entryRemoved(evicted, key, oldValue, newValue)
-
+                Log.i(TAG,"entry removed!!!!!!!!!!!!!!!!!!!")
                 if (!playingMap.contains(key)) {
                     oldValue?.let {
                         it.player.release()
@@ -54,13 +72,24 @@ class MultiPlayerPlaybackManager(
         return PendingIntent.getActivity(
             applicationContext,
             0,
-            Intent(Intent.ACTION_VIEW, callbackUri.toUri(), applicationContext, MainActivity::class.java),
+            Intent(
+                Intent.ACTION_VIEW,
+                callbackUri.toUri(),
+                applicationContext,
+                MainActivity::class.java
+            ),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-    fun getMediaSession(id: String, uri: String, callbackUri: String?, context: Context, applicationContext: Context): MediaSession {
+    fun getMediaSession(
+        id: String,
+        uri: String,
+        callbackUri: String?,
+        context: Context,
+        applicationContext: Context
+    ): MediaSession {
         val existingSession = playingMap.get(id) ?: cache.get(id)
         if (existingSession != null) return existingSession
 
@@ -84,13 +113,6 @@ class MultiPlayerPlaybackManager(
         }
 
         player.addListener(object : Player.Listener {
-            override fun onPlayerErrorChanged(error: PlaybackException?) {
-                if (error!=null) {
-                    Log.e("AHHHH", error.toString())
-                    cache.remove(id)
-                    playingMap.remove(id, mediaSession)
-                }
-            }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 if (isPlaying) {
@@ -112,6 +134,7 @@ class MultiPlayerPlaybackManager(
                             cachedPositions.add(uri, player.currentPosition)
                         }
                     }
+
                     STATE_READY -> {
                         cachedPositions.get(uri)?.let { lastPosition ->
                             if (abs(player.currentPosition - lastPosition) > 5 * 60) {
@@ -119,6 +142,7 @@ class MultiPlayerPlaybackManager(
                             }
                         }
                     }
+
                     else -> {
                         // only saves if it wqs playing
                         if (abs(player.currentPosition) > 1) {

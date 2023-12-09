@@ -14,18 +14,19 @@ class SettingStore(private val context: Context) {
 
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("settings")
-        val SERVER_URL:  Preferences.Key<String> = stringPreferencesKey("invite_url")
-        val TOR_SOCK_PROXY_PORT:  Preferences.Key<String> = stringPreferencesKey("tor_sock_proxy_port")
-        val ALWAYS_TOR_PROXY:  Preferences.Key<String> = stringPreferencesKey("always_tor_proxy")
+        val SERVER_URL: Preferences.Key<String> = stringPreferencesKey("invite_url")
+        val TOR_SOCK_PROXY_PORT: Preferences.Key<String> =
+            stringPreferencesKey("tor_sock_proxy_port")
+        val ALWAYS_TOR_PROXY: Preferences.Key<String> = stringPreferencesKey("always_tor_proxy")
     }
 
-    fun getData(key: Preferences.Key<String>): Flow<String?>  = context.dataStore.data
+    fun getData(key: Preferences.Key<String>): Flow<String?> = context.dataStore.data
         .map { preferences ->
             preferences[key] ?: getAppDefault(key)
         }
 
     suspend fun saveData(key: Preferences.Key<String>, value: String) {
-        if (value=="") return
+        if (value == "") return
         context.dataStore.edit { preferences ->
             preferences[key] = value
         }

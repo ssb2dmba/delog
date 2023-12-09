@@ -28,7 +28,8 @@ interface MessageTreeRepository {
     fun getPagedMessageByKey(author: String): PagingSource<Int, AppDatabaseView.MessageInTree>
 }
 
-class MessageTreeRepositoryImpl(private val messageTreeDao: MessageTreeDao) : MessageTreeRepository {
+class MessageTreeRepositoryImpl(private val messageTreeDao: MessageTreeDao) :
+    MessageTreeRepository {
 
     // by author
     override fun getPagedMessageByAuthor(author: String): PagingSource<Int, AppDatabaseView.MessageInTree> {

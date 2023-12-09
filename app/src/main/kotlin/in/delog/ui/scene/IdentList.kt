@@ -39,8 +39,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.BottomBarMainButton
+import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentListViewModel
@@ -71,7 +71,7 @@ fun IdentList(navController: NavHostController) {
                 colors = CardDefaults.cardColors(),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
-                    .padding(bottom=0.dp, top=16.dp, start = 16.dp, end=16.dp)
+                    .padding(bottom = 0.dp, top = 16.dp, start = 16.dp, end = 16.dp)
                     .wrapContentHeight()
                     .combinedClickable(
                         onLongClick = {

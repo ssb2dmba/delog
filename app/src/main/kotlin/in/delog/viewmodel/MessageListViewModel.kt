@@ -21,15 +21,24 @@ package `in`.delog.viewmodel
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.*
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message
 import `in`.delog.repository.MessageRepository
 import `in`.delog.repository.MessageTreeRepository
-import `in`.delog.ssb.SsbService
+import `in`.delog.service.ssb.SsbService
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Immutable
@@ -96,11 +105,11 @@ class MessageListViewModel(
                 }
             }
                 .flow.map { pagingData ->
-                pagingData.map { msgAndAbout ->
-                    //UrlCachedPreviewer. preloadPreviewsFor(msgAndAbout)
-                    msgAndAbout
-                }
-            }.cachedIn(viewModelScope)
+                    pagingData.map { msgAndAbout ->
+                        //UrlCachedPreviewer. preloadPreviewsFor(msgAndAbout)
+                        msgAndAbout
+                    }
+                }.cachedIn(viewModelScope)
             _uiState.update { it.copy(loaded = true) }
         }
     }

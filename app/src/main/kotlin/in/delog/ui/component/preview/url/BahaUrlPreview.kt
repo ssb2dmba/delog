@@ -2,8 +2,13 @@ package `in`.delog.ui.component.preview.url
 
 import android.net.Uri
 import android.os.Looper
-import kotlinx.coroutines.*
-import java.util.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 interface IUrlPreviewCallback {
     fun onComplete(urlInfo: UrlInfoItem)
@@ -44,7 +49,9 @@ class BahaUrlPreview(val url: String, var callback: IUrlPreviewCallback?) {
         val uri = Uri.parse(url)
         var isImage = false
         for (imageExtension in imageExtensionArray) {
-            if (uri.path != null && uri.path!!.toLowerCase(Locale.getDefault()).endsWith(imageExtension)) {
+            if (uri.path != null && uri.path!!.toLowerCase(Locale.getDefault())
+                    .endsWith(imageExtension)
+            ) {
                 isImage = true
                 break
             }

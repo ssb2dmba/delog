@@ -19,8 +19,19 @@ package `in`.delog.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import `in`.delog.db.dao.*
-import `in`.delog.db.model.*
+import `in`.delog.db.dao.AboutDao
+import `in`.delog.db.dao.ContactDao
+import `in`.delog.db.dao.DraftDao
+import `in`.delog.db.dao.IdentDao
+import `in`.delog.db.dao.MessageDao
+import `in`.delog.db.dao.MessageTreeDao
+import `in`.delog.db.dao.RelayDao
+import `in`.delog.db.model.About
+import `in`.delog.db.model.Contact
+import `in`.delog.db.model.Draft
+import `in`.delog.db.model.Ident
+import `in`.delog.db.model.Message
+import `in`.delog.db.model.RelayServer
 
 @Database(
     entities = [

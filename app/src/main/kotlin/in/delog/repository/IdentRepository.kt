@@ -45,7 +45,8 @@ interface IdentRepository {
 
 }
 
-class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: AboutDao) : IdentRepository {
+class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: AboutDao) :
+    IdentRepository {
 
     override val idents: Flow<List<IdentAndAbout>> = identDao.getAllLive()
 
@@ -58,7 +59,7 @@ class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: A
     }
 
     override suspend fun insert(feed: IdentAndAbout): Long {
-        val id= identDao.insert(feed = feed.ident)
+        val id = identDao.insert(feed = feed.ident)
         identDao.setFeedAsDefaultFeed(id)
         aboutDao.insert(feed.about!!)
         return id;

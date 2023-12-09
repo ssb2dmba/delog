@@ -17,13 +17,14 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import org.apache.tuweni.bytes.Bytes;
-import in.delog.libsodium.Sodium;
-import in.delog.libsodium.SodiumUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 import javax.security.auth.Destroyable;
+
+import in.delog.libsodium.Sodium;
+import in.delog.libsodium.SodiumUtils;
 
 // Documentation copied under the ISC License, from
 // https://github.com/jedisct1/libsodium-doc/blob/424b7480562c2e063bc8c52c452ef891621c8480/public-key_cryptography/authenticated_encryption.md

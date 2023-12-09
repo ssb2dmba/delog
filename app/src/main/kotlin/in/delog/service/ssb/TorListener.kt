@@ -1,20 +1,16 @@
-package `in`.delog.ssb
+package `in`.delog.service.ssb
 
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import `in`.delog.MainApplication
-import io.matthewnelson.kmp.tor.common.address.OnionAddress
-import io.matthewnelson.kmp.tor.controller.common.config.TorConfig
 import io.matthewnelson.kmp.tor.controller.common.events.TorEvent
 import io.matthewnelson.kmp.tor.manager.common.event.TorManagerEvent
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.net.InetSocketAddress
 
-class TorListener: TorManagerEvent.Listener() {
+class TorListener : TorManagerEvent.Listener() {
     private val _eventLines: MutableLiveData<String> = MutableLiveData("")
     val eventLines: LiveData<String> = _eventLines
     private val events: MutableList<String> = ArrayList(50)
@@ -41,7 +37,6 @@ class TorListener: TorManagerEvent.Listener() {
 
         super.onEvent(event, output)
     }
-
 
 
     override fun onEvent(event: TorEvent.Type.MultiLineEvent, output: List<String>) {

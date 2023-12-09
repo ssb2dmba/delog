@@ -15,12 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ssb
+package `in`.delog.service.ssb
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import `in`.delog.ui.LocalActiveFeed
-import org.koin.androidx.compose.get
 
 @Composable
 fun ForkSsbService() {
@@ -28,12 +25,12 @@ fun ForkSsbService() {
     val feed = LocalActiveFeed.current ?: return
     val ssbService: SsbService = get()
     LaunchedEffect(feed) {
-        try {
-            ssbService.reconnect(feed.ident)
-        } catch (e: Exception) {
-            // TODO snackbar
-            e.printStackTrace()
-        }
+    try {
+    ssbService.reconnect(feed.ident)
+    } catch (e: Exception) {
+    // TODO snackbar
+    e.printStackTrace()
     }
-    */
+    }
+     */
 }

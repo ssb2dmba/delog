@@ -15,9 +15,10 @@ package org.apache.tuweni.crypto.sodium;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.tuweni.bytes.Bytes;
-import in.delog.libsodium.NaCl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import in.delog.libsodium.NaCl;
 
 class ConcatenateTest {
 

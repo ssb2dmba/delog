@@ -66,7 +66,7 @@ fun DotsIndicator(
     totalDots: Int,
     selectedIndex: Int,
     selectedColor: Color = MaterialTheme.colorScheme.primary,
-    unSelectedColor: Color = MaterialTheme.colorScheme.onPrimary ,
+    unSelectedColor: Color = MaterialTheme.colorScheme.onPrimary,
     dotSize: Dp
 ) {
     LazyRow(

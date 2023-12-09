@@ -16,12 +16,26 @@
  */
 package org.apache.tuweni.concurrent.coroutines
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newCoroutineContext
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.apache.tuweni.concurrent.AsyncCompletion
-import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletionException
 import java.util.function.Consumer
-import kotlin.coroutines.*
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.ContinuationInterceptor
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Starts new co-routine and returns its result as an implementation of [AsyncCompletion].

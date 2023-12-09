@@ -49,7 +49,7 @@ fun Message.toMessageViewData() = MessageViewData(
     timestamp = timestamp,
     author = author,
     contentAsText = contentAsText,
-    root= root,
+    root = root,
     branch = branch
 )
 
@@ -59,7 +59,7 @@ fun Draft.toMessageViewData() = MessageViewData(
     timestamp = timestamp,
     author = author,
     contentAsText = contentAsText,
-    root =root,
+    root = root,
     branch = branch
 )
 

@@ -82,6 +82,7 @@ suspend fun parseHtml(url: String, document: Document): UrlInfoItem =
                 in META_OG_DESCRIPTION -> if (description.isEmpty()) {
                     description = it.attr(CONTENT)
                 }
+
                 in META_OG_IMAGE -> if (image.isEmpty()) image = it.attr(CONTENT)
             }
 
@@ -90,6 +91,7 @@ suspend fun parseHtml(url: String, document: Document): UrlInfoItem =
                 in META_NAME_DESCRIPTION -> if (description.isEmpty()) {
                     description = it.attr(CONTENT)
                 }
+
                 in META_OG_IMAGE -> if (image.isEmpty()) image = it.attr(CONTENT)
             }
 
@@ -97,9 +99,11 @@ suspend fun parseHtml(url: String, document: Document): UrlInfoItem =
                 in META_ITEMPROP_TITLE -> if (title.isEmpty()) {
                     title = it.attr(CONTENT)
                 }
+
                 in META_ITEMPROP_DESCRIPTION -> if (description.isEmpty()) {
                     description = it.attr(CONTENT)
                 }
+
                 in META_ITEMPROP_IMAGE -> if (image.isEmpty()) {
                     image = it.attr(CONTENT)
                 }
