@@ -18,6 +18,7 @@
 - [x] SSB protocol improvement proposals
 - [x] hypertext link embedding
 - [x] Tor low-power-integration
+- [x] Video preview
 - [.] quotes, reply, vote support
 - [ ] blob support
 - [ ] draft ordering & support
