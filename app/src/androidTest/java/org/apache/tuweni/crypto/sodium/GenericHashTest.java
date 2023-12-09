@@ -18,10 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.apache.tuweni.bytes.Bytes;
-import in.delog.libsodium.NaCl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+
+import in.delog.libsodium.NaCl;
 
 @RunWith(AndroidJUnit4.class)
 class GenericHashTest {

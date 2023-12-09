@@ -20,7 +20,11 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.tuweni.scuttlebutt.lib.model.Profile
 import org.apache.tuweni.scuttlebutt.lib.model.UpdateNameMessage
-import org.apache.tuweni.scuttlebutt.lib.model.query.*
+import org.apache.tuweni.scuttlebutt.lib.model.query.AboutQuery
+import org.apache.tuweni.scuttlebutt.lib.model.query.AboutQueryResponse
+import org.apache.tuweni.scuttlebutt.lib.model.query.IsFollowingQuery
+import org.apache.tuweni.scuttlebutt.lib.model.query.IsFollowingResponse
+import org.apache.tuweni.scuttlebutt.lib.model.query.WhoAmIResponse
 import org.apache.tuweni.scuttlebutt.rpc.RPCAsyncRequest
 import org.apache.tuweni.scuttlebutt.rpc.RPCFunction
 import org.apache.tuweni.scuttlebutt.rpc.mux.Multiplexer

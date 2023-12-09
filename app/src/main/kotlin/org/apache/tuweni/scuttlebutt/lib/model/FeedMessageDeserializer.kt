@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import java.io.IOException
-import java.util.*
+import java.util.Optional
 
 class FeedMessageDeserializer : JsonDeserializer<FeedMessage>() {
     @Throws(IOException::class, JsonProcessingException::class)
@@ -51,7 +51,7 @@ class FeedMessageDeserializer : JsonDeserializer<FeedMessage>() {
     private fun getKeyValue(key: String, content: JsonNode): Optional<String> {
         if (content.nodeType != JsonNodeType.STRING) {
             val value = content[key]
-            if (value!=null) {
+            if (value != null) {
                 return Optional.of(value.asText())
             }
         }

@@ -1,3 +1,20 @@
+/**
+ * Delog
+ * Copyright (C) 2023 dmba.info
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package `in`.delog.ui.component.richtext
 
 import android.util.Log
@@ -44,7 +61,10 @@ object CachedRichTextParser {
     }
 }
 
-val HTTPRegex = "^((http|https)://)?([A-Za-z0-9-_]+(\\.[A-Za-z0-9-_]+)+)(:[0-9]+)?(/[^?#]*)?(\\?[^#]*)?(#.*)?".toRegex(RegexOption.IGNORE_CASE)
+val HTTPRegex =
+    "^((http|https)://)?([A-Za-z0-9-_]+(\\.[A-Za-z0-9-_]+)+)(:[0-9]+)?(/[^?#]*)?(\\?[^#]*)?(#.*)?".toRegex(
+        RegexOption.IGNORE_CASE
+    )
 
 class RichTextParser() {
     fun parseText(
@@ -92,7 +112,11 @@ class RichTextParser() {
         )
     }
 
-    private fun findTextSegments(content: String, images: Set<String>, urls: Set<String>): ImmutableList<ParagraphState> {
+    private fun findTextSegments(
+        content: String,
+        images: Set<String>,
+        urls: Set<String>
+    ): ImmutableList<ParagraphState> {
         var paragraphSegments = persistentListOf<ParagraphState>()
 
         content.split('\n').forEach { paragraph ->
@@ -189,7 +213,8 @@ class EmailSegment(segment: String) : Segment(segment)
 
 
 @Immutable
-open class HashIndexSegment(segment: String, val hex: String, val extras: String?) : Segment(segment)
+open class HashIndexSegment(segment: String, val hex: String, val extras: String?) :
+    Segment(segment)
 
 @Immutable
 class HashTagSegment(segment: String, val hashtag: String, val extras: String?) : Segment(segment)

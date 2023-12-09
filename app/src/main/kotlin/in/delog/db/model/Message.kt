@@ -19,29 +19,29 @@ package `in`.delog.db.model
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import `in`.delog.ssb.SsbMessageContent
+import `in`.delog.service.ssb.SsbMessageContent
 import kotlinx.serialization.json.Json
 
 /**
 This model adapted for room database represent an ssb message as described in the ssb protocol guide
 
 Exemple message
-        {
-          "key": "%fH6ZETSgkMAvxbMO8aAz1h8rNLO4lKoWMTtmxZZag/A=.sha256",
-          "value": {
-            "previous": "%11J4JcYTzJy6a5Tlk9ZKxiCMQEupNuNs747Ktemo2d0=.sha256",
-            "sequence": 3,
-            "author": "@YpSbE5/7oWuf7k6zhU/wwbm28EffUggYEwVpDkOAdIg=.ed25519",
-            "timestamp": 1673170497023,
-            "hash": "sha256",
-            "content": {
-              "text": "NEWTEST 2",
-              "type": "post"
-            },
-            "signature": "KlEVtD4E221mJibhXuZCQ15BrsnNNHruepucHqvYnJVvw8UJgl5sL1QPGMATnP7KlkzM3SirUf4/19DkT+4sDQ==.sig.ed25519"
-          },
-          "timestamp": 1673170497024
-        }
+{
+"key": "%fH6ZETSgkMAvxbMO8aAz1h8rNLO4lKoWMTtmxZZag/A=.sha256",
+"value": {
+"previous": "%11J4JcYTzJy6a5Tlk9ZKxiCMQEupNuNs747Ktemo2d0=.sha256",
+"sequence": 3,
+"author": "@YpSbE5/7oWuf7k6zhU/wwbm28EffUggYEwVpDkOAdIg=.ed25519",
+"timestamp": 1673170497023,
+"hash": "sha256",
+"content": {
+"text": "NEWTEST 2",
+"type": "post"
+},
+"signature": "KlEVtD4E221mJibhXuZCQ15BrsnNNHruepucHqvYnJVvw8UJgl5sL1QPGMATnP7KlkzM3SirUf4/19DkT+4sDQ==.sig.ed25519"
+},
+"timestamp": 1673170497024
+}
 
  */
 @Entity(primaryKeys = ["key"])
@@ -78,7 +78,7 @@ data class Message(
     @ColumnInfo(name = "branch")
     var branch: String?,
 
-) {
+    ) {
 
 }
 

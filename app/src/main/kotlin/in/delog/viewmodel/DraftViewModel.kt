@@ -21,10 +21,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import `in`.delog.db.model.*
+import `in`.delog.db.model.About
+import `in`.delog.db.model.Draft
+import `in`.delog.db.model.Ident
+import `in`.delog.db.model.Message
+import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.repository.DraftRepository
 import `in`.delog.repository.MessageRepository
-import `in`.delog.ssb.*
+import `in`.delog.service.ssb.SsbMessageContent
+import `in`.delog.service.ssb.SsbSignableMessage
+import `in`.delog.service.ssb.SsbSignedMessage
+import `in`.delog.service.ssb.makeHash
+import `in`.delog.service.ssb.signMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,7 +68,6 @@ class DraftViewModel(
             setCurrentDraft(inserted.toString())
         }
     }
-
 
 
     fun setCurrentDraft(oid: String) {

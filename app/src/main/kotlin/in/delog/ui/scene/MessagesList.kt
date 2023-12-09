@@ -20,11 +20,21 @@ package `in`.delog.ui.scene
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -44,7 +54,13 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.toMessageViewData
-import `in`.delog.ui.component.*
+import `in`.delog.ui.component.AppEmptyList
+import `in`.delog.ui.component.BottomBarMainButton
+import `in`.delog.ui.component.GoToTop
+import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.ListSpacer
+import `in`.delog.ui.component.MessageItem
+import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.BottomBarViewModel
@@ -145,8 +161,6 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                 }
 
 
-
-
             }
         }
 
@@ -165,7 +179,6 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                         scrollState.firstVisibleItemScrollOffset > jumpThreshold
             }
         }
-        Log.i("SCROLL", scrollState.firstVisibleItemScrollOffset.toString())
         GoToTop(
             // Only show if the scroller is not at the bottom
             enabled = jumpToBottomButtonEnabled,
@@ -180,7 +193,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
 
     }
 
-    if (uiState.error!= null && uiState.error?.message!=null) {
+    if (uiState.error != null && uiState.error?.message != null) {
         val context = LocalContext.current
         Toast
             .makeText(

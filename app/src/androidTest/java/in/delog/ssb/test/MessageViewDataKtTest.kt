@@ -3,7 +3,7 @@ package `in`.delog.ssb.test
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Message
-import `in`.delog.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.BaseSsbService.Companion.format
 import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.component.content
 import `in`.delog.ui.component.toMessageViewData
@@ -17,7 +17,7 @@ class MessageViewDataKtTest {
 
     @Test
     fun draftToMessageViewData() {
-        var draft = Draft(1, "me", 1, "post","content", "qwerty","12345")
+        var draft = Draft(1, "me", 1, "post", "content", "qwerty", "12345")
         val mvd = draft.toMessageViewData()
         assertEquals(draft.author, mvd.author)
         assertEquals(draft.contentAsText, mvd.contentAsText)
@@ -29,8 +29,10 @@ class MessageViewDataKtTest {
 
     @Test
     fun messageToMessageViewData() {
-        val msg = Message("#key", "#previous", 1, "@author", 1,
-            "content", "post", "sig.ed25","testr","testb")
+        val msg = Message(
+            "#key", "#previous", 1, "@author", 1,
+            "content", "post", "sig.ed25", "testr", "testb"
+        )
         val mvd = msg.toMessageViewData()
         assertEquals(msg.key, mvd.key)
         assertEquals(msg.author, mvd.author)

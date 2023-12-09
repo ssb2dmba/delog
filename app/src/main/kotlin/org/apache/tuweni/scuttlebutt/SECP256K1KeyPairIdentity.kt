@@ -19,7 +19,7 @@ package org.apache.tuweni.scuttlebutt
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.SECP256K1
 import org.apache.tuweni.crypto.sodium.Signature
-import java.util.*
+import java.util.Objects
 
 internal class SECP256K1KeyPairIdentity(private val keyPair: SECP256K1.KeyPair) : Identity {
     override fun sign(message: Bytes): Bytes {

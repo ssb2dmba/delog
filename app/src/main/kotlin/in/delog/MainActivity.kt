@@ -31,9 +31,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
-import `in`.delog.db.model.About
-import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.ssb.ForkSsbService
+import `in`.delog.service.ssb.ForkSsbService
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppBottomAppBar
 import `in`.delog.ui.component.AppScaffold
@@ -79,9 +77,11 @@ fun MyApp() {
             Configuration.UI_MODE_NIGHT_YES -> {
                 darkTheme = true
             }
+
             Configuration.UI_MODE_NIGHT_NO -> {
                 darkTheme = false
             }
+
             Configuration.UI_MODE_NIGHT_UNDEFINED -> {
                 darkTheme = true
             }

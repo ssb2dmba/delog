@@ -17,19 +17,42 @@
  */
 package `in`.delog.ui.scene
 
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Plumbing
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,10 +64,8 @@ import `in`.delog.MainApplication
 import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.getInviteURl
-import `in`.delog.ssb.BaseSsbService.Companion.TAG
-import `in`.delog.ssb.SsbService
+import `in`.delog.service.ssb.SsbService
 import `in`.delog.ui.component.IdentityBox
-import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.ui.scene.identitifiers.InviteWebRequest
@@ -155,7 +176,7 @@ fun IdentDetail(
 fun IdentDetailConfirmDeleteDialog(
     navHostController: NavHostController,
     viewModel: IdentAndAboutViewModel,
-    onDismissRequest: () ->Unit
+    onDismissRequest: () -> Unit
 ) {
     val uiState by viewModel.uiState.observeAsState(AboutUIState())
     AlertDialog(onDismissRequest = onDismissRequest,
@@ -219,15 +240,15 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     val uiState by vm.uiState.observeAsState(AboutUIState())
     val identAndAbout = uiState.identAndAbout
 
-    if (identAndAbout==null) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator()
-            }
-            return
+    if (identAndAbout == null) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
     }
 
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
@@ -236,8 +257,8 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
         IdentDetailTopBarMenu(
             navHostController,
             vm,
-            { showExportDialogState= true},
-            { showDeleteDialogState = true}
+            { showExportDialogState = true },
+            { showDeleteDialogState = true }
         )
         Spacer(modifier = Modifier.weight(1f))
         ExtendedFloatingActionButton(
@@ -276,7 +297,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     }
 
     if (showInviteRequest) {
-        val inviteUrl= ident.getInviteURl()
+        val inviteUrl = ident.getInviteURl()
         InviteWebRequest(inviteUrl, ::setUpInvite)
         return
     }
@@ -372,7 +393,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                                     MainApplication.toastify("ok" + it.asString())
                                 },
                                 {
-                                   MainApplication.toastify(it.message.toString())
+                                    MainApplication.toastify(it.message.toString())
                                 }
                             )
                         }
@@ -391,7 +412,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                 }
 
             }
-        } else if (identAndAbout!!.ident.server!= null) {
+        } else if (identAndAbout!!.ident.server != null) {
             Row {
                 val ssbService: SsbService = get()
                 TextButton(
@@ -399,10 +420,12 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                         showInviteRequest = true
                     }
                 ) {
-                    Text(text =String.format(
-                        stringResource(R.string.get_invite_and_redeem_it),
-                        identAndAbout!!.ident.server
-                    ))
+                    Text(
+                        text = String.format(
+                            stringResource(R.string.get_invite_and_redeem_it),
+                            identAndAbout!!.ident.server
+                        )
+                    )
                 }
             }
         }

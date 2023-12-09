@@ -17,7 +17,11 @@
  */
 package `in`.delog.db.model
 
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.Relation
 
 @Entity
 data class About(
@@ -38,7 +42,7 @@ data class About(
     @ColumnInfo(name = "dirty")
     var dirty: Boolean = false,
 
-) {
+    ) {
 }
 
 /*
@@ -93,14 +97,15 @@ data class IdentAndAbout(
     var about: About?
 ) {
 
-    fun getNetworkIdentifier():String {
-        if (this.about?.name==null || this.about?.name!!.isEmpty()) {
-            return this.ident.publicKey.subSequence(0,5).toString()
+    fun getNetworkIdentifier(): String {
+        if (this.about?.name == null || this.about?.name!!.isEmpty()) {
+            return this.ident.publicKey.subSequence(0, 5).toString()
         }
         val server = if (this.ident.server.isNullOrEmpty()) "" else "@" + this.ident.server
         val name = this.about?.name + server
         return name
     }
+
     companion object {
         fun empty(about: String): Ident {
             return Ident(

@@ -1,10 +1,25 @@
+/**
+ * Delog
+ * Copyright (C) 2023 dmba.info
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package `in`.delog.ui.component.preview.videos
 
 import androidx.annotation.OptIn
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.okhttp.OkHttpDataSource
-import androidx.media3.exoplayer.ExoPlaybackException
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
@@ -12,7 +27,6 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import `in`.delog.MainApplication
 import `in`.delog.service.HttpClient
-import `in`.delog.ssb.BaseSsbService.Companion.TAG
 
 
 @UnstableApi // Extend MediaSessionService
@@ -44,7 +58,8 @@ class PlaybackService : MediaSessionService() {
     fun lazyProgressiveDS(): MultiPlayerPlaybackManager {
         managerProgressive?.let { return it }
 
-        val newInstance = MultiPlayerPlaybackManager(newProgressiveDataSource(), videoViewedPositionCache)
+        val newInstance =
+            MultiPlayerPlaybackManager(newProgressiveDataSource(), videoViewedPositionCache)
         managerProgressive = newInstance
         return newInstance
     }
@@ -71,7 +86,8 @@ class PlaybackService : MediaSessionService() {
         val toDestroyProgressive = managerProgressive
 
         managerHls = MultiPlayerPlaybackManager(newHslDataSource(), videoViewedPositionCache)
-        managerProgressive = MultiPlayerPlaybackManager(newProgressiveDataSource(), videoViewedPositionCache)
+        managerProgressive =
+            MultiPlayerPlaybackManager(newProgressiveDataSource(), videoViewedPositionCache)
 
         toDestroyHls?.releaseAppPlayers()
         toDestroyProgressive?.releaseAppPlayers()
@@ -85,7 +101,6 @@ class PlaybackService : MediaSessionService() {
         managerLocal?.releaseAppPlayers()
         managerProgressive?.releaseAppPlayers()
         stopForeground(STOP_FOREGROUND_REMOVE)
-
         super.onDestroy()
     }
 
@@ -105,20 +120,16 @@ class PlaybackService : MediaSessionService() {
         // Overrides the notification with any player actually playing
         managerHls?.playingContent()?.forEach {
             super.onUpdateNotification(session, startInForegroundRequired)
-            Log.i("1HELLOOOOOO", "error:" + it.player.playerError?.message)
             if (it.player.isPlaying) {
                 super.onUpdateNotification(it, startInForegroundRequired)
             }
         }
         managerLocal?.playingContent()?.forEach {
-            Log.i("2HELLOOOOOO", "error:" + it.player.playerError?.message)
             if (it.player.isPlaying) {
                 super.onUpdateNotification(session, startInForegroundRequired)
             }
         }
         managerProgressive?.playingContent()?.forEach {
-            Log.i("3HELLOOOOOO", "error:" + it.player.playerError?.message)
-            Log.i("4HELLOOOOOO", "error:" + session.player.playerError)
             if (it.player.isPlaying) {
                 super.onUpdateNotification(session, startInForegroundRequired)
             }
@@ -151,9 +162,14 @@ class PlaybackService : MediaSessionService() {
 
         val manager = getAppropriateMediaSessionManager(uri)
 
-        return manager?.getMediaSession(id, uri, callbackUri, context = this, applicationContext = applicationContext)
+        return manager?.getMediaSession(
+            id,
+            uri,
+            callbackUri,
+            context = this,
+            applicationContext = applicationContext
+        )
     }
-
 
 
 }

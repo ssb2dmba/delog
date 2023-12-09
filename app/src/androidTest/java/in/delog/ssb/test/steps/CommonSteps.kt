@@ -12,11 +12,13 @@ import `in`.delog.MainActivity
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 
-class CommonSteps(val composeRuleHolder: ComposeRuleHolder,
-                  val scenarioHolder: ActivityScenarioHolder)
-    :SemanticsNodeInteractionsProvider by composeRuleHolder.composeRule {
+class CommonSteps(
+    val composeRuleHolder: ComposeRuleHolder,
+    val scenarioHolder: ActivityScenarioHolder
+) : SemanticsNodeInteractionsProvider by composeRuleHolder.composeRule {
 
     val sleep = 100L // used to add some wait to visualize says 1000L
+
     @When("^I open application$")
     fun iOpenComposeActivity() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -60,7 +62,8 @@ class CommonSteps(val composeRuleHolder: ComposeRuleHolder,
     @Then("I submit webview passing succesfully the captcha")
     fun I_submit_webview() {
         Thread.sleep(sleep)
-        onWebView().withElement(findElement(Locator.ID,"captcha")).perform(DriverAtoms.webKeys("1234"))
+        onWebView().withElement(findElement(Locator.ID, "captcha"))
+            .perform(DriverAtoms.webKeys("1234"))
         onWebView().withElement(findElement(Locator.NAME, "action")).perform(webClick())
         Thread.sleep(sleep)
     }

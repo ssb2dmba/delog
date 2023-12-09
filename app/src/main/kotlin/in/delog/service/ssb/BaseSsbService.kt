@@ -15,14 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ssb
+package `in`.delog.service.ssb
 
 import android.util.Log
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.asKeyPair
-import `in`.delog.repository.ContactRepositoryImpl
-import `in`.delog.repository.MessageRepositoryImpl
 import io.vertx.core.Vertx
 import kotlinx.serialization.json.Json
 import org.apache.tuweni.bytes.Bytes32
@@ -37,7 +35,6 @@ import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClient
 import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClientFactory
 import org.apache.tuweni.scuttlebutt.rpc.*
 import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
-import java.net.ConnectException
 import java.util.*
 
 open class BaseSsbService {
@@ -71,7 +68,11 @@ open class BaseSsbService {
         return identity?.toCanonicalForm() ?: "";
     }
 
-    open suspend fun connectWithInvite(feed: Ident, callBack: (RPCResponse) -> Unit, errorCb: ((Exception) -> Unit)?) {
+    open suspend fun connectWithInvite(
+        feed: Ident,
+        callBack: (RPCResponse) -> Unit,
+        errorCb: ((Exception) -> Unit)?
+    ) {
         try {
             setIdentity(feed)
             if (feed.invite == null) {
@@ -94,14 +95,18 @@ open class BaseSsbService {
             Log.i(TAG, rpcMessageAsyncResult.asString())
             callBack(rpcMessageAsyncResult)
         } catch (ex: Exception) {
-            if (errorCb!=null) {
+            if (errorCb != null) {
                 errorCb(ex)
             }
         }
     }
 
 
-    open suspend fun connect(pFeed: Ident, terminationFn: () -> Unit, errorFn: (Exception) -> Unit): RPCHandler? {
+    open suspend fun connect(
+        pFeed: Ident,
+        terminationFn: () -> Unit,
+        errorFn: (Exception) -> Unit
+    ): RPCHandler? {
         setIdentity(pFeed)
         if (keyPair == null || host.isEmpty()) {
             Log.w(TAG, "attempting to connect but no identity")
@@ -120,7 +125,7 @@ open class BaseSsbService {
             } catch (e: Exception) {
                 println(e)
                 Thread.sleep(1000 * i.toLong())
-                if (i>=3) throw e
+                if (i >= 3) throw e
             }
         }
 
@@ -162,7 +167,6 @@ open class BaseSsbService {
         port = pFeed.port
         keyPair = pFeed.asKeyPair()
     }
-
 
 
 }

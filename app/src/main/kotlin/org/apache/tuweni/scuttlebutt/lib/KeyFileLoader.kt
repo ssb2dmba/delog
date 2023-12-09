@@ -24,7 +24,7 @@ import java.io.IOException
 import java.io.UncheckedIOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
-import java.util.*
+import java.util.Scanner
 
 /**
  * Utility class for loading scuttlebutt keys from the file system.

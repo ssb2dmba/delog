@@ -26,7 +26,11 @@ import `in`.delog.repository.AboutRepository
 import `in`.delog.repository.DidRepository
 import `in`.delog.repository.IdentRepository
 import `in`.delog.repository.MessageRepository
-import `in`.delog.ssb.*
+import `in`.delog.service.ssb.SsbSignableMessage
+import `in`.delog.service.ssb.SsbSignedMessage
+import `in`.delog.service.ssb.makeHash
+import `in`.delog.service.ssb.signMessage
+import `in`.delog.service.ssb.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -45,7 +49,7 @@ data class AboutUIState(
     val error: String = "",
     val alias: String = "",
     val description: String = ""
-    )
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class IdentAndAboutViewModel(
@@ -70,7 +74,8 @@ class IdentAndAboutViewModel(
                 )
             }
             uiState.value.identAndAbout?.about?.name?.let {
-                checkName(uiState.value.identAndAbout,
+                checkName(
+                    uiState.value.identAndAbout,
                     it
                 )
             }

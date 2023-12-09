@@ -13,11 +13,12 @@
 package org.apache.tuweni.crypto.sodium;
 
 import org.apache.tuweni.bytes.Bytes;
-import in.delog.libsodium.Sodium;
 
 import java.util.Objects;
 
 import javax.security.auth.Destroyable;
+
+import in.delog.libsodium.Sodium;
 
 //import jnr.ffi.Pointer;
 
@@ -66,7 +67,6 @@ public class SHA512Hash {
 //    public static SHA512Hash.Input fromPointer(Allocated allocated) {
 //      return new SHA512Hash.Input(Sodium.dup(allocated.pointer(), allocated.length()), allocated.length());
 //   }
-
         private Input(byte[] ptr, int length) {
             this.value = new Allocated(ptr, length);
         }

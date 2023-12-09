@@ -1,6 +1,11 @@
 package `in`.delog.ssb.test
 
 import `in`.delog.db.model.Ident
+import `in`.delog.service.ssb.SsbMessageContent
+import `in`.delog.service.ssb.SsbSignableMessage
+import `in`.delog.service.ssb.SsbSignedMessage
+import `in`.delog.service.ssb.makeHash
+import `in`.delog.service.ssb.signMessage
 import `in`.delog.ssb.*
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -91,7 +96,10 @@ class SsbSignMessageTest {
             content = ssbMessageContent
         )
         var sig = ssbSignableMessage.signMessage(feed2)
-        assertEquals("frSesk4GvaLhlx22eViXs9KN5BjD6pU6Q90zVOPJ7NHaMAqcncl2zGHuOyaVoUQ/V2uYFak4HvGo5zuZ5TWICg==", sig.toBase64String())
+        assertEquals(
+            "frSesk4GvaLhlx22eViXs9KN5BjD6pU6Q90zVOPJ7NHaMAqcncl2zGHuOyaVoUQ/V2uYFak4HvGo5zuZ5TWICg==",
+            sig.toBase64String()
+        )
     }
 
 

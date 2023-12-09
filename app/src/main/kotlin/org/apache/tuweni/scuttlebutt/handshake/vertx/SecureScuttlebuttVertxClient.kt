@@ -19,7 +19,11 @@ package org.apache.tuweni.scuttlebutt.handshake.vertx
 import android.util.Log
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.net.*
+import io.vertx.core.net.NetClient
+import io.vertx.core.net.NetClientOptions
+import io.vertx.core.net.NetSocket
+import io.vertx.core.net.ProxyOptions
+import io.vertx.core.net.ProxyType
 import io.vertx.kotlin.coroutines.await
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.bytes.Bytes32
@@ -28,9 +32,12 @@ import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.concurrent.coroutines.await
 import org.apache.tuweni.crypto.sodium.Signature
 import org.apache.tuweni.scuttlebutt.Invite
-import org.apache.tuweni.scuttlebutt.handshake.*
+import org.apache.tuweni.scuttlebutt.handshake.HandshakeException
+import org.apache.tuweni.scuttlebutt.handshake.SecureScuttlebuttHandshakeClient
 import org.apache.tuweni.scuttlebutt.handshake.SecureScuttlebuttHandshakeClient.Companion.create
 import org.apache.tuweni.scuttlebutt.handshake.SecureScuttlebuttHandshakeClient.Companion.fromInvite
+import org.apache.tuweni.scuttlebutt.handshake.SecureScuttlebuttStreamClient
+import org.apache.tuweni.scuttlebutt.handshake.StreamException
 
 /**
  * Secure Scuttlebutt client using Vert.x to manage persistent TCP connections.

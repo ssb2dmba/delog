@@ -88,6 +88,7 @@ public final class SECP256K1 {
     private static final String ALGORITHM = "ECDSA";
     private static final String CURVE_NAME = "secp256k1";
     private static final String PROVIDER = "BC";
+
     private SECP256K1() {
     }
 

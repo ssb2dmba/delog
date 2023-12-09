@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ssb
+package `in`.delog.service.ssb
 
 import android.util.Log
 import com.fasterxml.jackson.core.JsonProcessingException
@@ -26,7 +26,9 @@ import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.isOnion
 import `in`.delog.db.model.toJsonResponse
-import `in`.delog.repository.*
+import `in`.delog.repository.AboutRepository
+import `in`.delog.repository.ContactRepository
+import `in`.delog.repository.MessageRepository
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.tuweni.bytes.Bytes
@@ -34,7 +36,14 @@ import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.scuttlebutt.lib.model.FeedMessage
 import org.apache.tuweni.scuttlebutt.lib.model.toAbout
 import org.apache.tuweni.scuttlebutt.lib.model.toMessage
-import org.apache.tuweni.scuttlebutt.rpc.*
+import org.apache.tuweni.scuttlebutt.rpc.RPCCodec
+import org.apache.tuweni.scuttlebutt.rpc.RPCFlag
+import org.apache.tuweni.scuttlebutt.rpc.RPCFunction
+import org.apache.tuweni.scuttlebutt.rpc.RPCMessage
+import org.apache.tuweni.scuttlebutt.rpc.RPCRequestBody
+import org.apache.tuweni.scuttlebutt.rpc.RPCResponse
+import org.apache.tuweni.scuttlebutt.rpc.RPCStreamRequest
+import org.apache.tuweni.scuttlebutt.rpc.RPCStreamRequest2
 import org.apache.tuweni.scuttlebutt.rpc.mux.ScuttlebuttStreamHandler
 
 
@@ -49,19 +58,18 @@ class SsbService(
     val contactRepository = contactRepository
     val aboutRepository = aboutRepository
 
-    var connected: Int =0 // 0 disconnected, 1 connected, -1 errored
+    var connected: Int = 0 // 0 disconnected, 1 connected, -1 errored
 
     val torService = torService
 
 
-
     suspend fun synchronize(pFeed: Ident, errorCb: ((Exception) -> Unit)?) {
-        val applicationScope =  MainApplication.getApplicationScope()
+        val applicationScope = MainApplication.getApplicationScope()
         applicationScope.launch {
             try {
                 reconnect(pFeed)
             } catch (e: Exception) {
-                if (errorCb!=null) {
+                if (errorCb != null) {
                     errorCb(e)
                 }
             }
@@ -76,7 +84,7 @@ class SsbService(
         super.connect(pFeed, ::onConnected, ::onError)
     }
 
-    private fun onError(error:Exception) {
+    private fun onError(error: Exception) {
 
     }
 
@@ -160,7 +168,7 @@ class SsbService(
         Log.d(TAG, "sending endstream for: " + rpcMessage.requestNumber())
         rpcHandler?.endStream(rpcMessage.requestNumber() * -1)
 
-        if (secureScuttlebuttVertxClient!=null) {
+        if (secureScuttlebuttVertxClient != null) {
             Thread.sleep(3000)
             Log.i(TAG, "closing connection")
             secureScuttlebuttVertxClient!!.stop()

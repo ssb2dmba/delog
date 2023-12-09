@@ -38,8 +38,8 @@ import `in`.delog.R
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.ui.LocalActiveFeed
-import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.BottomBarMainButton
+import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.component.toMessageViewData
@@ -158,10 +158,11 @@ fun DraftConfirmDeleteDialog(navHostController: NavHostController, viewModel: Dr
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean =false) {
+fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean = false) {
     val identAndAbout = LocalActiveFeed.current ?: return
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    val draftViewModel = koinViewModel<DraftViewModel>(parameters = { parametersOf(identAndAbout.ident) })
+    val draftViewModel =
+        koinViewModel<DraftViewModel>(parameters = { parametersOf(identAndAbout.ident) })
     val title = stringResource(id = R.string.save_draft)
     var link: MessageAndAbout? by remember {
         mutableStateOf(null)
@@ -173,7 +174,7 @@ fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean =
     }
 
     LaunchedEffect(draftViewModel.draft) {
-        if (draftViewModel.draft != null && draftViewModel.draft!!.branch!=null) {
+        if (draftViewModel.draft != null && draftViewModel.draft!!.branch != null) {
             draftViewModel.getLink(draftViewModel.draft!!.branch!!)
         }
     }
@@ -264,7 +265,7 @@ fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean =
         ) {
             IdentityBox(identAndAbout = identAndAbout)
             val itemClicked = {
-                dirtyStatus=!dirtyStatus
+                dirtyStatus = !dirtyStatus
                 //focusRequester.requestFocus()
             }
 
@@ -280,7 +281,7 @@ fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean =
                         onValueChange = {
                             contentAsText = it
                         },
-                        keyboardOptions= KeyboardOptions(autoCorrect = true),
+                        keyboardOptions = KeyboardOptions(autoCorrect = true),
                         modifier = Modifier
                             .focusRequester(focusRequester)
                             .focusTarget()
@@ -305,8 +306,9 @@ fun DraftEdit(navController: NavHostController, draftId: String, done: Boolean =
                         navController = navController,
                         message = obj,
                         showToolbar = false,
-                        hasDivider = link!=null,
-                        onClickCallBack = itemClicked)
+                        hasDivider = link != null,
+                        onClickCallBack = itemClicked
+                    )
                 }
             }
         }

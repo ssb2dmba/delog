@@ -3,7 +3,7 @@ package `in`.delog.repository
 import android.util.Log
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.getHttpScheme
-import `in`.delog.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject

@@ -13,12 +13,13 @@
 package org.apache.tuweni.crypto.sodium;
 
 import org.apache.tuweni.bytes.Bytes;
-import in.delog.libsodium.Sodium;
-import in.delog.libsodium.SodiumUtils;
 
 import java.util.Objects;
 
 import javax.security.auth.Destroyable;
+
+import in.delog.libsodium.Sodium;
+import in.delog.libsodium.SodiumUtils;
 
 
 /**

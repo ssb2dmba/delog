@@ -5,10 +5,24 @@ import android.graphics.Color
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -26,15 +40,14 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.zachklipp.richtext.ui.printing.Printable
 import com.zachklipp.richtext.ui.printing.rememberPrintableController
 import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.ssb.BaseSsbService.Companion.TAG
-import `in`.delog.ssb.Dict
-import `in`.delog.ssb.WordList
-import `in`.delog.ssb.secretKeyToMnemonic
-import `in`.delog.viewmodel.IdentAndAboutViewModel
+import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.service.ssb.Dict
+import `in`.delog.service.ssb.WordList
+import `in`.delog.service.ssb.secretKeyToMnemonic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.apache.tuweni.io.Base64
-import java.util.*
+import java.util.Locale
 
 
 @Composable
@@ -164,9 +177,9 @@ fun ExportMnemonicDialog(
                         val pk = identAndAbout!!.ident.privateKey!!
                         //var atServer =""
                         val atServer = "@" +
-                                    identAndAbout!!.ident.server +
-                                    ":" +
-                                    identAndAbout!!.ident.port
+                                identAndAbout!!.ident.server +
+                                ":" +
+                                identAndAbout!!.ident.port
 
                         val configuration = LocalConfiguration.current
 

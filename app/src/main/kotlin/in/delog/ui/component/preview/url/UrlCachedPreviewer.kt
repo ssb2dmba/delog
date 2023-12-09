@@ -61,7 +61,8 @@ object UrlCachedPreviewer {
                         return
                     }
 
-                    val state = UrlPreviewState.Error(throwable.message ?: "Error Loading url preview")
+                    val state =
+                        UrlPreviewState.Error(throwable.message ?: "Error Loading url preview")
                     cache.put(url, state)
                     onReady(state)
                 }

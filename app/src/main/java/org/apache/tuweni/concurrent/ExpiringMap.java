@@ -43,6 +43,7 @@ public final class ExpiringMap<K, V> implements Map<K, V> {
     private final PriorityBlockingQueue<ExpiringEntry<K, V>> expiryQueue = new PriorityBlockingQueue<>();
     private final LongSupplier currentTimeSupplier;
     private final Long defaultTimeout;
+
     /**
      * Construct an empty map.
      */

@@ -34,7 +34,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
-class IdentListViewModel(private val repository: IdentRepository, private val aboutRepository: AboutRepository) : ViewModel() {
+class IdentListViewModel(
+    private val repository: IdentRepository,
+    private val aboutRepository: AboutRepository
+) : ViewModel() {
 
     private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
     var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
@@ -46,10 +49,10 @@ class IdentListViewModel(private val repository: IdentRepository, private val ab
         GlobalScope.launch(Dispatchers.IO) {
             val about = About(
                 ident.publicKey,
-                name = alias ?: ident.publicKey.subSequence(0,6).toString(),
+                name = alias ?: ident.publicKey.subSequence(0, 6).toString(),
                 dirty = true
             )
-            var id = repository.insert(IdentAndAbout(ident,about))
+            var id = repository.insert(IdentAndAbout(ident, about))
             ident.oid = id
             _insertedIdent.value = ident
         }

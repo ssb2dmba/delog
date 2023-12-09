@@ -39,6 +39,7 @@ public final class ExpiringSet<E> implements Set<E> {
     private final PriorityBlockingQueue<ExpiringEntry<E>> expiryQueue = new PriorityBlockingQueue<>();
     private final LongSupplier currentTimeSupplier;
     private final long evictionTimeout;
+
     /**
      * Construct an empty expiring set.
      *

@@ -18,7 +18,14 @@ package org.apache.tuweni.scuttlebutt.handshake
 
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.bytes.Bytes32
-import org.apache.tuweni.crypto.sodium.*
+import org.apache.tuweni.crypto.sodium.Allocated
+import org.apache.tuweni.crypto.sodium.Box
+import org.apache.tuweni.crypto.sodium.Concatenate
+import org.apache.tuweni.crypto.sodium.DiffieHelman
+import org.apache.tuweni.crypto.sodium.HMACSHA512256
+import org.apache.tuweni.crypto.sodium.SHA256Hash
+import org.apache.tuweni.crypto.sodium.SecretBox
+import org.apache.tuweni.crypto.sodium.Signature
 import org.apache.tuweni.scuttlebutt.Identity
 import org.apache.tuweni.scuttlebutt.Invite
 
@@ -73,7 +80,9 @@ class SecureScuttlebuttHandshakeClient private constructor(
      */
     fun readHello(message: Bytes) {
         if (message.size() != 64) {
-            throw HandshakeException("Invalid handshake message length: " + message.toArrayUnsafe().decodeToString())
+            throw HandshakeException(
+                "Invalid handshake message length: " + message.toArrayUnsafe().decodeToString()
+            )
         }
         val hmac = message.slice(0, 32)
         val key = message.slice(32, 32)

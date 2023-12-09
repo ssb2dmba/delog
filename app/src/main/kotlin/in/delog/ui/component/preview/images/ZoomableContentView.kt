@@ -71,9 +71,9 @@ import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import `in`.delog.R
-import `in`.delog.ui.component.richtext.ClickableUrl
 import `in`.delog.ui.component.LoadingAnimation
 import `in`.delog.ui.component.preview.videos.VideoView
+import `in`.delog.ui.component.richtext.ClickableUrl
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
@@ -85,6 +85,7 @@ import java.io.File
 
 val imageExtensions = listOf("png", "jpg", "gif", "bmp", "jpeg", "webp", "svg")
 val videoExtensions = listOf("mp4", "avi", "wmv", "mpg", "amv", "webm", "mov", "mp3", "m3u8")
+
 @Immutable
 abstract class ZoomableContent(
     val description: String? = null,
@@ -216,7 +217,7 @@ fun ZoomableContentView(
             artworkUri = content.artworkUri,
             authorName = content.authorName,
             roundedCorner = roundedCorner,
-            nostrUriCallback = content.uri,
+            uriCallback = content.uri,
             onDialog = { dialogOpen = true },
         )
 
@@ -229,7 +230,7 @@ fun ZoomableContentView(
                     artworkUri = content.artworkUri,
                     authorName = content.authorName,
                     roundedCorner = roundedCorner,
-                    nostrUriCallback = content.uri,
+                    uriCallback = content.uri,
                     onDialog = { dialogOpen = true },
                 )
             }
@@ -419,8 +420,8 @@ fun ImageUrlWithDownloadButton(url: String, showImage: MutableState<Boolean>) {
 private fun InlineDownloadIcon(showImage: MutableState<Boolean>) =
     InlineTextContent(
         Placeholder(
-            width =  17.sp,
-            height =  17.sp,
+            width = 17.sp,
+            height = 17.sp,
             placeholderVerticalAlign = PlaceholderVerticalAlign.Center
         )
     ) {
@@ -428,7 +429,7 @@ private fun InlineDownloadIcon(showImage: MutableState<Boolean>) =
             modifier = Modifier.size(20.dp),
             onClick = { showImage.value = true }
         ) {
-            Icon(Icons.Default.DownloadForOffline,contentDescription = "download for offline")
+            Icon(Icons.Default.DownloadForOffline, contentDescription = "download for offline")
         }
     }
 
@@ -657,8 +658,14 @@ fun ZoomableImageDialog(
                 attributes.copyFrom(activityWindow.attributes)
                 attributes.type = dialogWindow.attributes.type
                 dialogWindow.attributes = attributes
-                parentView.layoutParams = FrameLayout.LayoutParams(activityWindow.decorView.width, activityWindow.decorView.height)
-                view.layoutParams = FrameLayout.LayoutParams(activityWindow.decorView.width, activityWindow.decorView.height)
+                parentView.layoutParams = FrameLayout.LayoutParams(
+                    activityWindow.decorView.width,
+                    activityWindow.decorView.height
+                )
+                view.layoutParams = FrameLayout.LayoutParams(
+                    activityWindow.decorView.width,
+                    activityWindow.decorView.height
+                )
             }
         }
 
@@ -761,7 +768,6 @@ private fun CopyToClipboard(
 }
 
 
-
 @Composable
 private fun RenderImageOrVideo(
     content: ZoomableContent,
@@ -836,9 +842,6 @@ private fun RenderImageOrVideo(
         }
     }
 }
-
-
-
 
 
 // Window utils

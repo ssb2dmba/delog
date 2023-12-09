@@ -18,8 +18,27 @@
 package `in`.delog.di.modules
 
 import `in`.delog.db.AppDatabase
-import `in`.delog.repository.*
-import `in`.delog.viewmodel.*
+import `in`.delog.repository.AboutRepository
+import `in`.delog.repository.AboutRepositoryImpl
+import `in`.delog.repository.ContactRepository
+import `in`.delog.repository.ContactRepositoryImpl
+import `in`.delog.repository.DidRepository
+import `in`.delog.repository.DidRepositoryImpl
+import `in`.delog.repository.DraftRepository
+import `in`.delog.repository.DraftRepositoryImpl
+import `in`.delog.repository.FeedRepositoryImpl
+import `in`.delog.repository.IdentRepository
+import `in`.delog.repository.MessageRepository
+import `in`.delog.repository.MessageRepositoryImpl
+import `in`.delog.repository.MessageTreeRepository
+import `in`.delog.repository.MessageTreeRepositoryImpl
+import `in`.delog.viewmodel.BottomBarViewModel
+import `in`.delog.viewmodel.ContactListViewModel
+import `in`.delog.viewmodel.DraftListViewModel
+import `in`.delog.viewmodel.DraftViewModel
+import `in`.delog.viewmodel.IdentAndAboutViewModel
+import `in`.delog.viewmodel.IdentListViewModel
+import `in`.delog.viewmodel.MessageListViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -30,14 +49,14 @@ val mainViewModel = module {
         database.identDao()
     }
 
-    single { FeedRepositoryImpl(get(),get()) }
+    single { FeedRepositoryImpl(get(), get()) }
     factory<IdentRepository> { (FeedRepositoryImpl(get(), get())) }
-    single { IdentListViewModel(get(),get()) }
+    single { IdentListViewModel(get(), get()) }
     viewModel { IdentAndAboutViewModel(get(), get(), get(), get(), get()) }
     single { MessageRepositoryImpl(get()) }
     factory<MessageRepository> { (MessageRepositoryImpl(get())) }
     factory<MessageTreeRepository> { (MessageTreeRepositoryImpl(get())) }
-    viewModel { MessageListViewModel(get(), get(), get(),get()) }
+    viewModel { MessageListViewModel(get(), get(), get(), get()) }
 
     factory<DraftRepository> { (DraftRepositoryImpl(get())) }
     viewModel { DraftListViewModel(get(), get()) }

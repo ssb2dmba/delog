@@ -1,3 +1,20 @@
+/**
+ * Delog
+ * Copyright (C) 2023 dmba.info
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package `in`.delog.ui
 
 import android.Manifest
@@ -20,7 +37,7 @@ import androidx.core.content.ContextCompat
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.common.util.concurrent.ListenableFuture
-import `in`.delog.ui.component.QrCodeAnalyzer
+import `in`.delog.ui.component.qrcode.QrCodeAnalyzer
 import java.util.concurrent.Executors
 
 private val REQUIRED_PERMISSIONS = listOf(Manifest.permission.CAMERA)
@@ -81,13 +98,13 @@ fun CameraQrCodeScanner(callback: (String) -> Unit) {
     }
 
 
-        Box(
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        AndroidView(
+            factory = { previewView },
             modifier = Modifier.fillMaxSize()
-        ) {
-            AndroidView(
-                factory = { previewView },
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        )
+    }
 
 }

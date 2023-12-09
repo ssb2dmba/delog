@@ -17,8 +17,8 @@
  */
 package `in`.delog.di.modules
 
-import `in`.delog.ssb.SsbService
-import `in`.delog.ssb.TorService
+import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.TorService
 import org.koin.dsl.module
 
 val ssbModule = module {

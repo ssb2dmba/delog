@@ -8,9 +8,9 @@ import io.cucumber.junit.CucumberOptions;
 @SuppressWarnings("unused")
 @CucumberOptions(
         glue = "in.delog.ssb.test",
-        tags =  "not @ignore" ,
+        tags = "not @ignore",
         features = "features"
 )
-public class Instrumentation  extends CucumberAndroidJUnitRunner{
+public class Instrumentation extends CucumberAndroidJUnitRunner {
 
 }

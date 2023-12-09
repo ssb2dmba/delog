@@ -21,7 +21,17 @@ import android.text.format.DateUtils
 import android.util.Patterns
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -31,8 +41,21 @@ import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Reply
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,16 +67,15 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import `in`.delog.ssb.BaseSsbService.Companion.format
-import `in`.delog.ui.component.preview.url.UrlPreview
+import `in`.delog.service.ssb.BaseSsbService.Companion.format
 import `in`.delog.ui.component.richtext.RichTextViewer
-
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
 import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.sql.Timestamp
-import java.util.*
+import java.util.Calendar
+import java.util.Date
 
 
 @Composable
@@ -62,7 +84,7 @@ fun msgToolbar(
     message: MessageViewData,
     onClickCallBack: () -> Unit,
     truncated: Boolean,
-    ) {
+) {
     Row(
         horizontalArrangement = Arrangement.Start,
         modifier = Modifier
@@ -171,8 +193,10 @@ fun MessageItem(
 
     val whereToCut = remember(content) {
         // Cuts the text in the first space or new line after SHORT_TEXT_LENGTH characters
-        val firstSpaceAfterCut = content.indexOf(' ', SHORT_TEXT_LENGTH).let { if (it < 0) content.length else it }
-        val firstNewLineAfterCut = content.indexOf('\n', SHORT_TEXT_LENGTH).let { if (it < 0) content.length else it }
+        val firstSpaceAfterCut =
+            content.indexOf(' ', SHORT_TEXT_LENGTH).let { if (it < 0) content.length else it }
+        val firstNewLineAfterCut =
+            content.indexOf('\n', SHORT_TEXT_LENGTH).let { if (it < 0) content.length else it }
 
         // or after SHORTEN_AFTER_LINES lines
         val numberOfLines = content.count { it == '\n' }
@@ -197,7 +221,7 @@ fun MessageItem(
     }
 
 
-    val text:String by remember(content) {
+    val text: String by remember(content) {
         derivedStateOf {
             if (!truncate) {
                 content
@@ -312,7 +336,12 @@ fun MessageItem(
                 //Spacer(modifier = Modifier.height(8.dp))
                 // row toolbar
                 if (showToolbar) {
-                    msgToolbar(navController = navController, message = message, truncated=truncated, onClickCallBack = onClickCallBack)
+                    msgToolbar(
+                        navController = navController,
+                        message = message,
+                        truncated = truncated,
+                        onClickCallBack = onClickCallBack
+                    )
                 }
             }
         }

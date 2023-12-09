@@ -7,6 +7,7 @@ import java.time.Duration
 
 object HttpClient {
     private var proxy: Proxy? = null
+    private var useProxy: Boolean = false
 
     var proxyChangeListeners = ArrayList<() -> Unit>()
 
@@ -14,8 +15,9 @@ object HttpClient {
     }
 
     fun getHttpClient(): OkHttpClient {
-        val seconds = if (proxy != null) 20L else 10L
+        val seconds = if (useProxy) 40L else 10L
         val duration = Duration.ofSeconds(seconds)
+        proxy = initProxy(false,"127.0.0.1", 9090)
         return OkHttpClient.Builder()
             .proxy(proxy)
             .readTimeout(duration)

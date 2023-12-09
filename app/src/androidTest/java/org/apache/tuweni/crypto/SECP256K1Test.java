@@ -27,12 +27,13 @@ import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.crypto.SECP256K1.PublicKey;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.crypto.SECP256K1.Signature;
-import in.delog.libsodium.NaCl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.util.Random;
+
+import in.delog.libsodium.NaCl;
 
 
 class SECP256K1Test {

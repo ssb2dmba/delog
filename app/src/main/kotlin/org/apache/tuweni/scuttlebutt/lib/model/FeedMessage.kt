@@ -20,9 +20,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Message
-import `in`.delog.ssb.SsbMessageContent
+import `in`.delog.service.ssb.SsbMessageContent
 import kotlinx.serialization.json.Json
-import java.util.*
+import java.util.Optional
 
 /**
  * A scuttlebutt feed message

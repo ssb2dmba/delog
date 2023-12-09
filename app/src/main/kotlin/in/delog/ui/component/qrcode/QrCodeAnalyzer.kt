@@ -1,13 +1,39 @@
-package `in`.delog.ui.component
+/**
+ * Delog
+ * Copyright (C) 2023 dmba.info
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package `in`.delog.ui.component.qrcode
 
-import android.graphics.ImageFormat.*
+import android.graphics.ImageFormat.YUV_420_888
+import android.graphics.ImageFormat.YUV_422_888
+import android.graphics.ImageFormat.YUV_444_888
 import android.os.Build
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import com.google.zxing.*
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.BinaryBitmap
+import com.google.zxing.DecodeHintType
+import com.google.zxing.MultiFormatReader
+import com.google.zxing.NotFoundException
+import com.google.zxing.PlanarYUVLuminanceSource
+import com.google.zxing.Result
 import com.google.zxing.common.HybridBinarizer
 import java.nio.ByteBuffer
+
 
 private fun ByteBuffer.toByteArray(): ByteArray {
     rewind()
@@ -70,3 +96,4 @@ class QrCodeAnalyzer(
         image.close()
     }
 }
+

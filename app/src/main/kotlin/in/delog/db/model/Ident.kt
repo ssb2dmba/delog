@@ -52,13 +52,14 @@ data class Ident(
     @ColumnInfo(name = "last_push")
     var lastPush: Int?,
 
-) {
+    ) {
     companion object {
         fun getHttpScheme(server: String): String {
             var httpScheme = "https://"
             if (server.endsWith(".onion")
                 || server.endsWith(".bit")
-                || server.startsWith("192.168")) {
+                || server.startsWith("192.168")
+            ) {
                 httpScheme = "http://"
             }
             return httpScheme
@@ -70,11 +71,10 @@ data class Ident(
         }
 
 
-
     }
 }
 
-fun Ident.isOnion():Boolean {
+fun Ident.isOnion(): Boolean {
     return this.server.endsWith("onion")
 }
 

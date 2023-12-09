@@ -20,7 +20,7 @@ import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.bytes.MutableBytes
 import org.apache.tuweni.crypto.sodium.SHA256Hash
 import org.apache.tuweni.crypto.sodium.SecretBox
-import java.util.*
+import java.util.Arrays
 import java.util.stream.Collectors
 
 internal class SecureScuttlebuttStream(

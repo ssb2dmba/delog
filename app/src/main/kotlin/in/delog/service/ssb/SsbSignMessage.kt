@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ssb
+package `in`.delog.service.ssb
 
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.asKeyPair
-import `in`.delog.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.BaseSsbService.Companion.format
 import kotlinx.serialization.Serializable
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.sodium.SHA256Hash
