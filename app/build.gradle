@@ -256,8 +256,6 @@ task('generateSWIGsource') {
 gradle.projectsEvaluated {
     preBuild.dependsOn 'generateSWIGsource'
 }
-
-
 [
         [input_arch: 'arm', output_arch: 'android-armv6', ndk_platform: 'android-19'],
         [input_arch: 'armv7-a', output_arch: 'android-armv7-a', ndk_platform: 'android-19'],
