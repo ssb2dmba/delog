@@ -20,12 +20,11 @@ package `in`.delog.db.model
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-
 @Entity
 data class Draft(
 
     @PrimaryKey(autoGenerate = true)
-    val oid: Int,
+    val oid: Long,
 
     @ColumnInfo(name = "author")
     val author: String,
@@ -45,4 +44,20 @@ data class Draft(
     @ColumnInfo(name = "branch")
     var branch: String?
 
-)
+) {
+    companion object {
+        fun empty(author: String): Draft =  Draft(
+            oid = 0,
+            author = author,
+            timestamp = 0L,
+            type = "",
+            contentAsText = "",
+            root = null,
+            branch = null
+        )
+    }
+}
+
+
+
+

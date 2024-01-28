@@ -84,7 +84,7 @@ fun DraftNew(
     val identAndAbout = LocalActiveFeed.current ?: return
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     val draftViewModel =
-        koinViewModel<DraftViewModel>(parameters = { parametersOf(identAndAbout.ident) })
+        koinViewModel<DraftViewModel>(parameters = { parametersOf(identAndAbout.ident, null, linkedKey) })
 
     var link: MessageAndAbout? by remember {
         mutableStateOf(null)
@@ -130,14 +130,8 @@ fun DraftNew(
                     branch = branch,
                     root = root
                 )
-                draftViewModel.insert(draft = draft)
+                draftViewModel.save(draft)
             })
-        }
-    }
-
-    LaunchedEffect(draftViewModel.inserted) {
-        if (draftViewModel.inserted != null) {
-            navController.navigate("${Scenes.DraftEdit.route}/${draftViewModel.inserted}/done")
         }
     }
 

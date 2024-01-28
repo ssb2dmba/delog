@@ -69,6 +69,7 @@ class SsbService(
             try {
                 reconnect(pFeed)
             } catch (e: Exception) {
+                e.printStackTrace()
                 if (errorCb != null) {
                     errorCb(e)
                 }
@@ -97,7 +98,7 @@ class SsbService(
                 var ourSequence = messageRepository.getLastSequence(myFeed)
                 createHistoryStream(myFeed, ourSequence)
                 // let's call all of our friends
-                contactRepository.geContacts(myFeed).forEach { // todo implement multiserver
+                contactRepository.geContacts(myFeed).forEach {
                     ourSequence = messageRepository.getLastSequence(it.follow)
                     createHistoryStream(it.follow, ourSequence)
                 }

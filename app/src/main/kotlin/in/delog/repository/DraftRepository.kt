@@ -26,7 +26,7 @@ interface DraftRepository {
     suspend fun insert(draft: Draft): Long
     suspend fun deleteDraft(draft: Draft)
     fun getPagedDraft(author: String): PagingSource<Int, Draft>
-    fun getById(oid: Int): Draft
+    fun getById(oid: Long): Draft
     fun update(draft: Draft)
     fun last(author: String): Draft
 }
@@ -49,7 +49,7 @@ class DraftRepositoryImpl(private val draftDao: DraftDao) : DraftRepository {
         return draftDao.getPagedDraft(author)
     }
 
-    override fun getById(oid: Int): Draft {
+    override fun getById(oid: Long): Draft {
         return draftDao.getById(oid)
     }
 

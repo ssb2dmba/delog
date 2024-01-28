@@ -209,7 +209,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
 fun NewDraftFab(navController: NavController) {
     BottomBarMainButton(
         onClick = {
-            navController.navigate(Scenes.DraftNew.route)
+            navController.navigate(Scenes.DraftNew.route + "/post")
         },
         text = stringResource(id = R.string.compose)
     )

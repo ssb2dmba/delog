@@ -117,6 +117,10 @@ open class BaseSsbService {
             SecureScuttlebuttVertxClient(vertx, keyPair!!, networkKeyBytes32)
         for (i in 0..3) {
             try {
+                if (pFeed.invite == null) {
+                    Log.e("ssb", "attempting to connect but no invite !")
+                    return null
+                }
                 val invite: Invite = Invite.fromCanonicalForm(pFeed.invite!!);
                 val remotePublicKey = invite.identity.ed25519PublicKey();
                 rpcHandler = makeRPCHandler(remotePublicKey!!)

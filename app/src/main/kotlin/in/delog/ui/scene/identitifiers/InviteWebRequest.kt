@@ -18,18 +18,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.webkit.ProxyConfig
+import androidx.webkit.ProxyController
 import com.google.accompanist.web.LoadingState
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.TorService
+import org.koin.androidx.compose.get
+import java.util.concurrent.Executor
 
 @Composable
 fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
+
+
     Log.i(TAG, "getting invite from ${startUrl}")
     val webViewState = rememberWebViewState(startUrl)
     LaunchedEffect(webViewState.lastLoadedUrl) {
@@ -66,7 +76,24 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
             }
         }
         val webError = remember { mutableStateOf("") }
-        if (webError.value == "") {
+        //if (webError.value == "") {
+            if (""".*\.onion(/.*)?$""".toRegex().matches(startUrl)) {
+                val torService: TorService = get()
+                val proxyConfig: ProxyConfig = ProxyConfig.Builder()
+                    .addProxyRule("socks5://127.0.0.1:" + torService.torProxyPort)
+                    .build()
+                ProxyController.getInstance()
+                    .setProxyOverride(proxyConfig, Executor { Runnable { } }, Runnable { })
+                LaunchedEffect(Unit) {
+                    torService.start()
+                }
+                val torConnected: Boolean by torService.connected.collectAsState()
+                if (!torConnected) {
+                    Log.d(TAG, "tor not connected !")
+                    loading.value = true
+                    return
+                }
+            }
             WebView(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -106,9 +133,7 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
                     }
                 }
             )
-        } else {
-            Text(webError.value)
-        }
+
     }
 
 

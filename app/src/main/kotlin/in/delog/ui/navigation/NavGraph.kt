@@ -35,7 +35,9 @@ import `in`.delog.ui.scene.MessagesList
 import `in`.delog.ui.scene.PreferencesEdit
 import `in`.delog.ui.scene.identitifiers.IdentNew
 
-
+const val LINK = "link";
+const val TYPE = "draftType";
+const val OID = "id";
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(
@@ -43,13 +45,12 @@ fun NavGraph(navController: NavHostController) {
         startDestination = Scenes.MainFeed.route
     )
     {
-        val id = "id";
-        val draftType = "draftType";
+
         composable(
-            route = Scenes.MainFeed.route + "/{" + id + "}",
-            arguments = listOf(navArgument(id) { type = NavType.StringType })
+            route = Scenes.MainFeed.route + "/{" + LINK + "}",
+            arguments = listOf(navArgument(LINK) { type = NavType.StringType })
         ) { backStackEntry ->
-            backStackEntry.arguments?.getString(id)
+            backStackEntry.arguments?.getString(LINK)
                 ?.let { MessagesList(navController, it) }
         }
         composable(route = Scenes.MainFeed.route) {
@@ -64,17 +65,17 @@ fun NavGraph(navController: NavHostController) {
             IdentList(navController)
         }
         composable(
-            route = Scenes.FeedDetail.route + "/{" + id + "}",
-            arguments = listOf(navArgument(id) { type = NavType.StringType })
+            route = Scenes.FeedDetail.route + "/{" + LINK + "}",
+            arguments = listOf(navArgument(LINK) { type = NavType.StringType })
         ) { backStackEntry ->
-            backStackEntry.arguments?.getString(id)
+            backStackEntry.arguments?.getString(LINK)
                 ?.let { IdentDetail(navController, it) }
         }
         composable(
-            route = Scenes.AboutEdit.route + "/{" + id + "}",
-            arguments = listOf(navArgument(id) { type = NavType.StringType })
+            route = Scenes.AboutEdit.route + "/{" + LINK + "}",
+            arguments = listOf(navArgument(LINK) { type = NavType.StringType })
         ) { backStackEntry ->
-            backStackEntry.arguments?.getString(id)
+            backStackEntry.arguments?.getString(LINK)
                 ?.let { AboutEdit(navController, it) }
         }
 
@@ -88,39 +89,41 @@ fun NavGraph(navController: NavHostController) {
             ContactList(navController)
         }
 
-        composable(route = Scenes.DraftNew.route) {
-            DraftNew(navController)
-        }
 
         composable(route = Scenes.Preferences.route) {
             PreferencesEdit(navController)
         }
 
         composable(
-            route = Scenes.DraftNew.route + "/{" + draftType + "}" + "/{" + id + "}",
+            route = Scenes.DraftNew.route + "/post",
+        ) { backStackEntry ->
+            DraftEdit(navController = navController, draftMode ="post",  draftId = 0L, link= "")
+        }
+
+        composable(
+            route = Scenes.DraftNew.route + "/{" + TYPE + "}" + "/{" + LINK + "}",
             arguments = listOf(
-                navArgument(id) { type = NavType.StringType },
-                navArgument(draftType) { type = NavType.StringType })
+                navArgument(LINK) { type = NavType.StringType },
+                navArgument(TYPE) { type = NavType.StringType })
         ) { backStackEntry ->
-            val key = backStackEntry.arguments?.getString(id)
-            val draftType = backStackEntry.arguments?.getString(draftType)
-            DraftNew(navController = navController, draftMode = draftType, linkedKey = key);
+            var linkKey = backStackEntry.arguments?.getString(LINK)
+            val draftType = backStackEntry.arguments?.getString(TYPE)
+            if (linkKey == null) linkKey = ""
+            System.out.println("here" + draftType + linkKey)
+            DraftEdit(navController = navController, draftMode =draftType!!,  draftId = 0L, link= linkKey!!)
         }
 
-        composable(
-            route = Scenes.DraftEdit.route + "/{" + id + "}/done",
-            arguments = listOf(navArgument(id) { type = NavType.StringType })
-        ) { backStackEntry ->
-            backStackEntry.arguments?.getString(id)
-                ?.let { DraftEdit(navController, it, true) }
-        }
+
+
 
         composable(
-            route = Scenes.DraftEdit.route + "/{" + id + "}",
-            arguments = listOf(navArgument(id) { type = NavType.StringType })
+            route = Scenes.DraftEdit.route + "/{" + OID + "}",
+            arguments = listOf(navArgument(OID) { type = NavType.LongType})
         ) { backStackEntry ->
-            backStackEntry.arguments?.getString(id)
-                ?.let { DraftEdit(navController, it) }
+            System.out.println("there")
+            var oid = backStackEntry.arguments?.getLong(OID)
+            if (oid == null) oid = 0
+            DraftEdit(navController, draftMode="", draftId= oid,link="")
         }
 
     }

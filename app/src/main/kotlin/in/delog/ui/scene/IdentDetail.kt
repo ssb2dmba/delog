@@ -229,7 +229,6 @@ fun IdentDetailConfirmDeleteDialog(
 
 @Composable
 fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAboutViewModel) {
-    val context = LocalContext.current
     var server by remember { mutableStateOf(ident.server) }
     var port by remember { mutableStateOf(ident.port) }
     var defaultIdent by remember { mutableStateOf(ident.defaultIdent) }

@@ -30,6 +30,7 @@
             android:hardwareAccelerated="true"
             android:launchMode="singleTop"
             android:theme="@style/Theme.MyApp"
+            android:configChanges="orientation|screenSize|screenLayout"
             android:windowSoftInputMode="adjustResize">
 
             <intent-filter>

@@ -184,9 +184,7 @@ fun MessageItem(
         return null
     }
 
-    val content: String by remember {
-        mutableStateOf(message.content(format).text.toString())
-    }
+    val content: String = message.content(format).text.toString()
 
     val SHORT_TEXT_LENGTH = 240
     val SHORTEN_AFTER_LINES = 6
