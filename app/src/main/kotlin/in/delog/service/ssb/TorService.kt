@@ -21,15 +21,30 @@ import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.Ports
 import io.matthewnelson.kmp.tor.manager.TorManager
 import io.matthewnelson.kmp.tor.manager.TorServiceConfig
 import io.matthewnelson.kmp.tor.manager.common.TorOperationManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class TorService {
+
+    private val _connected = MutableStateFlow(false)
+    val connected: StateFlow<Boolean> = _connected.asStateFlow()
 
     private val providerAndroid by lazy {
 
         object : TorConfigProviderAndroid(context = MainApplication.applicationContext()) {
             override fun provide(): TorConfig {
                 return TorConfig.Builder {
+
+
+                    val http = Ports.HttpTunnel()
+                    put(http.set(AorDorPort.Value(PortProxy(9258))))
+
+                    val trans = Ports.Trans()
+                    put(trans.set(AorDorPort.Value(PortProxy(9262))))
+                    put(trans.set(AorDorPort.Value(PortProxy(9263))))
+
                     // Set SOCKS5 port
                     val socks = Ports.Socks()
                     put(socks.set(AorDorPort.Value(PortProxy(torProxyPort))))
@@ -38,6 +53,7 @@ class TorService {
                     // For Android, disabling & reducing connection padding is
                     // advisable to minimize mobile data usage.
                     put(ConnectionPadding().set(AorTorF.False))
+
                     put(ConnectionPaddingReduced().set(TorF.True))
                     // Tor default is 24h. Reducing to 1 min helps mitigate
                     // unnecessary mobile data usage.
@@ -82,7 +98,7 @@ class TorService {
                     torProxyPort = it.toInt()
                 }
                 torProxyPort = torProxyPort
-                manager.debug(true)
+                manager.debug(false)
                 manager.addListener(listener)
                 listener.addLine(
                     TorServiceConfig.getMetaData(MainApplication.applicationContext()).toString()
@@ -92,12 +108,17 @@ class TorService {
     }
 
     suspend fun start() {
-        torOperationManager.start();
+        if (_connected.value == true) {
+            return
+        }
+        torOperationManager.start()
+        _connected.value = true
     }
 
     fun stop() {
         MainApplication.getApplicationScope().launch {
             torOperationManager.stopQuietly()
+            _connected.value = false
         }
     }
 

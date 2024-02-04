@@ -21,9 +21,13 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.consumedWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.*
 import androidx.compose.runtime.*
@@ -59,7 +63,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun MyApp() {
 
@@ -106,13 +110,15 @@ fun MyApp() {
                     },
                     floatingActionButtonPosition = FabPosition.Center,
                     floatingActionButton = { },
+
                     content = {
                         Surface(
                             modifier = Modifier
                                 .padding(it)
+                                .consumeWindowInsets(it)
+                                .systemBarsPadding()
                                 .fillMaxHeight()
                         ) {
-
                             NavGraph(navController = navController)
                         }
                     },

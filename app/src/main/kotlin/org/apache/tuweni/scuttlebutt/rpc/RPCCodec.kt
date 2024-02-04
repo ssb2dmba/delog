@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * This encoder is stateful as it maintains a counter to provide different request ids over time.
  */
 object RPCCodec {
-    val counter = AtomicInteger(1)
+    val counter = AtomicInteger(1000)
     private val mapper = ObjectMapper()
     private fun nextRequestNumber(): Int {
         val requestNumber = counter.getAndIncrement()

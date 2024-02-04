@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Ident
@@ -38,6 +39,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -45,45 +47,70 @@ import kotlinx.serialization.json.Json
 
 class DraftViewModel(
     var feed: Ident,
+    var type: String?,
+    val draftId: Long,
+    var linkKey: String?,
     private val messageRepository: MessageRepository,
     private val draftRepository: DraftRepository
 ) : ViewModel() {
 
-    //signal your view when the coroutine finishes insert
-    var inserted: Long? by mutableStateOf(null)
 
-    var draft: Draft? by mutableStateOf(null)
+    //var draft: Draft by mutableStateOf(Draft.empty(feed.publicKey))
 
-    var link: MessageAndAbout? by mutableStateOf(null)
+    private val _draft = MutableStateFlow(Draft.empty(feed.publicKey))
+    val draft: StateFlow<Draft> = _draft.asStateFlow()
 
-    fun getLink(key: String) {
+    private val _link = MutableStateFlow(null as MessageAndAbout?)
+    val link: StateFlow<MessageAndAbout?> = _link.asStateFlow()
+
+
+    init {
+        System.out.println("init draft: " + draftId + " " + type)
+        System.out.println("link: " + linkKey)
+        viewModelScope.launch(Dispatchers.IO) {
+            if (draftId >=0) {
+                var rval = draftRepository.getById(draftId)
+                if (rval != null) {
+                    _draft.update { rval }
+                    if (_draft.value.branch != null) {
+                        linkKey = draft.value.branch
+                    }
+                }
+            } else if (!type.isNullOrBlank()){
+                System.out.println("draft type2: " + type)
+                _draft.update { it.copy(type = type!!) }
+            }
+            if (!linkKey.isNullOrBlank()) {
+                var rval2  = messageRepository.getMessageAndAbout(linkKey!!)
+                _link.update { rval2 }
+                _draft.update { it.copy(branch = rval2!!.message.key) }
+                if (rval2!!.message.root != null) {
+                    _draft.update { it.copy(root = rval2!!.message.root) }
+                } else {
+                    _draft.update { it.copy(root = rval2!!.message.key) }
+                }
+            }
+
+        }
+    }
+    fun updateDraftContentAsText(text: String) {
+        _draft.update { it.copy(contentAsText = text) }
+    }
+
+    fun save(draft: Draft) {
+        System.out.println("save!!!!!" + draft.oid)
         GlobalScope.launch(Dispatchers.IO) {
-            link = messageRepository.getMessageAndAbout(key)
+            if (draft.oid<=0) {
+                var oid = draftRepository.insert(draft)
+                _draft.value = draftRepository.getById(oid)
+            } else {
+                draftRepository.update(draft)
+                _draft.value = draftRepository.getById(draft.oid)
+            }
         }
     }
 
-    fun insert(draft: Draft) {
-        GlobalScope.launch(Dispatchers.IO) {
-            inserted = draftRepository.insert(draft)
-            setCurrentDraft(inserted.toString())
-        }
-    }
-
-
-    fun setCurrentDraft(oid: String) {
-        GlobalScope.launch(Dispatchers.IO) {
-            draft = draftRepository.getById(oid.toInt())
-        }
-    }
-
-    fun update(draftParam: Draft) {
-        GlobalScope.launch(Dispatchers.IO) {
-            draftRepository.update(draftParam)
-            draft = draftRepository.getById(draftParam.oid)
-        }
-    }
-
-    fun deleteDraft(draft: Draft) {
+    fun delete(draft: Draft) {
         GlobalScope.launch(Dispatchers.IO) {
             draftRepository.deleteDraft(draft)
         }

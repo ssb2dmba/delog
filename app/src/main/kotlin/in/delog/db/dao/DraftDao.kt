@@ -34,7 +34,7 @@ interface DraftDao {
     fun insert(draft: Draft): Long
 
     @Query("SELECT * FROM draft WHERE oid = :oid ")
-    fun getById(oid: Int): Draft
+    fun getById(oid: Long): Draft
 
     @Update
     fun update(draft: Draft)
