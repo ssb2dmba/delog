@@ -28,10 +28,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.positionInWindow
@@ -46,6 +48,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toIntRect
 import androidx.navigation.NavHostController
 import com.google.accompanist.insets.navigationBarsWithImePadding
@@ -54,6 +57,7 @@ import `in`.delog.db.model.Draft
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.BottomBarMainButton
+import `in`.delog.ui.component.EmojiPicker
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.MessageViewData
@@ -182,7 +186,8 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
         parametersOf(
             identAndAbout.ident,
             draftMode,
-            draftId
+            draftId,
+            link
         )
     })
     val draft by draftViewModel.draft.observeAsState(null)
@@ -194,9 +199,7 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
     val itemClicked = {
         dirtyStatus = !dirtyStatus
     }
-    var link: MessageAndAbout? by remember {
-        mutableStateOf(null)
-    }
+    val link by draftViewModel.link.observeAsState(null)
 
 
     if (dirtyStatus) {
@@ -208,50 +211,94 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
             Column(
                 Modifier.verticalScroll(state)
             ) {
-                if (draftViewModel.link != null) {
+                if (link != null) {
                     MessageItem(
                         navController = navController,
-                        message = draftViewModel.link!!.message.toMessageViewData(),
+                        message = link!!.message.toMessageViewData(),
                         showToolbar = false,
                         hasDivider = true,
                         onClickCallBack = {}
                     )
                 }
                 IdentityBox(identAndAbout = identAndAbout)
-                val coroutineScope = rememberCoroutineScope()
-                val focusRequester = remember { FocusRequester() }
-                var tfv by remember {
-                    mutableStateOf(
-                        TextFieldValue(
-                            text = draft!!.contentAsText,
-                            selection = TextRange(draft!!.contentAsText.length)
-                        )
+                if (link != null) {
+                    MessageItem(
+                        navController = navController,
+                        message = link!!.message.toMessageViewData(),
+                        showToolbar = false,
+                        hasDivider = true,
+                        onClickCallBack = {}
                     )
                 }
-                OutlinedTextField(
-                    value = tfv,
-                    onValueChange = {
-                        tfv = it
-                        draftViewModel.updateDraftContentAsText(it.text)
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        autoCorrect = true,
-                    ),
-                    modifier = Modifier
-                        .focusRequester(focusRequester)
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 56.dp)
-                        .onFocusEvent { focusState ->
-                            if (focusState.isFocused) {
-                                coroutineScope.launch {
-                                    state.animateScrollTo(state.maxValue) //  - 230)
+                val showInputField: Boolean
+                ReplyHeader(link = link, draftMode = draftMode)
+                val coroutineScope = rememberCoroutineScope()
+                when (draftMode) {
+                    "repost" -> showInputField = false
+                    "vote" -> {
+                        showInputField = false
+                        Text(
+                            text = draft!!.contentAsText,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(12.dp)
+                                .border(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.tertiary,
+                                    RectangleShape
+                                ),
+                            fontSize = 48.sp
+
+                        )
+                        EmojiPicker {  draftViewModel.updateDraftContentAsText(it.emoji)  }
+//                        coroutineScope.launch {
+//                            state.animateScrollTo(state.maxValue) //  - 230)
+//                        }
+                    }
+
+                    "reply" -> {
+                        showInputField = true
+                    }
+
+                    else -> showInputField = true
+                }
+
+                if (showInputField) {
+
+                    val focusRequester = remember { FocusRequester() }
+                    var tfv by remember {
+                        mutableStateOf(
+                            TextFieldValue(
+                                text = draft!!.contentAsText,
+                                selection = TextRange(draft!!.contentAsText.length)
+                            )
+                        )
+                    }
+                    OutlinedTextField(
+                        value = tfv,
+                        onValueChange = {
+                            tfv = it
+                            draftViewModel.updateDraftContentAsText(it.text)
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            autoCorrect = true,
+                        ),
+                        modifier = Modifier
+                            .focusRequester(focusRequester)
+                            .fillMaxSize()
+                            .defaultMinSize(minHeight = 200.dp)
+                            .onFocusEvent { focusState ->
+                                if (focusState.isFocused) {
+                                    coroutineScope.launch {
+                                        state.animateScrollTo(state.maxValue)
+                                    }
                                 }
                             }
-                        }
-                        .padding(8.dp)
-                )
-                LaunchedEffect(Unit) {
-                    focusRequester.requestFocus()
+                            .padding(8.dp)
+                    )
+                    LaunchedEffect(Unit) {
+                        focusRequester.requestFocus()
+                    }
                 }
 
             }
@@ -332,4 +379,30 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
         DraftPublishDialog(navController, draftViewModel)
     }
 
+}
+
+@Composable
+fun ReplyHeader(link: MessageAndAbout?, draftMode: String?) {
+    if (link == null) return
+    var txt: String? = null
+    when (draftMode) {
+        "reply" -> txt = String.format("in reply to %s", link.about!!.name)
+        "repost" -> txt = String.format("repost %s message", link.about!!.name)
+        "vote" -> txt = String.format("vote for %s message", link.about!!.name)
+    }
+    if (txt != null) {
+        Text(
+            text = txt,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.tertiary,
+        )
+    }
+}
+
+@Composable
+fun SaveDraftFab(onClick: () -> Unit) {
+    BottomBarMainButton(
+        onClick = onClick,
+        text = stringResource(id = R.string.save)
+    )
 }

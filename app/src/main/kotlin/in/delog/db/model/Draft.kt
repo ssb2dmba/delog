@@ -50,7 +50,7 @@ data class Draft(
             oid = 0,
             author = author,
             timestamp = 0L,
-            type = "",
+            type = "post",
             contentAsText = "",
             root = null,
             branch = null

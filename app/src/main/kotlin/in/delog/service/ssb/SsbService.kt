@@ -96,6 +96,7 @@ class SsbService(
             try {
                 // let's check our backup, moved device
                 var ourSequence = messageRepository.getLastSequence(myFeed)
+                System.out.println("our sequence: " + ourSequence)
                 createHistoryStream(myFeed, ourSequence)
                 // let's call all of our friends
                 contactRepository.geContacts(myFeed).forEach {
@@ -149,20 +150,20 @@ class SsbService(
                 Log.w(TAG, "db return empty: " + ct)
                 hasMoreResults = false
             }
-            messages.forEach {
-                Log.d(TAG, "> [${rpcMessage.requestNumber()}] :" + it.key)
+            for (m: Message in messages) {
+                Log.d(TAG, "> [${rpcMessage.requestNumber()}] :" + m)
                 val response = RPCCodec.encodeResponse(
-                    Bytes.wrap(it.toJsonResponse(format)),
+                    Bytes.wrap(m.toJsonResponse(format)),
                     rpcMessage.requestNumber(),
                     RPCFlag.Stream.STREAM,
                     RPCFlag.BodyType.JSON
                 )
                 rpcHandler?.sendBytes(response)
                 // increment for next query
-                remoteSequence = it.sequence
+                remoteSequence = m.sequence
                 // increment for remote limit & protection
                 ct++
-                updateLastPush(it)
+                updateLastPush(m)
             }
 
         }
@@ -174,7 +175,7 @@ class SsbService(
             Log.i(TAG, "closing connection")
             secureScuttlebuttVertxClient!!.stop()
         }
-        torService.stop();
+        //torService.stop();
 
     }
 

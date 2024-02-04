@@ -60,9 +60,13 @@ class DraftViewModel(
     private val _draft = MutableStateFlow(Draft.empty(feed.publicKey))
     val draft: StateFlow<Draft> = _draft.asStateFlow()
 
+    private val _link = MutableStateFlow(null as MessageAndAbout?)
+    val link: StateFlow<MessageAndAbout?> = _link.asStateFlow()
 
-    var link: MessageAndAbout? by mutableStateOf(null)
+
     init {
+        System.out.println("init draft: " + draftId + " " + type)
+        System.out.println("link: " + linkKey)
         viewModelScope.launch(Dispatchers.IO) {
             if (draftId >=0) {
                 var rval = draftRepository.getById(draftId)
@@ -73,32 +77,25 @@ class DraftViewModel(
                     }
                 }
             } else if (!type.isNullOrBlank()){
+                System.out.println("draft type2: " + type)
                 _draft.update { it.copy(type = type!!) }
             }
-//            if (!linkKey.isNullOrBlank()) {
-//                getLink(linkKey!!)
-//            }
+            if (!linkKey.isNullOrBlank()) {
+                var rval2  = messageRepository.getMessageAndAbout(linkKey!!)
+                _link.update { rval2 }
+                _draft.update { it.copy(branch = rval2!!.message.key) }
+                if (rval2!!.message.root != null) {
+                    _draft.update { it.copy(root = rval2!!.message.root) }
+                } else {
+                    _draft.update { it.copy(root = rval2!!.message.key) }
+                }
+            }
 
         }
     }
     fun updateDraftContentAsText(text: String) {
         _draft.update { it.copy(contentAsText = text) }
     }
-
-    fun getLink(key: String) {
-        GlobalScope.launch(Dispatchers.IO) {
-            link = messageRepository.getMessageAndAbout(key)
-            if (link != null) {
-                _draft.update { it.copy(branch = link!!.message.key) }
-                if (link!!.message.root != null) {
-                    _draft.update { it.copy(root = link!!.message.root) }
-                } else {
-                    _draft.update { it.copy(root = link!!.message.key) }
-                }
-            }
-        }
-    }
-
 
     fun save(draft: Draft) {
         System.out.println("save!!!!!" + draft.oid)
