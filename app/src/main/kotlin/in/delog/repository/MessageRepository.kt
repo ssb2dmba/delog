@@ -40,12 +40,17 @@ interface MessageRepository {
     fun getMessageAndAbout(key: String): MessageAndAbout?
 
     fun getMessage(key: String): Message?
+    fun blobIsUsefull(key: String):Boolean
 }
 
 class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageRepository {
 
     override fun getMessage(key: String): Message? {
         return messageDao.getMessage(key)
+    }
+
+    override fun blobIsUsefull(key: String): Boolean {
+       return messageDao.countMessagesWithBlob(key)>0
     }
 
     override fun getMessageAndAbout(key: String): MessageAndAbout? {

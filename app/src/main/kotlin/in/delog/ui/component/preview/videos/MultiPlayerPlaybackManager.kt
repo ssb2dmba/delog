@@ -58,7 +58,6 @@ class MultiPlayerPlaybackManager(
                 newValue: MediaSession?
             ) {
                 super.entryRemoved(evicted, key, oldValue, newValue)
-                Log.i(TAG,"entry removed!!!!!!!!!!!!!!!!!!!")
                 if (!playingMap.contains(key)) {
                     oldValue?.let {
                         it.player.release()

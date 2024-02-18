@@ -38,9 +38,6 @@ import java.util.concurrent.Executor
 
 @Composable
 fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
-
-
-    Log.i(TAG, "getting invite from ${startUrl}")
     val webViewState = rememberWebViewState(startUrl)
     LaunchedEffect(webViewState.lastLoadedUrl) {
         if (webViewState.lastLoadedUrl != null) {

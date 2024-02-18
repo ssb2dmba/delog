@@ -78,7 +78,7 @@ class SsbService(
     }
 
     suspend fun reconnect(pFeed: Ident) {
-        Log.i(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
+        Log.d(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
         if (pFeed.isOnion()) {
             torService.start();
         }
@@ -96,7 +96,6 @@ class SsbService(
             try {
                 // let's check our backup, moved device
                 var ourSequence = messageRepository.getLastSequence(myFeed)
-                System.out.println("our sequence: " + ourSequence)
                 createHistoryStream(myFeed, ourSequence)
                 // let's call all of our friends
                 contactRepository.geContacts(myFeed).forEach {
@@ -172,7 +171,7 @@ class SsbService(
 
         if (secureScuttlebuttVertxClient != null) {
             Thread.sleep(3000)
-            Log.i(TAG, "closing connection")
+            Log.d(TAG, "closing connection")
             secureScuttlebuttVertxClient!!.stop()
         }
         //torService.stop();
@@ -190,7 +189,7 @@ class SsbService(
         params["seq"] = sequence
         params["limit"] = 100
         params["keys"] = true
-        Log.i("createHistoryStream", "$pk $sequence")
+        Log.d("createHistoryStream", "$pk $sequence")
         createStream("createHistoryStream", params)
     }
 
@@ -225,7 +224,7 @@ class SsbService(
     }
 
     fun routeMessage(message: RPCResponse) {
-        Log.i("routeMessage", message.asString())
+        Log.d("routeMessage", message.asString())
         var m = message.asJSON(objectMapper, FeedMessage::class.java)
         if (m.type.isPresent) {
             when (m.type.get()) {

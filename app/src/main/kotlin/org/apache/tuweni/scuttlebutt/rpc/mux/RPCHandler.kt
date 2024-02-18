@@ -164,7 +164,7 @@ open class RPCHandler(
         } else {
             val isEnd = RPCFlag.EndOrError.END.isApplied(rpcFlags)
             if (isEnd) {
-                Log.i(TAG, rpcMessage.requestNumber().toString() + " ends ack OK")
+                Log.d(TAG, rpcMessage.requestNumber().toString() + " ends ack OK")
             } else {
                 onRPCRequest(rpcMessage)
             }

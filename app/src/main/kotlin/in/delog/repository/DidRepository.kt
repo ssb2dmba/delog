@@ -32,7 +32,6 @@ class DidRepositoryImpl : DidRepository {
                 JSONObject().put("error", e.message).toString()
             }
         }
-        Log.i(TAG, textResponse)
         val jsonObject = JSONObject(textResponse)
         if (jsonObject.has("error")) {
             return DidValid(false, jsonObject.getString("error"))

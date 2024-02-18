@@ -28,6 +28,7 @@ import `in`.delog.db.dao.DraftDao
 import `in`.delog.db.dao.IdentDao
 import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.dao.MessageTreeDao
+import `in`.delog.db.dao.BlobDao
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 
@@ -72,6 +73,10 @@ val dataBaseModule = module(createdAtStart = true) {
         return dataBase.authorInfoDao()
     }
 
+    fun provideWantDao(dataBase: AppDatabase): BlobDao {
+        return dataBase.wantDao()
+    }
+
     single { provideDataBase(androidApplication()) }
     single { provideFeedDao(get()) }
     single { provideMessageDao(get()) }
@@ -79,4 +84,5 @@ val dataBaseModule = module(createdAtStart = true) {
     single { provideDraftDao(get()) }
     single { provideContactDao(get()) }
     single { provideAuthorInfoDao(get()) }
+    single { provideWantDao(get()) }
 }

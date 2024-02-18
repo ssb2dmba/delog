@@ -17,6 +17,8 @@
  */
 package `in`.delog.viewmodel
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -27,15 +29,24 @@ import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
+import `in`.delog.repository.BlobRepository
 import `in`.delog.repository.DraftRepository
 import `in`.delog.repository.MessageRepository
+import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.Mention
 import `in`.delog.service.ssb.SsbMessageContent
 import `in`.delog.service.ssb.SsbSignableMessage
 import `in`.delog.service.ssb.SsbSignedMessage
+import `in`.delog.service.ssb.getMessageContent
+import `in`.delog.service.ssb.getMessageContentString
 import `in`.delog.service.ssb.makeHash
 import `in`.delog.service.ssb.signMessage
+import `in`.delog.ui.component.MessageViewData
+import `in`.delog.ui.component.empty
+import `in`.delog.ui.component.toDraft
+import `in`.delog.ui.component.toMessageViewData
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,75 +55,89 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+data class BlobItem(
+    val key: String,
+    val type: String,
+    val size: Long,
+    val uri: Uri
+)
 
 class DraftViewModel(
     var feed: Ident,
     var type: String?,
-    val draftId: Long,
-    var linkKey: String?,
+    private val draftId: Long,
+    private var linkKey: String?,
     private val messageRepository: MessageRepository,
-    private val draftRepository: DraftRepository
+    private val draftRepository: DraftRepository,
+    private val  blobRepository: BlobRepository
 ) : ViewModel() {
 
-
-    //var draft: Draft by mutableStateOf(Draft.empty(feed.publicKey))
-
-    private val _draft = MutableStateFlow(Draft.empty(feed.publicKey))
-    val draft: StateFlow<Draft> = _draft.asStateFlow()
+    private val _messageViewData = MutableStateFlow(MessageViewData.empty(feed.publicKey))
+    val messageViewData: StateFlow<MessageViewData> = _messageViewData.asStateFlow()
 
     private val _link = MutableStateFlow(null as MessageAndAbout?)
     val link: StateFlow<MessageAndAbout?> = _link.asStateFlow()
 
+    var isLoadingImage by mutableStateOf(false)
 
     init {
-        System.out.println("init draft: " + draftId + " " + type)
-        System.out.println("link: " + linkKey)
         viewModelScope.launch(Dispatchers.IO) {
             if (draftId >=0) {
-                var rval = draftRepository.getById(draftId)
-                if (rval != null) {
-                    _draft.update { rval }
-                    if (_draft.value.branch != null) {
-                        linkKey = draft.value.branch
+                val draft = draftRepository.getById(draftId)
+                if (draft != null) {
+                    _messageViewData.update { draft.toMessageViewData(format, blobRepository) }
+                    if (!draft.branch.isNullOrEmpty()) {
+                        // at first link key comes from navigation router
+                        // in case we reopen a saved message link key comes from draft
+                        linkKey = draft.branch
                     }
                 }
-            } else if (!type.isNullOrBlank()){
-                System.out.println("draft type2: " + type)
-                _draft.update { it.copy(type = type!!) }
-            }
-            if (!linkKey.isNullOrBlank()) {
-                var rval2  = messageRepository.getMessageAndAbout(linkKey!!)
-                _link.update { rval2 }
-                _draft.update { it.copy(branch = rval2!!.message.key) }
-                if (rval2!!.message.root != null) {
-                    _draft.update { it.copy(root = rval2!!.message.root) }
-                } else {
-                    _draft.update { it.copy(root = rval2!!.message.key) }
-                }
             }
 
+            if (!linkKey.isNullOrBlank()) {
+                val parentMsg  = messageRepository.getMessageAndAbout(linkKey!!)
+                _link.update { parentMsg }
+                _messageViewData.update { it.copy(branch = parentMsg?.message?.key) }
+                if (!parentMsg!!.message.root.isNullOrBlank()) {
+                    _messageViewData.update { it.copy(root = parentMsg.message.root) }
+                } else {
+                    _messageViewData.update { it.copy(root = parentMsg.message.key) }
+                }
+                putParentInContentAsText()
+            }
         }
     }
-    fun updateDraftContentAsText(text: String) {
-        _draft.update { it.copy(contentAsText = text) }
+
+
+    private fun putParentInContentAsText() {
+        val ssbMessageContent = getMessageContent(_messageViewData.value.contentAsText)
+        ssbMessageContent.root = _messageViewData.value.root
+        ssbMessageContent.branch = _messageViewData.value.branch
+        _messageViewData.update { it.copy(contentAsText =  getMessageContentString(ssbMessageContent)) }
     }
 
-    fun save(draft: Draft) {
-        System.out.println("save!!!!!" + draft.oid)
-        GlobalScope.launch(Dispatchers.IO) {
+    fun updateDraftContentAsText(text: String) {
+        val ssbMessageContent = getMessageContent(_messageViewData.value.contentAsText)
+        ssbMessageContent.text = text
+        _messageViewData.update { it.copy(contentAsText =  getMessageContentString(ssbMessageContent)) }
+    }
+
+
+
+    fun save(messageViewData: MessageViewData) {
+        val draft = messageViewData.toDraft()
+        viewModelScope.launch(Dispatchers.IO) {
             if (draft.oid<=0) {
-                var oid = draftRepository.insert(draft)
-                _draft.value = draftRepository.getById(oid)
+                messageViewData.oid = draftRepository.insert(draft)
             } else {
                 draftRepository.update(draft)
-                _draft.value = draftRepository.getById(draft.oid)
             }
         }
     }
 
-    fun delete(draft: Draft) {
-        GlobalScope.launch(Dispatchers.IO) {
-            draftRepository.deleteDraft(draft)
+    fun delete(messageViewData: MessageViewData) {
+        viewModelScope.launch(Dispatchers.IO) {
+            draftRepository.deleteDraft(messageViewData.toDraft())
         }
     }
 
@@ -138,11 +163,12 @@ class DraftViewModel(
         _showPublishDialog.value = false
     }
 
-    fun publishDraft(draft: Draft, feed: Ident) {
-        GlobalScope.launch(Dispatchers.IO) {
+    fun publishDraft(messageViewData: MessageViewData, feed: Ident) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val draft = messageViewData.toDraft()
             val ssbSignableMessage = SsbSignableMessage.fromDraft(draft)
             // precise some blockchain info
-            val last: Message? = messageRepository.getLastMessage(draft.author)
+            val last: Message? = messageRepository.getLastMessage(messageViewData.author)
             if (last != null) {
                 ssbSignableMessage.sequence = last.sequence + 1
             } else {
@@ -161,7 +187,40 @@ class DraftViewModel(
             val message = fromSsbSignedMessage(ssbSignedMessage)
             // save message & delete draft
             messageRepository.addMessage(message)
-            draftRepository.deleteDraft(draft) // not in transaction but that's ok
+            draftRepository.deleteDraft(draft)
+        }
+    }
+
+
+    fun selectImage(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val author = _messageViewData.value.author
+            val blob: BlobItem = blobRepository.insert(author,uri)
+                ?: // Todo toast error
+                return@launch
+            _messageViewData.update { it.copy(blobs = it.blobs.plus(blob)) }
+            blobsInContentAsText()
+            isLoadingImage = false
+        }
+    }
+
+    private fun blobsInContentAsText() {
+        val ssbMessageContent = getMessageContent(_messageViewData.value.contentAsText)
+        var mentions =  arrayOf<Mention>()
+        for (blob in messageViewData.value.blobs) {
+            mentions = mentions.plus(Mention(blob.key, "", type=blob.type,size=blob.size))
+        }
+        ssbMessageContent.mentions = mentions
+        _messageViewData.update { it.copy(contentAsText =  getMessageContentString(ssbMessageContent)) }
+    }
+
+    fun unSelect(key: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val blobs =  messageViewData.value.blobs.filter { it.key != key }.toTypedArray()
+            _messageViewData.update { it.copy(blobs = blobs) }
+            blobRepository.deleteIfKeyUnused(key)
+            blobsInContentAsText()
+            isLoadingImage = false
         }
     }
 }
@@ -183,15 +242,21 @@ fun fromSsbSignedMessage(ssbSignedMessage: SsbSignedMessage): Message {
 }
 
 private fun SsbSignableMessage.Companion.fromDraft(draft: Draft): SsbSignableMessage {
+    val ssbMessageContent: SsbMessageContent = Json.decodeFromString<SsbMessageContent>(
+        SsbMessageContent.serializer(),
+        draft.contentAsText
+    )
+
     return SsbSignableMessage(
         previous = null,
         sequence = 1,
         author = draft.author,
         content = SsbMessageContent(
-            draft.contentAsText,
-            type = draft.type,
-            root = draft.root,
-            branch = draft.branch,
+            text = ssbMessageContent.text,
+            type = ssbMessageContent.type,
+            root = ssbMessageContent.root,
+            mentions = ssbMessageContent.mentions,
+            branch = ssbMessageContent.branch
         ),
         timestamp = System.currentTimeMillis(),
         hash = ""

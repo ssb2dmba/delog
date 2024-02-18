@@ -30,6 +30,8 @@ import java.util.*
 @Dao
 interface MessageDao {
 
+    @Query("select count(*) from message where contentAsText like :key")
+    fun countMessagesWithBlob(key: String): Int
 
     @Query("SELECT * FROM message WHERE type='post' and author = :author or author IN (select follow from contact where author = :author and value = 1) order by oid desc")
     fun getPagedPosts(author: String): PagingSource<Int, MessageAndAbout>

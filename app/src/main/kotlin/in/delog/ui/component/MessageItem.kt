@@ -17,8 +17,12 @@
  */
 package `in`.delog.ui.component
 
+import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.text.format.DateUtils
-import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +32,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -44,7 +49,6 @@ import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,19 +62,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import `in`.delog.MainApplication
 import `in`.delog.service.ssb.BaseSsbService.Companion.format
 import `in`.delog.ui.component.richtext.RichTextViewer
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
+import `in`.delog.viewmodel.BlobItem
+import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.sql.Timestamp
@@ -79,7 +93,7 @@ import java.util.Date
 
 
 @Composable
-fun msgToolbar(
+fun MsgToolbar(
     navController: NavController,
     message: MessageViewData,
     onClickCallBack: () -> Unit,
@@ -87,8 +101,7 @@ fun msgToolbar(
 ) {
     Row(
         horizontalArrangement = Arrangement.Start,
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             horizontalAlignment = Alignment.End,
@@ -109,42 +122,42 @@ fun msgToolbar(
                 }
             }
         }
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier.weight(0.25F)
-        ) {
-            // Repost
-            IconButton(
-                onClick = {
-                    repost(message.key, navController)
-                }
-            )
-            {
-                Icon(
-                    Icons.Filled.Autorenew,
-                    contentDescription = "",
-                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                )// reply
-            }
-        }
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier.weight(0.25F)
-        ) {
-            // Like
-            IconButton(
-                onClick = {
-                    vote(message.key, navController)
-                }
-            )
-            {
-                Icon(
-                    Icons.Filled.Favorite,
-                    contentDescription = "",
-                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                )// reply
-            }
-        }
+//        Column(
+//            horizontalAlignment = Alignment.End,
+//            modifier = Modifier.weight(0.25F)
+//        ) {
+//            // Repost
+//            IconButton(
+//                onClick = {
+//                    repost(message.key, navController)
+//                }
+//            )
+//            {
+//                Icon(
+//                    Icons.Filled.Autorenew,
+//                    contentDescription = "",
+//                    modifier = Modifier.size(ButtonDefaults.IconSize)
+//                )// reply
+//            }
+//        }
+//        Column(
+//            horizontalAlignment = Alignment.End,
+//            modifier = Modifier.weight(0.25F)
+//        ) {
+//            // Like
+//            IconButton(
+//                onClick = {
+//                    vote(message.key, navController)
+//                }
+//            )
+//            {
+//                Icon(
+//                    Icons.Filled.Favorite,
+//                    contentDescription = "",
+//                    modifier = Modifier.size(ButtonDefaults.IconSize)
+//                )// reply
+//            }
+//        }
         Column(
             horizontalAlignment = Alignment.End,
             modifier = Modifier.weight(0.25F)
@@ -169,71 +182,56 @@ fun msgToolbar(
 @Composable
 fun MessageItem(
     navController: NavController,
-    message: MessageViewData,
+    messageViewData: MessageViewData,
     showToolbar: Boolean = false,
     hasDivider: Boolean = false,
     onClickCallBack: () -> Unit,
     truncate: Boolean = false
 ) {
 
-    fun firstUrl(search: String): String? {
-        val matcher = Patterns.WEB_URL.matcher(search)
-        if (matcher.find()) {
-            return matcher.group()
-        }
-        return null
-    }
-
-    val content: String = message.content(format).text.toString()
+    val messageText: String = messageViewData.deserializeMessageContent(format).text ?: ""
 
     val SHORT_TEXT_LENGTH = 240
     val SHORTEN_AFTER_LINES = 6
 
-    val whereToCut = remember(content) {
+    val whereToCut = remember(messageText) {
         // Cuts the text in the first space or new line after SHORT_TEXT_LENGTH characters
         val firstSpaceAfterCut =
-            content.indexOf(' ', SHORT_TEXT_LENGTH).let { if (it < 0) content.length else it }
+            messageText.indexOf(' ', SHORT_TEXT_LENGTH).let { if (it < 0) messageText.length else it }
         val firstNewLineAfterCut =
-            content.indexOf('\n', SHORT_TEXT_LENGTH).let { if (it < 0) content.length else it }
+            messageText.indexOf('\n', SHORT_TEXT_LENGTH).let { if (it < 0) messageText.length else it }
 
         // or after SHORTEN_AFTER_LINES lines
-        val numberOfLines = content.count { it == '\n' }
+        val numberOfLines = messageText.count { it == '\n' }
 
         var charactersInLines = minOf(firstSpaceAfterCut, firstNewLineAfterCut)
 
         if (numberOfLines > SHORTEN_AFTER_LINES) {
-            val shortContent = content.lines().take(SHORTEN_AFTER_LINES)
+            val shortContent = messageText.lines().take(SHORTEN_AFTER_LINES)
             charactersInLines = 0
             for (line in shortContent) {
                 // +1 because new line character is omitted from .lines
                 charactersInLines += (line.length + 1)
             }
         }
-
         minOf(firstSpaceAfterCut, firstNewLineAfterCut, charactersInLines)
     }
-
 
     var truncated by remember {
         mutableStateOf(false)
     }
 
-
-    val text: String by remember(content) {
+    val text: String by remember(messageText) {
         derivedStateOf {
             if (!truncate) {
-                content
+                messageText
             } else {
-                truncated = whereToCut < content.length
-                content.take(whereToCut)
+                truncated = whereToCut < messageText.length
+                messageText.take(whereToCut)
             }
         }
     }
-
-
-
-
-
+    /**************/
     Card(
         colors = CardDefaults.cardColors(),
         shape = RoundedCornerShape(0.dp),
@@ -244,28 +242,21 @@ fun MessageItem(
             }
     ) {
         Row(
-            modifier = Modifier
-                //.height(IntrinsicSize.Max)
-                .padding(8.dp)
+            modifier = Modifier.threadIndicator(
+                    strokeWidth = 1.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    dry= (messageViewData.level == 0L) and (messageViewData.replies == 0L)
+                )
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(44.dp)
             ) {
-                if (hasDivider) {
-                    Divider(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxHeight()
-                            .padding(top = 48.dp)
-                            .width(width = 1.dp),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
+
                 AsyncImage(
-                    model = "https://robohash.org/${message.author}.png",
-                    placeholder = rememberAsyncImagePainter("https://robohash.org/${message.author}.png"),
+                    model = "https://robohash.org/${messageViewData.author}.png",
+                    placeholder = rememberAsyncImagePainter("https://robohash.org/${messageViewData.author}.png"),
                     contentDescription = "Profile Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -292,14 +283,14 @@ fun MessageItem(
                             modifier = Modifier
                                 .weight(0.9f),
                             //.padding(2.dp),
-                            text = message.authorName ?: message.author,
+                            text = messageViewData.authorName ?: messageViewData.author,
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.titleSmall,
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1
                         )
                         val strTimeAgo: String = DateUtils.getRelativeTimeSpanString(
-                            Date(Timestamp(message.timestamp).time).time,
+                            Date(Timestamp(messageViewData.timestamp).time).time,
                             Calendar.getInstance().timeInMillis,
                             DateUtils.MINUTE_IN_MILLIS
                         ).toString()
@@ -320,23 +311,21 @@ fun MessageItem(
                     val maxLines = if (truncate) 6 else Int.MAX_VALUE
                     RichTextViewer(text, { onClickCallBack.invoke() }, maxLines)
                 }
-//                // row preview
-//                if (truncated || text.length <= shortLength) {
-//                    if (url != null) {
-//                        Row(modifier = Modifier
-//                            .padding(16.dp)
-//                            .padding(bottom = 0.dp)
-//                            .height(200.dp)) {
-//                            UrlPreview(url = url, urlText = url)
-//                        }
-//                    }
-//                }
-                //Spacer(modifier = Modifier.height(8.dp))
-                // row toolbar
+                if (messageViewData.blobs.size>0) {
+                    Row(
+                        modifier = Modifier
+                            .height(200.dp)
+                            .padding(top = 8.dp)
+                    ) {
+                        BlobsEdit(
+                            blobs = messageViewData.blobs,
+                            action = { openView(it) }, actionIcon = { PageViewIcon() })
+                    }
+                }
                 if (showToolbar) {
-                    msgToolbar(
+                    MsgToolbar(
                         navController = navController,
-                        message = message,
+                        message = messageViewData,
                         truncated = truncated,
                         onClickCallBack = onClickCallBack
                     )
@@ -346,6 +335,29 @@ fun MessageItem(
     }
 }
 
+
+
+fun openView( it: BlobItem) {
+    val context = MainApplication.applicationContext()
+    val type = it.type
+    try {
+        val intent = Intent()
+        intent.setAction(Intent.ACTION_VIEW)
+
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            val contentUri =
+                FileProvider.getUriForFile(context, "in.delog.provider", File(it.uri.path!!))
+            intent.setDataAndType(contentUri, type)
+
+        context.startActivity(intent)
+    } catch (anfe: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            "No activity found to open this attachment.",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+}
 fun makeArgUri(key: String): Any {
     return URLEncoder.encode(key, Charset.defaultCharset().toString())
 }
@@ -369,31 +381,89 @@ fun repost(key: String, navController: NavController) {
 @Composable
 fun MessageItemPreview() {
     val navController = rememberNavController()
+    var blobs = arrayOf<BlobItem>()
+    val b1 = BlobItem(
+        key = "&YsGsrC3iYbfU9ZS1qw0XTPGGLxxpapUreC/fo0xICNA=.sha256",
+        size = 100,
+        type = "application/pdf",
+        uri = Uri.EMPTY
+    )
+    val b2 = BlobItem(
+        key = "key2",
+        size = 100,
+        type = "image/png",
+        uri = Uri.fromFile(File("https://picsum.photos/300/300"))
+    )
+    blobs = blobs.plus(b1)
+    blobs = blobs.plus(b2)
+    val txt =  "#title \n we made healthy  \uD83D\uDD25  Wikipedia[note 3] is a #multilingual free online encyclopedia written and maintained by a community of volunteers, known as @Wikipedians, through open collaboration and using a wiki-based editing system called MediaWiki. Wikipedia is the largest and most-read reference work in history.[3] It is consistently one of the 10 most popular websites ranked by Similarweb and formerly Alexa; as of 2022, Wikipedia was ranked the 5th most popular site in the world.[4] It is hosted by the Wikimedia Foundation, an American non-profit organization funded mainly through donations.[5]"
+
     val messageViewData = MessageViewData(
         key = "@1234",
         timestamp = 1234, author = "",
-        contentAsText = "#title \n we made healthy  \uD83D\uDD25  Wikipedia[note 3] is a #multilingual free online encyclopedia written and maintained by a community of volunteers, known as @Wikipedians, through open collaboration and using a wiki-based editing system called MediaWiki. Wikipedia is the largest and most-read reference work in history.[3] It is consistently one of the 10 most popular websites ranked by Similarweb and formerly Alexa; as of 2022, Wikipedia was ranked the 5th most popular site in the world.[4] It is hosted by the Wikimedia Foundation, an American non-profit organization funded mainly through donations.[5]",
+        contentAsText = "{ \"type\": \"post\", \"text\": \"${txt}\", \"mentions\": [ { \"name\": \"Wikipedians\", \"link\": \"@Wikipedians\" } ] }",
         authorImage = "",
-        authorName = "Cookie Jar"
+        authorName = "Cookie Jar",
+        blobs = blobs
     )
+
+    val messageViewData2 = messageViewData.copy(
+        key="@1235",
+        contentAsText = "{ \"type\": \"post\", \"text\":  \"plop\" }",
+        level = 1
+    )
+
     MyTheme(
         darkTheme = false,
         dynamicColor = false
     ) {
         Surface(modifier = Modifier.fillMaxSize()) {
             Column {
-                LazyVerticalGrid(columns = GridCells.Fixed(1)) {
-                    item {
-                        MessageItem(
-                            navController = navController,
-                            message = messageViewData,
-                            showToolbar = true,
-                            onClickCallBack = { },
-                            truncate = true
-                        )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(1),
+                    modifier=Modifier.padding(8.dp),
+                    content = {
+                        item {
+                            MessageItem(
+                                navController = navController,
+                                messageViewData = messageViewData,
+                                showToolbar = true,
+                                onClickCallBack = { },
+                                truncate = true
+                            )
+                        }
+                        item {
+                            MessageItem(
+                                navController = navController,
+                                messageViewData = messageViewData2,
+                                showToolbar = true,
+                                onClickCallBack = { },
+                                truncate = true
+                            )
+                        }
                     }
-                }
+                )
+
             }
         }
     }
 }
+
+fun Modifier.threadIndicator(strokeWidth: Dp, color: Color, dry: Boolean) = composed(
+    factory = {
+        if (dry) return@composed this
+        val density = LocalDensity.current
+        val strokeWidthPx = density.run { strokeWidth.toPx() }
+
+        Modifier.drawBehind {
+            val height = size.height - strokeWidthPx/2
+
+            drawLine(
+                color = color,
+                start = Offset(x = 44f, y = 0f),
+                end = Offset(x = 44f , y = height),
+                strokeWidth = strokeWidthPx
+            )
+        }
+    }
+)

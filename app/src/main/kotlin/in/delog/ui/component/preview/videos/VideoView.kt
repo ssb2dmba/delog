@@ -722,10 +722,8 @@ fun Waveform(
 
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 super.onPlayWhenReadyChanged(playWhenReady, reason)
-                Log.i(TAG, "got itttttttttttt2!" + playWhenReady + reason)
             }
             override fun onPlayerError(error: PlaybackException) {
-                Log.i(TAG, "got itttttttttttt!")
                 super.onPlayerError(error)
             }
         }

@@ -20,50 +20,31 @@ package `in`.delog.db.model
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import `in`.delog.service.ssb.Mention
 
 @Entity
-data class Draft(
+data class Blob(
 
     @PrimaryKey(autoGenerate = true)
-    var oid: Long,
+    val oid: Int,
 
     @ColumnInfo(name = "author")
     val author: String,
 
-    @ColumnInfo(name = "timestamp")
-    val timestamp: Long,
+    @ColumnInfo(name = "key")
+    val key: String,
 
     @ColumnInfo(name = "type")
-    var type: String,
+    val type: String,
 
-    @ColumnInfo(name = "contentAsText")
-    var contentAsText: String,
+    @ColumnInfo(name = "size")
+    val size: Long,
 
-    @ColumnInfo(name = "root")
-    var root: String?,
+    @ColumnInfo(name = "own")
+    var own: Boolean,
 
-    @ColumnInfo(name = "branch")
-    var branch: String?
+    @ColumnInfo(name = "want")
+    var want: Boolean,
 
-) {
-
-
-    //val mentions: Array<Mention>?
-
-    companion object {
-        fun empty(author: String): Draft =  Draft(
-            oid = 0,
-            author = author,
-            timestamp = 0L,
-            type = "post",
-            contentAsText = "{\"type\": \"post\", \"text\": \"\", \"mentions\": [] }",
-            root = null,
-            branch = null
-        )
-    }
-}
-
-
-
-
+    @ColumnInfo(name = "contentWarning")
+    val contentWarning: String?,
+)

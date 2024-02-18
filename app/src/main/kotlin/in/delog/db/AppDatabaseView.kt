@@ -69,27 +69,6 @@ class AppDatabaseView {
     )
 }
 
-fun AppDatabaseView.MessageInTree.content(format: Json): MessageContent {
-    return try {
-        format.decodeFromString(
-            MessageContent.serializer(),
-            this.contentAsText
-        )
-    } catch (e: SerializationException) {
-        // TODO incomming .box message here
-        // at insert in db with type text that should not happen
-        MessageContent(this.contentAsText, "error")
-    }
-}
 
-fun AppDatabaseView.MessageInTree.toMessageViewData() = MessageViewData(
-    key = key,
-    timestamp = timestamp,
-    author = author,
-    contentAsText = contentAsText,
-    root = root,
-    branch = branch,
-    authorName = name,
-    authorImage = image,
-    pName = pName
-)
+
+

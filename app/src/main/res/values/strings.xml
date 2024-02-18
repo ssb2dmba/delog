@@ -65,4 +65,7 @@
     <string name="always_use_tor_proxy">0</string>
     <string name="proxy_tor">proxy Tor</string>
     <string name="always_uses_tor_proxy">Always uses Tor proxy</string>
+    <string name="upload_image">upload image</string>
+    <string name="forward">forward</string>
+    <string name="back">back</string>
 </resources>

@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 10,
-    "identityHash": "647271a2361238d5ab24673fa48e9cb3",
+    "version": 11,
+    "identityHash": "570c85b0d7de7898c42481a27ea0ebd4",
     "entities": [
       {
         "tableName": "Ident",
@@ -323,8 +323,8 @@
         "foreignKeys": []
       },
       {
-        "tableName": "Want",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`oid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `author` TEXT NOT NULL, `want` TEXT NOT NULL)",
+        "tableName": "Blob",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`oid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `author` TEXT NOT NULL, `key` TEXT NOT NULL, `type` TEXT NOT NULL, `size` INTEGER NOT NULL, `own` INTEGER NOT NULL, `want` INTEGER NOT NULL, `contentWarning` TEXT)",
         "fields": [
           {
             "fieldPath": "oid",
@@ -339,10 +339,40 @@
             "notNull": true
           },
           {
-            "fieldPath": "want",
-            "columnName": "want",
+            "fieldPath": "key",
+            "columnName": "key",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "size",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "own",
+            "columnName": "own",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "want",
+            "columnName": "want",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentWarning",
+            "columnName": "contentWarning",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -363,7 +393,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '647271a2361238d5ab24673fa48e9cb3')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '570c85b0d7de7898c42481a27ea0ebd4')"
     ]
   }
 }

@@ -19,14 +19,25 @@ package `in`.delog.service.ssb
 
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.asKeyPair
+import `in`.delog.repository.BlobRepository
 import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import `in`.delog.viewmodel.BlobItem
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.sodium.SHA256Hash
 import org.apache.tuweni.crypto.sodium.Signature
 
+@Serializable
+data class Mention(
+    val link: String,
+    val name: String,
+    val type: String?=null,
+    val size: Long?=null
+)
 
-@Serializable()
+
+@Serializable
 data class SsbMessageContent(
     var text: String? = null,
     var type: String,
@@ -34,11 +45,11 @@ data class SsbMessageContent(
     val about: String? = null,
     val image: String? = null,
     val name: String? = null,
-    val root: String? = null,
-    val branch: String? = null,
-    val description: String? = null
+    var root: String? = null,
+    var branch: String? = null,
+    val description: String? = null,
+    var mentions: Array<Mention>? = null
 )
-
 @Serializable
 data class SsbSignableMessage(
     var previous: String?,
@@ -77,6 +88,23 @@ fun SsbSignableMessage.signMessage(feed: Ident): Bytes {
         Bytes.wrap(getMessageString(this).encodeToByteArray()),
         kp!!.secretKey()
     );
+}
+
+fun getMessageContentString(ssbMessageContent: SsbMessageContent): String {
+    return format.encodeToString(
+        SsbMessageContent.serializer(),
+        ssbMessageContent
+    )
+}
+
+fun getMessageContent(str: String): SsbMessageContent {
+    if (str.isNullOrBlank()) {
+        return SsbMessageContent(type = "post")
+    }
+    return Json.decodeFromString<SsbMessageContent>(
+        SsbMessageContent.serializer(),
+        str
+    )
 }
 
 fun getMessageString(message: SsbSignableMessage): String {

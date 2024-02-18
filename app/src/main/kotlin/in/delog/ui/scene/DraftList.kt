@@ -35,12 +35,12 @@ import androidx.navigation.NavHostController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import `in`.delog.db.model.Draft
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.ListSpacer
 import `in`.delog.ui.component.MessageItem
-import `in`.delog.ui.component.toMessageViewData
+import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.DraftListViewModel
@@ -62,9 +62,9 @@ fun DraftList(navController: NavHostController) {
 
     val draftListViewModel =
         koinViewModel<DraftListViewModel>(parameters = { parametersOf(identAndAbout.ident.publicKey) })
-    val fpgDrafts: Flow<PagingData<Draft>> = draftListViewModel.draftsPaged
-    val lazyMessageItems: LazyPagingItems<Draft> = fpgDrafts.collectAsLazyPagingItems()
-
+    val fpgDrafts: Flow<PagingData<MessageViewData>>? = draftListViewModel.messageViewData
+    val lazyMessageItems: LazyPagingItems<MessageViewData> = fpgDrafts?.collectAsLazyPagingItems()
+        ?: return
     Column {
         IdentityBox(identAndAbout = identAndAbout)
         if (lazyMessageItems.itemCount == 0) {
@@ -87,13 +87,15 @@ fun DraftList(navController: NavHostController) {
                     ) {
                         MessageItem(
                             navController = navController,
-                            message = it.toMessageViewData(),
+                            messageViewData = it,
                             showToolbar = false,
                             truncate = true,
                             onClickCallBack = {
                                 navController.navigate("${Scenes.DraftEdit.route}/${it.oid}")
                             }
                         )
+                        Spacer(modifier = Modifier.padding(4.dp))
+                        ListSpacer()
                     }
                 }
             }
