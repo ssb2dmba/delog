@@ -18,23 +18,30 @@
 package `in`.delog.viewmodel
 
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import `in`.delog.db.model.*
-import `in`.delog.repository.AboutRepository
-import `in`.delog.repository.DidRepository
-import `in`.delog.repository.IdentRepository
-import `in`.delog.repository.MessageRepository
-import `in`.delog.service.ssb.SsbSignableMessage
-import `in`.delog.service.ssb.SsbSignedMessage
-import `in`.delog.service.ssb.makeHash
-import `in`.delog.service.ssb.signMessage
-import `in`.delog.service.ssb.*
+import `in`.delog.db.model.About
+import `in`.delog.db.model.Ident
+import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.Message
+import `in`.delog.db.repository.AboutRepository
+import `in`.delog.db.repository.DidRepository
+import `in`.delog.db.repository.IdentRepository
+import `in`.delog.db.repository.MessageRepository
+import `in`.delog.model.SsbSignableMessage
+import `in`.delog.model.SsbSignedMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Immutable

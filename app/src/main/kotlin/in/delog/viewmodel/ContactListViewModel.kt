@@ -24,7 +24,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import `in`.delog.db.model.Contact
-import `in`.delog.repository.ContactRepository
+import `in`.delog.db.repository.ContactRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

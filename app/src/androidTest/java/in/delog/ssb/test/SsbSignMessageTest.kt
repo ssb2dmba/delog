@@ -1,11 +1,9 @@
 package `in`.delog.ssb.test
 
 import `in`.delog.db.model.Ident
-import `in`.delog.service.ssb.SsbMessageContent
-import `in`.delog.service.ssb.SsbSignableMessage
-import `in`.delog.service.ssb.SsbSignedMessage
-import `in`.delog.service.ssb.makeHash
-import `in`.delog.service.ssb.signMessage
+import `in`.delog.model.SsbMessageContent
+import `in`.delog.model.SsbSignableMessage
+import `in`.delog.model.SsbSignedMessage
 import `in`.delog.ssb.*
 import org.junit.Assert.assertEquals
 import org.junit.Test

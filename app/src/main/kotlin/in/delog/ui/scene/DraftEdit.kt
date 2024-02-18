@@ -69,7 +69,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.MessageAndAbout
-import `in`.delog.service.ssb.getMessageContent
+import `in`.delog.model.SsbMessageContent
+import `in`.delog.model.toMessageViewData
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.BlobsEdit
 import `in`.delog.ui.component.BottomBarMainButton
@@ -78,7 +79,6 @@ import `in`.delog.ui.component.EmojiPicker
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.UploadFromGallery
-import `in`.delog.ui.component.toMessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.BottomBarViewModel
@@ -113,7 +113,7 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
     var tfv by remember {
         mutableStateOf(
             TextFieldValue(
-                text = getMessageContent(messageViewData!!.contentAsText).text
+                text = SsbMessageContent.serialize(messageViewData!!.contentAsText).text
                     ?: "",
                 selection = TextRange(messageViewData!!.contentAsText.length)
             )

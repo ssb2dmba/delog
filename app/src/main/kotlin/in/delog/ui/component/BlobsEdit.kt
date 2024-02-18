@@ -76,7 +76,7 @@ fun BlobsEdit(blobs: Array<BlobItem>, action: (key: BlobItem) -> Unit, actionIco
                 contentPadding = PaddingValues(all = 1.dp)
             ) {
                 items(blobs) { blobItem ->
-                    BlobPreview(blobItem, action, cta = actionIcon)
+                    BlobView(blobItem, action, cta = actionIcon)
                 }
             }
         }

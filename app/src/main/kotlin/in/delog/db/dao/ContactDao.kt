@@ -18,13 +18,19 @@
 package `in`.delog.db.dao
 
 import androidx.paging.PagingSource
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import `in`.delog.db.model.Contact
 import `in`.delog.db.model.ContactAndAbout
 
 @Dao
 interface ContactDao {
 
+    @Transaction
     @Query("SELECT * FROM contact WHERE author = :author order by oid desc")
     fun getPagedContact(author: String): PagingSource<Int, ContactAndAbout>
 

@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.component
 
-import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -42,8 +41,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Autorenew
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material3.ButtonDefaults
@@ -79,6 +76,8 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import `in`.delog.MainApplication
+import `in`.delog.model.MessageViewData
+import `in`.delog.model.serializeMessageContent
 import `in`.delog.service.ssb.BaseSsbService.Companion.format
 import `in`.delog.ui.component.richtext.RichTextViewer
 import `in`.delog.ui.navigation.Scenes
@@ -189,7 +188,7 @@ fun MessageItem(
     truncate: Boolean = false
 ) {
 
-    val messageText: String = messageViewData.deserializeMessageContent(format).text ?: ""
+    val messageText: String = messageViewData.serializeMessageContent(format).text ?: ""
 
     val SHORT_TEXT_LENGTH = 240
     val SHORTEN_AFTER_LINES = 6

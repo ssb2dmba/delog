@@ -18,7 +18,7 @@
 package `in`.delog.service.ssb
 
 
-import java.util.*
+import java.util.Locale
 
 /**
  * A Cached list of words. This serves as an abstraction, allowing collaborators to be agnostic

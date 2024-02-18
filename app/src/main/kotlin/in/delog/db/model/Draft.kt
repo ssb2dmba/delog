@@ -20,7 +20,7 @@ package `in`.delog.db.model
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import `in`.delog.service.ssb.Mention
+import `in`.delog.model.SsbMessageContent
 
 @Entity
 data class Draft(
@@ -48,16 +48,13 @@ data class Draft(
 
 ) {
 
-
-    //val mentions: Array<Mention>?
-
     companion object {
         fun empty(author: String): Draft =  Draft(
             oid = 0,
             author = author,
             timestamp = 0L,
             type = "post",
-            contentAsText = "{\"type\": \"post\", \"text\": \"\", \"mentions\": [] }",
+            contentAsText =  SsbMessageContent.empty().deserialize(),
             root = null,
             branch = null
         )

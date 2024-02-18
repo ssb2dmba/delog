@@ -18,24 +18,22 @@
 package `in`.delog.di.modules
 
 import `in`.delog.db.AppDatabase
-import `in`.delog.repository.AboutRepository
-import `in`.delog.repository.AboutRepositoryImpl
-import `in`.delog.repository.ContactRepository
-import `in`.delog.repository.ContactRepositoryImpl
-import `in`.delog.repository.DidRepository
-import `in`.delog.repository.DidRepositoryImpl
-import `in`.delog.repository.DraftRepository
-import `in`.delog.repository.DraftRepositoryImpl
-import `in`.delog.repository.FeedRepositoryImpl
-import `in`.delog.repository.IdentRepository
-import `in`.delog.repository.BlobRepository
-import `in`.delog.repository.BlobRepositoryImpl
-import `in`.delog.repository.MessageRepository
-import `in`.delog.repository.MessageRepositoryImpl
-import `in`.delog.repository.MessageTreeRepository
-import `in`.delog.repository.MessageTreeRepositoryImpl
-import `in`.delog.repository.WantRepository
-import `in`.delog.repository.WantRepositoryImpl
+import `in`.delog.db.repository.AboutRepository
+import `in`.delog.db.repository.AboutRepositoryImpl
+import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.BlobRepositoryImpl
+import `in`.delog.db.repository.ContactRepository
+import `in`.delog.db.repository.ContactRepositoryImpl
+import `in`.delog.db.repository.DidRepository
+import `in`.delog.db.repository.DidRepositoryImpl
+import `in`.delog.db.repository.DraftRepository
+import `in`.delog.db.repository.DraftRepositoryImpl
+import `in`.delog.db.repository.FeedRepositoryImpl
+import `in`.delog.db.repository.IdentRepository
+import `in`.delog.db.repository.MessageRepository
+import `in`.delog.db.repository.MessageRepositoryImpl
+import `in`.delog.db.repository.MessageTreeRepository
+import `in`.delog.db.repository.MessageTreeRepositoryImpl
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.ContactListViewModel
 import `in`.delog.viewmodel.DraftListViewModel
@@ -80,8 +78,5 @@ val mainViewModel = module {
 
     single { BlobRepositoryImpl(get(), get()) }
     factory<BlobRepository> { (BlobRepositoryImpl(get(), get())) }
-
-    single { WantRepositoryImpl(get()) }
-    factory<WantRepository> { (WantRepositoryImpl(get())) }
 
 }

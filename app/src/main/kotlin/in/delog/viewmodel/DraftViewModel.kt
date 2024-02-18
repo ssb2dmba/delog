@@ -18,7 +18,6 @@
 package `in`.delog.viewmodel
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -29,23 +28,18 @@ import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
-import `in`.delog.repository.BlobRepository
-import `in`.delog.repository.DraftRepository
-import `in`.delog.repository.MessageRepository
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.DraftRepository
+import `in`.delog.db.repository.MessageRepository
+import `in`.delog.model.Mention
+import `in`.delog.model.MessageViewData
+import `in`.delog.model.SsbMessageContent
+import `in`.delog.model.SsbSignableMessage
+import `in`.delog.model.SsbSignedMessage
+import `in`.delog.model.empty
+import `in`.delog.model.toDraft
+import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.BaseSsbService.Companion.format
-import `in`.delog.service.ssb.Mention
-import `in`.delog.service.ssb.SsbMessageContent
-import `in`.delog.service.ssb.SsbSignableMessage
-import `in`.delog.service.ssb.SsbSignedMessage
-import `in`.delog.service.ssb.getMessageContent
-import `in`.delog.service.ssb.getMessageContentString
-import `in`.delog.service.ssb.makeHash
-import `in`.delog.service.ssb.signMessage
-import `in`.delog.ui.component.MessageViewData
-import `in`.delog.ui.component.empty
-import `in`.delog.ui.component.toDraft
-import `in`.delog.ui.component.toMessageViewData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -110,16 +104,16 @@ class DraftViewModel(
 
 
     private fun putParentInContentAsText() {
-        val ssbMessageContent = getMessageContent(_messageViewData.value.contentAsText)
+        val ssbMessageContent = SsbMessageContent.serialize(_messageViewData.value.contentAsText)
         ssbMessageContent.root = _messageViewData.value.root
         ssbMessageContent.branch = _messageViewData.value.branch
-        _messageViewData.update { it.copy(contentAsText =  getMessageContentString(ssbMessageContent)) }
+        _messageViewData.update { it.copy(contentAsText = ssbMessageContent.deserialize()) }
     }
 
     fun updateDraftContentAsText(text: String) {
-        val ssbMessageContent = getMessageContent(_messageViewData.value.contentAsText)
+        val ssbMessageContent = SsbMessageContent.serialize(_messageViewData.value.contentAsText)
         ssbMessageContent.text = text
-        _messageViewData.update { it.copy(contentAsText =  getMessageContentString(ssbMessageContent)) }
+        _messageViewData.update { it.copy(contentAsText =  ssbMessageContent.deserialize()) }
     }
 
 
@@ -205,13 +199,13 @@ class DraftViewModel(
     }
 
     private fun blobsInContentAsText() {
-        val ssbMessageContent = getMessageContent(_messageViewData.value.contentAsText)
+        val ssbMessageContent = SsbMessageContent.serialize(_messageViewData.value.contentAsText)
         var mentions =  arrayOf<Mention>()
         for (blob in messageViewData.value.blobs) {
             mentions = mentions.plus(Mention(blob.key, "", type=blob.type,size=blob.size))
         }
         ssbMessageContent.mentions = mentions
-        _messageViewData.update { it.copy(contentAsText =  getMessageContentString(ssbMessageContent)) }
+        _messageViewData.update { it.copy(contentAsText =  ssbMessageContent.deserialize()) }
     }
 
     fun unSelect(key: String) {
@@ -243,7 +237,7 @@ fun fromSsbSignedMessage(ssbSignedMessage: SsbSignedMessage): Message {
 
 private fun SsbSignableMessage.Companion.fromDraft(draft: Draft): SsbSignableMessage {
     val ssbMessageContent: SsbMessageContent = Json.decodeFromString<SsbMessageContent>(
-        SsbMessageContent.serializer(),
+        `in`.delog.model.SsbMessageContent.serializer(),
         draft.contentAsText
     )
 

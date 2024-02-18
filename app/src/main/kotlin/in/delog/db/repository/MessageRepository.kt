@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.repository
+package `in`.delog.db.repository
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.lifecycle.LiveData

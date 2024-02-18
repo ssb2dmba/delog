@@ -35,12 +35,12 @@ import androidx.navigation.NavHostController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import `in`.delog.model.MessageViewData
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.ListSpacer
 import `in`.delog.ui.component.MessageItem
-import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.DraftListViewModel

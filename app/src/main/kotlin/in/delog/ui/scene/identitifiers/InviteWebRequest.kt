@@ -31,7 +31,6 @@ import com.google.accompanist.web.LoadingState
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
-import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.TorService
 import org.koin.androidx.compose.get
 import java.util.concurrent.Executor

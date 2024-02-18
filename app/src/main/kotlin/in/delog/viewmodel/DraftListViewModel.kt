@@ -25,13 +25,12 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import `in`.delog.repository.BlobRepository
-import `in`.delog.repository.DraftRepository
+import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.DraftRepository
+import `in`.delog.model.MessageViewData
+import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.BaseSsbService.Companion.format
-import `in`.delog.ui.component.MessageViewData
-import `in`.delog.ui.component.toMessageViewData
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch

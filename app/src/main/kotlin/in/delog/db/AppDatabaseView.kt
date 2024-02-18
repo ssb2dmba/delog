@@ -1,10 +1,6 @@
 package `in`.delog.db
 
 import androidx.room.DatabaseView
-import `in`.delog.ui.component.MessageContent
-import `in`.delog.ui.component.MessageViewData
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 
 class AppDatabaseView {
     @DatabaseView(

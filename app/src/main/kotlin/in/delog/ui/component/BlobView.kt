@@ -38,7 +38,7 @@ import `in`.delog.ui.theme.MyTheme
 import `in`.delog.viewmodel.BlobItem
 
 @Composable
-fun BlobPreview(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composable() () -> Unit) {
+fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composable() () -> Unit) {
     val mediaType = blobItem.type
     Box(modifier = Modifier
         .border(1.dp, MaterialTheme.colorScheme.background)
@@ -126,7 +126,7 @@ fun BlobPreview(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Compo
 
 @Preview
 @Composable
-fun blobPreviewPreview() {
+fun previewBlobView() {
     val b1 = BlobItem(
         key = "&YsGsrC3iYbfU9ZS1qw0XTPGGLxxpapUreC/fo0xICNA=.sha256",
         size = 100,
@@ -138,7 +138,7 @@ fun blobPreviewPreview() {
         dynamicColor = false
     ) {
         Card() {
-            BlobPreview(b1, {}) { CancelIcon() }
+            BlobView(b1, {}) { CancelIcon() }
         }
     }
 }

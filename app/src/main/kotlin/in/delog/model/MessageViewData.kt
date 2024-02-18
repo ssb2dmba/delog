@@ -15,14 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ui.component
+package `in`.delog.model
 
 import android.util.Log
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Message
-import `in`.delog.repository.BlobRepository
-import `in`.delog.service.ssb.Mention
+import `in`.delog.db.repository.BlobRepository
 import `in`.delog.viewmodel.BlobItem
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -76,7 +75,7 @@ fun MessageViewData.Companion.empty(author: String): MessageViewData {
     )
 }
 
-fun MessageViewData.deserializeMessageContent(format: Json): MessageContent {
+fun MessageViewData.serializeMessageContent(format: Json): MessageContent {
     return try {
         format.decodeFromString(
             MessageContent.serializer(),
@@ -118,7 +117,7 @@ suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository
         links = arrayOf(),
         blobs = arrayOf()
     )
-    val mc = mvd.deserializeMessageContent(format)
+    val mc = mvd.serializeMessageContent(format)
     mvd.type = mc.type
     mvd.root = mc.root
     mvd.branch = mc.branch
@@ -129,7 +128,7 @@ suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository
 }
 
 suspend fun AppDatabaseView.MessageInTree.toMessageViewData(format: Json, blobRepository: BlobRepository): MessageViewData {
-    var mvd =MessageViewData(
+    var mvd = MessageViewData(
         key = key,
         timestamp = timestamp,
         author = author,
@@ -144,7 +143,7 @@ suspend fun AppDatabaseView.MessageInTree.toMessageViewData(format: Json, blobRe
         links = arrayOf(),
         blobs = arrayOf()
     )
-    val mc = mvd.deserializeMessageContent(format)
+    val mc = mvd.serializeMessageContent(format)
     mvd.type=mc.type
     mvd.root=mc.root
     mvd.branch=mc.branch
@@ -156,7 +155,7 @@ suspend fun AppDatabaseView.MessageInTree.toMessageViewData(format: Json, blobRe
 
 
 fun MessageViewData.toDraft(): Draft {
-    val mc = deserializeMessageContent(Json)
+    val mc = serializeMessageContent(Json)
     return Draft(
         oid = oid,
         author = author,

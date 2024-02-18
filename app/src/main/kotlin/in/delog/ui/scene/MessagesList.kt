@@ -18,7 +18,6 @@
 package `in`.delog.ui.scene
 
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -54,14 +53,13 @@ import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.model.MessageViewData
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.GoToTop
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.ListSpacer
 import `in`.delog.ui.component.MessageItem
-import `in`.delog.ui.component.MessageViewData
 import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState

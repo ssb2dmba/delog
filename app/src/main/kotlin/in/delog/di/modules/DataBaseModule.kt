@@ -23,12 +23,12 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import `in`.delog.db.AppDatabase
 import `in`.delog.db.dao.AboutDao
+import `in`.delog.db.dao.BlobDao
 import `in`.delog.db.dao.ContactDao
 import `in`.delog.db.dao.DraftDao
 import `in`.delog.db.dao.IdentDao
 import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.dao.MessageTreeDao
-import `in`.delog.db.dao.BlobDao
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 

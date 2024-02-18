@@ -24,8 +24,8 @@ import androidx.lifecycle.asLiveData
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.repository.AboutRepository
-import `in`.delog.repository.IdentRepository
+import `in`.delog.db.repository.AboutRepository
+import `in`.delog.db.repository.IdentRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow

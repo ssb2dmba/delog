@@ -1,7 +1,5 @@
 package `in`.delog.service
 
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.platform.LocalContext
 import `in`.delog.MainApplication
 import `in`.delog.db.SettingStore
 import kotlinx.coroutines.flow.first
