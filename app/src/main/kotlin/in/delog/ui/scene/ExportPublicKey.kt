@@ -9,11 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,15 +60,15 @@ fun ExportPublickKeyDialog(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = identAndAbout!!.about!!.name!!,
+                            text = identAndAbout.about!!.name!!,
                             modifier = Modifier.padding(16.dp),
                         )
-                        val pubKey = identAndAbout!!.ident.publicKey
+                        val pubKey = identAndAbout.ident.publicKey
                         val atServer = "@" +
-                                identAndAbout!!.ident.server +
+                                identAndAbout.ident.server +
                                 ":" +
-                                identAndAbout!!.ident.port
-                        val content = if (identAndAbout!!.ident.server.isNotEmpty())
+                                identAndAbout.ident.port
+                        val content = if (identAndAbout.ident.server.isNotEmpty())
                             (pubKey + atServer)
                         else
                             pubKey
@@ -81,7 +81,7 @@ fun ExportPublickKeyDialog(
                             ),
                             contentDescription = "QR Code"
                         )
-                        if (identAndAbout!!.ident.server.isNotEmpty()) {
+                        if (identAndAbout.ident.server.isNotEmpty()) {
                             Text(
                                 text = content,
                                 modifier = Modifier.padding(32.dp),
@@ -96,15 +96,15 @@ fun ExportPublickKeyDialog(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    TextButton(
+                    Button(
                         onClick = { onDismissRequest() },
                         modifier = Modifier.padding(8.dp),
                     ) {
                         Text("Dismiss")
                     }
-                    TextButton(
+                    Button(
                         onClick = {
-                            printController.print(identAndAbout!!.about!!.name!!)
+                            printController.print(identAndAbout.about!!.name!!)
                         },
                         modifier = Modifier.padding(8.dp),
                     ) {

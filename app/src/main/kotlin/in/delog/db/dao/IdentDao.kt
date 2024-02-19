@@ -36,7 +36,7 @@ interface IdentDao {
     fun findByOId(oid: String): IdentAndAbout
 
     @Query("SELECT * FROM ident WHERE public_key = :pk LIMIT 1")
-    fun findByPublicKey(pk: String): IdentAndAbout
+    fun findByPublicKey(pk: String): IdentAndAbout?
 
     @Query("SELECT * FROM ident WHERE oid = :oid LIMIT 1")
     fun findByIdLive(oid: String): LiveData<Ident>
@@ -60,19 +60,19 @@ interface IdentDao {
     fun getDefaultFeed(): Flow<IdentAndAbout>
 
     @Query("UPDATE ident set default_ident = 0 ")
-    fun _unsetDefault()
+    fun unsetDefault()
 
 
     @Query("UPDATE ident set default_ident = 1 where oid=:oid ")
-    fun _setDefault(oid: Long)
+    fun setDefault(oid: Long)
 
     @Query("UPDATE ident set invite = null where oid=:oid ")
     fun cleanInvite(oid: Long)
 
+    @Transaction
+    fun setFeedAsDefaultFeed(oid: Long) {
+        unsetDefault()
+        setDefault(oid)
+    }
 }
 
-@Transaction
-fun IdentDao.setFeedAsDefaultFeed(oid: Long) {
-    _unsetDefault()
-    _setDefault(oid)
-}
