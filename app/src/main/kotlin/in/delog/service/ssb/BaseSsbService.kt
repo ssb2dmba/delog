@@ -43,19 +43,19 @@ open class BaseSsbService {
 
     var rpcHandler: RPCHandler? = null
 
-    lateinit var feedService: FeedService
+    private lateinit var feedService: FeedService
     var secureScuttlebuttVertxClient: SecureScuttlebuttVertxClient? = null
     val vertx: Vertx = Vertx.vertx()
     private val networkKeyBase64 = "1KHLiKZvAvjbY1ziZEHMXawbCEIM6qwjCDm3VYRan/s="
-    val networkKeyBytes32 = Bytes32.wrap(Base64.decode(networkKeyBase64))
+    private val networkKeyBytes32: Bytes32 = Bytes32.wrap(Base64.decode(networkKeyBase64))
     var keyPair: Signature.KeyPair? = null
     private var host: String = ""
     private var port: Int = 8008
-    var feedOid: Long = -1
+    private var feedOid: Long = -1
 
     companion object {
         val objectMapper = jacksonObjectMapper()
-        val TAG = this.javaClass.canonicalName
+        val TAG: String = this.javaClass.canonicalName
         val format = Json {
             prettyPrint = true
             prettyPrintIndent = "  " // two spaces
@@ -65,7 +65,7 @@ open class BaseSsbService {
 
     fun toCanonicalForm(): String {
         val identity = keyPair?.let { Identity.fromKeyPair(it) }
-        return identity?.toCanonicalForm() ?: "";
+        return identity?.toCanonicalForm() ?: ""
     }
 
     open suspend fun connectWithInvite(
@@ -76,14 +76,12 @@ open class BaseSsbService {
         try {
             setIdentity(feed)
             if (feed.invite == null) {
-                Log.e("ssb", "attempting to connect with invite but no invite !")
-                return
+                throw Exception("attempting to connect with invite but no invite !")
             }
             val inviteString = feed.invite!!
-            val invite: Invite = Invite.fromCanonicalForm(inviteString);
+            val invite: Invite = Invite.fromCanonicalForm(inviteString)
 
-
-            var ssbClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
+            val ssbClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
                 vertx,
                 keyPair!!, invite, networkKeyBytes32
             )
@@ -96,6 +94,8 @@ open class BaseSsbService {
         } catch (ex: Exception) {
             if (errorCb != null) {
                 errorCb(ex)
+            } else {
+                throw ex
             }
         }
     }
@@ -120,8 +120,8 @@ open class BaseSsbService {
                     Log.e("ssb", "attempting to connect but no invite !")
                     return null
                 }
-                val invite: Invite = Invite.fromCanonicalForm(pFeed.invite!!);
-                val remotePublicKey = invite.identity.ed25519PublicKey();
+                val invite: Invite = Invite.fromCanonicalForm(pFeed.invite!!)
+                val remotePublicKey = invite.identity.ed25519PublicKey()
                 rpcHandler = makeRPCHandler(remotePublicKey!!)
                 feedService = FeedService(rpcHandler!!)
                 return rpcHandler
@@ -136,7 +136,7 @@ open class BaseSsbService {
     }
 
     @Throws(Exception::class)
-    private suspend fun makeRPCHandler(remotePublicKey: PublicKey): RPCHandler? {
+    private suspend fun makeRPCHandler(remotePublicKey: PublicKey): RPCHandler {
         rpcHandler = secureScuttlebuttVertxClient
             ?.connectTo(
                 port,
@@ -162,7 +162,7 @@ open class BaseSsbService {
     }
 
     private fun setIdentity(pFeed: Ident) {
-        if (pFeed == null || pFeed.privateKey == null) {
+        if (pFeed?.privateKey == null) {
             return
         }
         feedOid = pFeed.oid

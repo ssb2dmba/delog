@@ -19,6 +19,7 @@ package `in`.delog.ui.scene
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Plumbing
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -49,7 +51,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,11 +63,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import `in`.delog.MainApplication
 import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.getInviteURl
-import `in`.delog.service.ssb.SsbService
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
@@ -72,9 +74,6 @@ import `in`.delog.ui.theme.keySmall
 import `in`.delog.viewmodel.AboutUIState
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentAndAboutViewModel
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -229,20 +228,30 @@ fun IdentDetailConfirmDeleteDialog(
 @Composable
 fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAboutViewModel) {
     var server by remember { mutableStateOf(ident.server) }
-    var port by remember { mutableStateOf(ident.port) }
+    var port by remember { mutableIntStateOf(ident.port) }
     var defaultIdent by remember { mutableStateOf(ident.defaultIdent) }
     var showExportDialogState by remember { mutableStateOf(false) }
     var showDeleteDialogState by remember { mutableStateOf(false) }
     var showInviteRequest by remember { mutableStateOf(false) }
-
+    var loading by remember { mutableStateOf(false) }
     val uiState by vm.uiState.observeAsState(AboutUIState())
     val identAndAbout = uiState.identAndAbout
 
-    if (identAndAbout == null) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    val redirect by vm.redirect.observeAsState(null)
+    if (redirect != null) {
+        LaunchedEffect(key1 = Unit) {
+            redirect.let {
+                navHostController.navigate(Scenes.FeedList.route)
+            }
+        }
+        return
+    }
+
+
+    if (loading || identAndAbout == null) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
             CircularProgressIndicator()
         }
@@ -276,22 +285,14 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
         )
 
     }
-    val ssbService: SsbService = get()
+
 
 
     fun setUpInvite(invite: String) {
+        loading = true
         ident.invite = invite
         vm.onSavingIdent(ident)
-        GlobalScope.launch {
-            ssbService.connectWithInvite(ident,
-                {
-                    // everything is going according to the plan
-                },
-                {
-                    MainApplication.toastify(it.message.toString())
-                })
-        }
-        navHostController.navigate("${Scenes.FeedList.route}")
+        vm.redeemInvite(ident)
     }
 
     if (showInviteRequest) {
@@ -324,7 +325,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            IdentityBox(identAndAbout = identAndAbout!!)
+            IdentityBox(identAndAbout = identAndAbout)
 
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -360,8 +361,6 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                     .width(80.dp)
                     .padding(start = 8.dp)
             )
-
-
         }
 
 
@@ -379,41 +378,29 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
         }
 
 
-        if (identAndAbout!!.ident.invite != null) {
+        if (identAndAbout.ident.invite != null) {
             Row {
-                val ssbService: SsbService = get()
                 TextButton(
                     onClick = {
-                        GlobalScope.launch {
-                            ssbService.connectWithInvite(
-                                identAndAbout.ident,
-                                {
-                                    MainApplication.toastify("ok" + it.asString())
-                                },
-                                {
-                                    MainApplication.toastify(it.message.toString())
-                                }
-                            )
-                        }
-                        navHostController.navigate("${Scenes.FeedList.route}")
+                        loading = true
+                        vm.redeemInvite(identAndAbout.ident)
                     }
                 ) {
                     Text(text = "redeem invite")
                 }
                 TextButton(
                     onClick = {
-                        vm.cleanInvite(identAndAbout!!.ident)
-                        navHostController.navigate("${Scenes.FeedDetail.route}/${identAndAbout!!.ident.oid}")
+                        vm.cleanInvite(identAndAbout.ident)
+                        navHostController.navigate("${Scenes.FeedDetail.route}/${identAndAbout.ident.oid}")
                     }
                 ) {
                     Text(text = "delete invite")
                 }
 
             }
-        } else if (identAndAbout!!.ident.server != null) {
+        } else if (identAndAbout.ident.server != null) {
             Row {
-                val ssbService: SsbService = get()
-                TextButton(
+                Button(
                     onClick = {
                         showInviteRequest = true
                     }
@@ -421,7 +408,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                     Text(
                         text = String.format(
                             stringResource(R.string.get_invite_and_redeem_it),
-                            identAndAbout!!.ident.server
+                            identAndAbout.ident.server
                         )
                     )
                 }

@@ -29,11 +29,19 @@ object HttpClient {
         val store = SettingStore(context)
         val alwaysTorProxy = runBlocking { store.getData(SettingStore.ALWAYS_TOR_PROXY).first() }
         val torProxyPort = runBlocking { store.getData(SettingStore.TOR_SOCK_PROXY_PORT).first() }
-        var port = if (torProxyPort!=null) { torProxyPort.toInt() } else { 9090 }
+        val port = torProxyPort?.toInt() ?: 9050
         return initProxy(alwaysTorProxy== "1","127.0.0.1",  port)
     }
 
-    fun initProxy(useProxy: Boolean, hostname: String, port: Int): Proxy? {
+    fun getTorProxy(): Proxy? {
+        val context = MainApplication.applicationContext()
+        val store = SettingStore(context)
+        val torProxyPort = runBlocking { store.getData(SettingStore.TOR_SOCK_PROXY_PORT).first() }
+        val port = torProxyPort?.toInt() ?: 9050
+        return initProxy(true,"127.0.0.1",  port)
+    }
+
+    private fun initProxy(useProxy: Boolean, hostname: String, port: Int): Proxy? {
         return if (useProxy) Proxy(Proxy.Type.SOCKS, InetSocketAddress(hostname, port)) else null
     }
 }

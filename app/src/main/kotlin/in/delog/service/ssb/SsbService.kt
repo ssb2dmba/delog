@@ -26,9 +26,9 @@ import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.isOnion
 import `in`.delog.db.model.toJsonResponse
-import `in`.delog.db.repository.AboutRepository
-import `in`.delog.db.repository.ContactRepository
-import `in`.delog.db.repository.MessageRepository
+import `in`.delog.repository.AboutRepository
+import `in`.delog.repository.ContactRepository
+import `in`.delog.repository.MessageRepository
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.tuweni.bytes.Bytes
@@ -48,19 +48,14 @@ import org.apache.tuweni.scuttlebutt.rpc.mux.ScuttlebuttStreamHandler
 
 
 class SsbService(
-    messageRepository: MessageRepository,
-    contactRepository: ContactRepository,
-    aboutRepository: AboutRepository,
-    torService: TorService
+    val messageRepository: MessageRepository,
+    val contactRepository: ContactRepository,
+    val aboutRepository: AboutRepository,
+    val torService: TorService
 ) :
     BaseSsbService() {
-    val messageRepository = messageRepository
-    val contactRepository = contactRepository
-    val aboutRepository = aboutRepository
 
-    var connected: Int = 0 // 0 disconnected, 1 connected, -1 errored
-
-    val torService = torService
+    private var connected: Int = 0 // 0 disconnected, 1 connected, -1 errored
 
 
     suspend fun synchronize(pFeed: Ident, errorCb: ((Exception) -> Unit)?) {
@@ -80,10 +75,25 @@ class SsbService(
     suspend fun reconnect(pFeed: Ident) {
         Log.d(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
         if (pFeed.isOnion()) {
-            torService.start();
+            torService.start()
         }
         super.connect(pFeed, ::onConnected, ::onError)
     }
+
+    override suspend fun connectWithInvite(
+        feed: Ident,
+        callBack: (RPCResponse) -> Unit,
+        errorCb: ((Exception) -> Unit)?
+    ) {
+        GlobalScope.launch {
+            Log.d(TAG, "redeem invite %s %s".format(feed.server, feed.publicKey))
+            if (feed.isOnion()) {
+                torService.start()
+            }
+            super.connectWithInvite(feed, callBack, errorCb)
+        }
+    }
+
 
     private fun onError(error: Exception) {
 
@@ -115,7 +125,7 @@ class SsbService(
     @Override
     override fun onRemoteProcedureCall(rpcMessage: RPCMessage) {
         try {
-            var rpcStreamRequest =
+            val rpcStreamRequest =
                 rpcMessage.asJSON(jacksonObjectMapper(), RPCRequestBody::class.java)
             when (rpcStreamRequest.name.first()) {
                 "createHistoryStream" -> onCreateHistoryStream(rpcMessage)
@@ -127,26 +137,23 @@ class SsbService(
     }
 
     private fun onCreateHistoryStream(rpcMessage: RPCMessage) {
-        var rpcStreamRequest = rpcMessage.asJSON(objectMapper, RPCStreamRequest2::class.java)
-        var id = rpcStreamRequest.id
-        var sequence = rpcStreamRequest.seq
-        var remoteLimit = rpcStreamRequest.limit
+        val rpcStreamRequest = rpcMessage.asJSON(objectMapper, RPCStreamRequest2::class.java)
+        val id = rpcStreamRequest.id
+        val sequence = rpcStreamRequest.seq
+        val remoteLimit = rpcStreamRequest.limit
 
 
         if (sequence < 1) {
             Log.w(TAG, String.format("pub is requesting the whole history: %s", sequence))
         }
         var remoteSequence = sequence.toLong()
-        val batchSize = Math.min(100, remoteLimit) // TODO put in config
+        val batchSize = 100.coerceAtMost(remoteLimit) // TODO put in config
         var hasMoreResults = true
         var ct = 0
         while (hasMoreResults) {
             val messages = messageRepository.getMessagePage(id, remoteSequence, batchSize)
-            if (messages.size < batchSize) {
-
-            }
-            if (messages.size == 0) {
-                Log.w(TAG, "db return empty: " + ct)
+            if (messages.isEmpty()) {
+                Log.w(TAG, "db return empty: $ct")
                 hasMoreResults = false
             }
             for (m: Message in messages) {
@@ -224,8 +231,7 @@ class SsbService(
     }
 
     fun routeMessage(message: RPCResponse) {
-        Log.d("routeMessage", message.asString())
-        var m = message.asJSON(objectMapper, FeedMessage::class.java)
+        val m = message.asJSON(objectMapper, FeedMessage::class.java)
         if (m.type.isPresent) {
             when (m.type.get()) {
                 "post" -> storePostMessage(m)
@@ -235,7 +241,7 @@ class SsbService(
                 else -> println("not implemented:" + m.type.get())
             }
         } else {
-            Log.w(TAG, "type not present: " + m);
+            Log.w(TAG, "type not present: $m")
         }
     }
 
@@ -248,16 +254,16 @@ class SsbService(
     }
 
     private fun storeAboutMessage(m: FeedMessage) {
-        var about: About? = m.toAbout()
+        val about: About? = m.toAbout()
         if (about != null) {
-            aboutRepository.insertOrUpdate(about!!)
+            aboutRepository.insertOrUpdate(about)
         } else {
             Log.w(TAG, "unable to decode %s %s".format(m.key, m.value.contentAsString))
         }
     }
 
     private fun storePostMessage(m: FeedMessage) {
-        var message: Message = m.toMessage()
+        val message: Message = m.toMessage()
         GlobalScope.launch {
             messageRepository.maybeAddMessage(message)
         }

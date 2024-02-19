@@ -40,7 +40,7 @@ interface IdentRepository {
     suspend fun findById(id: String): IdentAndAbout
     suspend fun getLive(id: String): LiveData<Ident>
     fun setFeedAsDefaultFeed(it: Ident)
-    suspend fun findByPublicKey(pk: String): IdentAndAbout
+    suspend fun findByPublicKey(pk: String): IdentAndAbout?
     suspend fun cleanInvite(newIdent: Ident)
 
 }
@@ -77,7 +77,7 @@ class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: A
         return identDao.findByOId(id)
     }
 
-    override suspend fun findByPublicKey(pk: String): IdentAndAbout {
+    override suspend fun findByPublicKey(pk: String): IdentAndAbout? {
         return identDao.findByPublicKey(pk)
     }
 

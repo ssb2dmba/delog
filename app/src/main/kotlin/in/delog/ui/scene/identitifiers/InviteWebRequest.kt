@@ -33,10 +33,11 @@ import com.google.accompanist.web.rememberWebViewState
 import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.service.ssb.TorService
 import org.koin.androidx.compose.get
-import java.util.concurrent.Executor
 
 @Composable
 fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
+
+
     val webViewState = rememberWebViewState(startUrl)
     LaunchedEffect(webViewState.lastLoadedUrl) {
         if (webViewState.lastLoadedUrl != null) {
@@ -52,7 +53,7 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
         modifier = Modifier.fillMaxSize()
     ) {
         val loading = remember { mutableStateOf(true) }
-        if (!(webViewState.loadingState is LoadingState.Finished) || loading.value) {
+        if (webViewState.loadingState !is LoadingState.Finished || loading.value) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
@@ -79,7 +80,7 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
                     .addProxyRule("socks5://127.0.0.1:" + torService.torProxyPort)
                     .build()
                 ProxyController.getInstance()
-                    .setProxyOverride(proxyConfig, Executor { Runnable { } }, Runnable { })
+                    .setProxyOverride(proxyConfig, { Runnable { } }, { })
                 LaunchedEffect(Unit) {
                     torService.start()
                 }
@@ -105,7 +106,7 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
                     it.webViewClient = object : WebViewClient() {
 
                         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                            super.onPageStarted(view, url, favicon);
+                            super.onPageStarted(view, url, favicon)
                         }
 
                         override fun onPageFinished(view: WebView?, url: String?) {

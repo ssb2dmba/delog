@@ -21,11 +21,12 @@ package `in`.delog.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
+import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.db.repository.AboutRepository
-import `in`.delog.db.repository.IdentRepository
+import `in`.delog.repository.IdentRepository
+import `in`.delog.service.ssb.SsbService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,8 +37,9 @@ import kotlinx.coroutines.launch
 
 class IdentListViewModel(
     private val repository: IdentRepository,
-    private val aboutRepository: AboutRepository
+    private val ssbService: SsbService
 ) : ViewModel() {
+
 
     private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
     var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
@@ -47,14 +49,28 @@ class IdentListViewModel(
 
     fun insert(ident: Ident, alias: String? = null) {
         GlobalScope.launch(Dispatchers.IO) {
+            // insert complete ident and about
             val about = About(
                 ident.publicKey,
                 name = alias ?: ident.publicKey.subSequence(0, 6).toString(),
                 dirty = true
             )
-            var id = repository.insert(IdentAndAbout(ident, about))
+            val id = repository.insert(IdentAndAbout(ident, about))
             ident.oid = id
-            _insertedIdent.value = ident
+            redeemInvite(ident)
+        }
+    }
+    private fun redeemInvite(ident: Ident) {
+        GlobalScope.launch {
+            ssbService.connectWithInvite(ident,
+                {
+                    // everything is going according to the plan
+                    MainApplication.toastify("Identity redeemed on relay successfully")
+                    _insertedIdent.value = ident
+                },
+                {
+                    MainApplication.toastify(it.message.toString())
+                })
         }
     }
 
@@ -62,10 +78,6 @@ class IdentListViewModel(
         GlobalScope.launch(Dispatchers.IO) {
             repository.setFeedAsDefaultFeed(ident)
         }
-    }
-
-    fun reset() {
-        _insertedIdent.value = null
     }
 
 }

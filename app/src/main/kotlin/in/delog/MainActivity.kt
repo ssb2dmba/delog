@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
@@ -40,6 +39,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
+import `in`.delog.service.ssb.ForkSsbService
+import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppBottomAppBar
 import `in`.delog.ui.component.AppScaffold
@@ -47,10 +48,17 @@ import `in`.delog.ui.navigation.NavGraph
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.viewmodel.IdentListViewModel
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
 
+    private val torService: TorService = get()
+
+    override fun onPause() {
+        torService.stop()
+        super.onPause()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,7 +75,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MyApp() {
 
@@ -76,6 +84,8 @@ fun MyApp() {
     CompositionLocalProvider(
         LocalActiveFeed provides defaultFeed
     ) {
+
+        ForkSsbService()
 
         val context = MainApplication.applicationContext()
         var darkTheme = true

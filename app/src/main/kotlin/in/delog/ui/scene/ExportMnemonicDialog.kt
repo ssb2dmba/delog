@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -171,22 +171,22 @@ fun ExportMnemonicDialog(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = identAndAbout!!.getNetworkIdentifier(),
+                            text = identAndAbout.getNetworkIdentifier(),
                             modifier = Modifier.padding(16.dp),
                         )
-                        val pk = identAndAbout!!.ident.privateKey!!
+                        val pk = identAndAbout.ident.privateKey!!
                         //var atServer =""
                         val atServer = "@" +
-                                identAndAbout!!.ident.server +
+                                identAndAbout.ident.server +
                                 ":" +
-                                identAndAbout!!.ident.port
+                                identAndAbout.ident.port
 
                         val configuration = LocalConfiguration.current
 
                         val screenWidth = configuration.screenWidthDp.dp
                         Image(
                             painter = rememberQrBitmapPainter(
-                                content = if (identAndAbout!!.ident.server.isNotEmpty())
+                                content = if (identAndAbout.ident.server.isNotEmpty())
                                     (pk + atServer)
                                 else
                                     pk,
@@ -194,14 +194,14 @@ fun ExportMnemonicDialog(
                             ),
                             contentDescription = "QR Code"
                         )
-                        if (identAndAbout!!.ident.server.isNotEmpty()) {
+                        if (identAndAbout.ident.server.isNotEmpty()) {
                             Text(
                                 text = atServer,
                                 modifier = Modifier.padding(32.dp),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                        rememberMnemonicText(pk = identAndAbout!!.ident.privateKey!!)?.let {
+                        rememberMnemonicText(pk = identAndAbout.ident.privateKey!!)?.let {
                             Text(
                                 text = it,
                                 modifier = Modifier.padding(32.dp),
@@ -216,15 +216,15 @@ fun ExportMnemonicDialog(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    TextButton(
+                    Button(
                         onClick = { onDismissRequest() },
                         modifier = Modifier.padding(8.dp),
                     ) {
                         Text("Dismiss")
                     }
-                    TextButton(
+                    Button(
                         onClick = {
-                            printController.print(identAndAbout!!.getNetworkIdentifier())
+                            printController.print(identAndAbout.getNetworkIdentifier())
                         },
                         modifier = Modifier.padding(8.dp),
                     ) {

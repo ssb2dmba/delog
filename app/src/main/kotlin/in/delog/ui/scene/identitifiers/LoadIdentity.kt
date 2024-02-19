@@ -1,8 +1,5 @@
 package `in`.delog.ui.scene.identitifiers
 
-import android.os.Handler
-import android.os.Looper
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,56 +20,44 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import `in`.delog.R
-import `in`.delog.db.SettingStore
-import `in`.delog.db.SettingStore.Companion.SERVER_URL
 import `in`.delog.db.model.Ident
 import `in`.delog.ui.CameraQrCodeScanner
 import `in`.delog.ui.component.EditDialog
-import `in`.delog.viewmodel.IdentListViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.apache.tuweni.crypto.sodium.Signature
 import org.apache.tuweni.io.Base64
 import org.apache.tuweni.scuttlebutt.Identity
-import org.koin.androidx.compose.koinViewModel
 import kotlin.reflect.KFunction2
 
 @Preview
 @Composable
 fun LoadIdentityPreview() {
     @SuppressWarnings
-    val identListViewModel = koinViewModel<IdentListViewModel>()
     fun mockReturn(pIdentity: Identity?, pInviteUrl: String?) {}
     LoadIdentity(
-        identListViewModel = identListViewModel,
+        serverUrl = "https://delog.in:8008",
         callBack = ::mockReturn
     )
 }
 
 @Composable
 fun LoadIdentity(
-    identListViewModel: IdentListViewModel,
+    serverUrl: String,
     callBack: KFunction2<Identity?, String?, Unit>
 ) {
 
-    val context = LocalContext.current
-    val store = SettingStore(context)
-    val serverUrl = store.getData(SERVER_URL).collectAsState(initial = null)
-    if (serverUrl.value == null) return
-    val serverName = serverUrl.value!!.split(":")[0]
+
+    if (serverUrl == null) return
+    val serverName = serverUrl.split(":")[0]
 
     var showInviteUrlDialog by remember { mutableStateOf(false) }
 
@@ -82,20 +67,15 @@ fun LoadIdentity(
 
     var showCameraScanner: Boolean by remember { mutableStateOf(false) }
 
-    fun toastify(message: String) {
-        Handler(Looper.getMainLooper()).post {
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        }
-    }
 
     fun setPk(input: String) {
-        if (input.length < 85) return;
+        if (input.length < 85) return
         showCameraScanner = false
         val privateKey = input.split("@")[0]
 
-        var identity: Identity?
+        val identity: Identity?
         try {
-            var keyPair = Signature.KeyPair.forSecretKey(
+            val keyPair = Signature.KeyPair.forSecretKey(
                 Signature.SecretKey.fromBytes(
                     Base64.decode(privateKey)
                 )
@@ -103,24 +83,17 @@ fun LoadIdentity(
             identity = Identity.fromKeyPair(keyPair)
 
         } catch (e: Exception) {
-            toastify("${e.localizedMessage}: $input")
+            e.printStackTrace()
             return
         }
-        // check if exists ...
-        var pk = identity.toCanonicalForm()
-        if (identListViewModel.idents.value!!.any { it.ident.publicKey == pk }) {
-            var preexist =
-                identListViewModel.idents.value!!.filter { it.ident.publicKey == pk }.first()
-            toastify("This identity ${pk} already exists !")
-            identListViewModel.setFeedAsDefaultFeed(preexist.ident)
-        }
+
         callBack(identity, null)
     }
 
     if (showMnemonicForm) {
         MnemonicForm {
             if (it == null) {
-                showMnemonicForm = false;
+                showMnemonicForm = false
             } else {
                 val inviteUrl = Ident.getInviteUrl(serverName)
                 callBack(it, if (getInvite) inviteUrl else null)
@@ -234,10 +207,10 @@ fun LoadIdentity(
             value = serverName,
             closeDialog = { showInviteUrlDialog = false },
             setValue = {
-                CoroutineScope(Dispatchers.IO).launch {
-                    store.saveData(SERVER_URL, it)
-                    showInviteUrlDialog = false
-                }
+//                CoroutineScope(Dispatchers.IO).launch {
+//                    store.saveData(SERVER_URL, it)
+//                    showInviteUrlDialog = false
+//                }
             }
         )
     }

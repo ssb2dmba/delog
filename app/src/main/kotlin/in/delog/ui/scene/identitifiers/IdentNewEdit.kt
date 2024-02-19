@@ -1,97 +1,95 @@
 package `in`.delog.ui.scene.identitifiers
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import `in`.delog.MainApplication
 import `in`.delog.R
 import `in`.delog.db.model.Ident
-import `in`.delog.service.ssb.SsbService
+import `in`.delog.ui.component.TextError
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.IdentListViewModel
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.apache.tuweni.scuttlebutt.Identity
 import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.MalformedInviteCodeException
-import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Preview
 @Composable
-fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteString: String) {
-    val identity = identity
-    var invite: Invite? = null
-    try {
-        invite = Invite.fromCanonicalForm(inviteString)
-    } catch (e: MalformedInviteCodeException) {
-        e.printStackTrace();
-        return
-    }
-    val ssbService: SsbService = get()
-    val identListViewModel = koinViewModel<IdentListViewModel>()
+fun previewIdentNewEdit() {
+    val inviteString ="udwhjyymzan454unyeirqbicgarsg4w3q664iadehiss4ek5gystc4ad.onion:8008:@u64QhYoJN4EKUtXi/T1hVvVYf+Rqm/t50rvNUFsXVK8=.ed25519~86Dn5SUBAuTbzJARsgV99LBu/qb4dxMoJZYSR5HcRzk="
+    val ident = Ident(
+        oid = 0,
+        publicKey = "@8bKCopZL2rilN7rPgd7/IyKj0RYPcilWsqaezvkGFRU=.ed25519",
+        server = "udwhjyymzan454unyeirqbicgarsg4w3q664iadehiss4ek5gystc4ad.onion",
+        port = 8008,
+        privateKey = "8CcQUI27IE+Rjj7sZ4Q9njjqcB0vizqstNYGVux/ehJilJsTn/uha5/uTrOFT/DBubbwR99SCBgTBWkOQ4B0iA==",
+        invite = inviteString,
+        sortOrder = 1,
+        defaultIdent = true,
+        lastPush = null
+    )
+    InnerNewIdentNewEdit(ident) { ident, alias -> }
+}
+
+
+@Composable
+fun InnerNewIdentNewEdit(ident: Ident,
+                         callback: (ident: Ident, alias: String) -> Unit
+) {
+
     var aliasInput by remember { mutableStateOf("") }
-    var serverInput by remember { mutableStateOf(invite.host) }
-    var portInput by remember { mutableStateOf(invite.port.toString()) }
-    var isValid = (aliasInput.length > 1) && (serverInput.length > 1) && (portInput.length == 4)
+    var serverInput by remember { mutableStateOf(ident.server) }
+    var portInput by remember { mutableStateOf(ident.port.toString()) }
+    val isValid = (aliasInput.length > 1) && (serverInput.length > 1) && (portInput.length == 4)
     var defaultServer by remember { mutableStateOf(true) }
-    val context = LocalContext.current
-
-    val newIdent by identListViewModel.insertedIdent.observeAsState(null)
-
-    if (newIdent != null) {
-        LaunchedEffect(key1 = Unit) {
-            newIdent!!.invite?.let {
-                GlobalScope.launch {
-                    ssbService.connectWithInvite(
-                        newIdent!!,
-                        {
-
-                        },
-                        {
-                            it.message?.let { it1 -> MainApplication.toastify(it1) };
-                        })
-                }
-                navController.navigate("${Scenes.FeedList.route}")
-            }
+    var loading by remember { mutableStateOf(false) }
+    if (loading) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CircularProgressIndicator()
         }
         return
     }
-
     Card(
         elevation = CardDefaults.cardElevation(),
         shape = RoundedCornerShape(0.dp),
         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
     ) {
+
 
         Column(
             modifier = Modifier
@@ -158,24 +156,56 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
-            TextButton(
+            Button(
                 enabled = isValid,
                 onClick = {
-                    val ident = Ident(
-                        oid = 0,
-                        publicKey = identity.toCanonicalForm(),
-                        server = serverInput,
-                        port = portInput.toInt(),
-                        privateKey = identity.privateKeyAsBase64String(),
-                        invite = inviteString,
-                        sortOrder = 1,
-                        defaultIdent = defaultServer,
-                        lastPush = null
-                    );
-                    identListViewModel.insert(ident = ident, aliasInput)
+                    loading = true
+                    ident.defaultIdent = defaultServer
+                    ident.server = serverInput
+                    ident.port = portInput.toInt()
+                    callback( ident,  aliasInput)
                 },
                 content = { Text(stringResource(id = R.string.save)) }
             )
         }
     }
+}
+
+@Composable
+fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteString: String) {
+    val identListViewModel = koinViewModel<IdentListViewModel>()
+    val newIdent by identListViewModel.insertedIdent.observeAsState(null)
+    if (newIdent != null) {
+        LaunchedEffect(key1 = Unit) {
+            newIdent!!.invite?.let {
+                navController.navigate(Scenes.FeedList.route)
+            }
+        }
+        return
+    }
+    val invite: Invite?
+    try {
+        invite = Invite.fromCanonicalForm(inviteString)
+    } catch (e: MalformedInviteCodeException) {
+        Card{
+            TextError("invite is malformed ! ${e.message}, $inviteString")
+        }
+        return
+    }
+    val ident = Ident(
+        oid = 0,
+        publicKey = identity.toCanonicalForm(),
+        server = invite.host,
+        port = invite.port,
+        privateKey = identity.privateKeyAsBase64String(),
+        invite = inviteString,
+        sortOrder = 1,
+        defaultIdent = true,
+        lastPush = null
+    )
+
+    InnerNewIdentNewEdit(ident) { ident, alias ->
+        identListViewModel.insert(ident = ident, alias)
+    }
+
 }

@@ -38,6 +38,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.AlertDialog
@@ -51,7 +52,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,14 +81,12 @@ import org.koin.core.parameter.parametersOf
 
 
 @Composable
-//@OptIn(ExperimentalLifecycleComposeApi::class)
 fun AboutEdit(
     navHostController: NavHostController,
     pubKey: String
 ) {
     val viewModel = koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(pubKey) })
     val uiState by viewModel.uiState.observeAsState(AboutUIState())
-    val aliasHasError by viewModel.aliasHasError.collectAsState()
 
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
@@ -198,9 +196,16 @@ fun AboutEdit(
                 var didColor = MaterialTheme.colorScheme.primary
                 if (!uiState.didValid!!) {
                     didColor = MaterialTheme.colorScheme.error
-                    idStatusText =
-                        "${uiState.alias}@${uiState.identAndAbout!!.ident.server} is not not available"
-                    idStatusIcon = Icons.Default.Close
+                    if (uiState.error.isNotEmpty()) {
+                        idStatusText = uiState.error
+                        idStatusIcon = Icons.Default.QuestionMark
+                    } else {
+                        idStatusText =
+                            "${uiState.alias}@${uiState.identAndAbout!!.ident.server} is not available"
+                        idStatusIcon = Icons.Default.Close
+                    }
+
+
                 }
                 Row(
                     modifier = Modifier

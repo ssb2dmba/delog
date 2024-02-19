@@ -19,28 +19,27 @@ package `in`.delog.viewmodel
 
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message
-import `in`.delog.db.repository.AboutRepository
-import `in`.delog.db.repository.DidRepository
-import `in`.delog.db.repository.IdentRepository
-import `in`.delog.db.repository.MessageRepository
-import `in`.delog.model.SsbSignableMessage
-import `in`.delog.model.SsbSignedMessage
+import `in`.delog.repository.AboutRepository
+import `in`.delog.repository.DidRepository
+import `in`.delog.repository.IdentRepository
+import `in`.delog.repository.MessageRepository
+import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.SsbSignableMessage
+import `in`.delog.service.ssb.SsbSignedMessage
+import `in`.delog.service.ssb.makeHash
+import `in`.delog.service.ssb.signMessage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -58,18 +57,19 @@ data class AboutUIState(
     val description: String = ""
 )
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class IdentAndAboutViewModel(
     private var pubKey: String,
     private val identRepository: IdentRepository,
     private val aboutRepository: AboutRepository,
     private val messageRepository: MessageRepository,
     private val didRepository: DidRepository,
+    private val ssbService: SsbService
 ) : ViewModel() {
 
-    val _uiState: MutableStateFlow<AboutUIState> = MutableStateFlow(AboutUIState())
+    private val _uiState: MutableStateFlow<AboutUIState> = MutableStateFlow(AboutUIState())
     val uiState: StateFlow<AboutUIState> = _uiState.asStateFlow()
-
+    private var _redirect: MutableStateFlow<Ident?> = MutableStateFlow(null)
+    var redirect: StateFlow<Ident?> = _redirect.asStateFlow()
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val iAndA = identRepository.findById(pubKey)
@@ -90,7 +90,7 @@ class IdentAndAboutViewModel(
     }
 
     fun onSavingIdent(ident: Ident) {
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             identRepository.update(ident)
             if (ident.defaultIdent) {
                 identRepository.setFeedAsDefaultFeed(ident)
@@ -99,45 +99,57 @@ class IdentAndAboutViewModel(
         }
     }
 
+    fun redeemInvite(ident: Ident) {
+        GlobalScope.launch {
+            ssbService.connectWithInvite(ident,
+                {
+                    // everything is going according to the plan
+                    MainApplication.toastify("Identity has been successfully validated on the relay.")
+                    _redirect.value = ident
+                },
+                {
+                    MainApplication.toastify(it.message.toString())
+                    _redirect.value = ident
+                })
+        }
+    }
+
     fun onSavingAbout(about: About) {
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             aboutRepository.insertOrUpdate(about)
             setDirty(true)
         }
     }
 
     fun cleanInvite(newIdent: Ident) {
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             identRepository.cleanInvite(newIdent)
         }
     }
 
     fun delete(ident: Ident) {
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             identRepository.delete(ident)
         }
     }
 
     fun onDoPublishClicked(about: About) {
-        GlobalScope.launch(Dispatchers.IO) {
-            val iAndA: IdentAndAbout = identRepository.findByPublicKey(about.about)
-            if (iAndA == null) {
-                return@launch
-            }
+        viewModelScope.launch(Dispatchers.IO) {
+            val iAndA: IdentAndAbout = identRepository.findByPublicKey(about.about) ?: return@launch
             val ident = iAndA.ident
-            val ssbSignableMessage = SsbSignableMessage.fromAbout(about!!)
+            val ssbSignableMessage = SsbSignableMessage.fromAbout(about)
             // precise some blockchain info
-            var last: Message? = messageRepository.getLastMessage(about!!.about)
+            val last: Message? = messageRepository.getLastMessage(about.about)
             if (last != null) {
                 ssbSignableMessage.sequence = last.sequence + 1
             } else {
                 ssbSignableMessage.sequence = 1
             }
             ssbSignableMessage.content.type = "about"
-            ssbSignableMessage.previous = last?.key;
+            ssbSignableMessage.previous = last?.key
             // sign message
-            ssbSignableMessage.hash = "sha256";
-            var sig = ssbSignableMessage.signMessage(ident!!)
+            ssbSignableMessage.hash = "sha256"
+            val sig = ssbSignableMessage.signMessage(ident)
 
             // add sig & hash info
             val ssbSignedMessage = SsbSignedMessage(ssbSignableMessage, sig)
@@ -147,7 +159,7 @@ class IdentAndAboutViewModel(
             val message = fromSsbSignedMessage(ssbSignedMessage)
             // save message & delete draft
             messageRepository.addMessage(message)
-            aboutRepository.insertOrUpdate(about = about!!)
+            aboutRepository.insertOrUpdate(about = about)
         }
 
     }
@@ -177,21 +189,6 @@ class IdentAndAboutViewModel(
             _uiState.update { it.copy(didValid = r.valid) }
         }
     }
-
-    val aliasHasError: StateFlow<Boolean> =
-        snapshotFlow { uiState.value.alias }
-            .mapLatest {
-                val r = didRepository.checkIfValid(uiState.value.identAndAbout, it)
-                if (r.error != null) {
-                    _uiState.update { it.copy(error = r.error) }
-                }
-                !r.valid
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = false
-            )
 
     fun updateDescription(value: String) {
         _uiState.update { it.copy(description = value.trim()) }
