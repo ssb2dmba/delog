@@ -21,12 +21,16 @@ package `in`.delog.ui.scene.identitifiers
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import `in`.delog.MainApplication
+import `in`.delog.db.SettingStore
+import `in`.delog.db.SettingStore.Companion.SERVER_URL
 import `in`.delog.db.model.Ident
 import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
@@ -52,6 +56,9 @@ fun IdentNew(navController: NavHostController) {
     var identity: Identity? by remember { mutableStateOf(null) }
     var hasNavigated by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val store = SettingStore(context)
+    val serverUrl = store.getData(SERVER_URL).collectAsState(initial = null)
+    if (serverUrl.value == null) return
 
     fun setInvite(s: String) {
         try {
@@ -64,12 +71,21 @@ fun IdentNew(navController: NavHostController) {
     }
 
     fun setIdentity(pIdentity: Identity?, pInviteUrl: String?) {
+        // check if exists ...
+        if (pIdentity!=null) {
+            val pk = pIdentity.toCanonicalForm()
+            if (identListViewModel.idents.value!!.any { it.ident.publicKey == pk }) {
+                val preexist = identListViewModel.idents.value!!.first { it.ident.publicKey == pk }
+                MainApplication.toastify("This identity $pk already exists !")
+                identListViewModel.setFeedAsDefaultFeed(preexist.ident)
+            }
+        }
         identity = pIdentity
         inviteUrl = pInviteUrl
     }
 
     fun doneWithoutInvite() {
-        if (hasNavigated == true) return
+        if (hasNavigated) return
         hasNavigated = true
         val ident = Ident(
             0,
@@ -81,24 +97,25 @@ fun IdentNew(navController: NavHostController) {
             -1,
             null,
             null
-        );
+        )
         val exists = identListViewModel.idents.value!!.any { it.ident.publicKey == ident.publicKey }
         if (exists) {
             val argUri = makeArgUri(ident.publicKey)
             navController.navigate("${Scenes.MainFeed.route}/${argUri}")
         } else {
             identListViewModel.insert(ident = ident)
-            navController.navigate("${Scenes.FeedList.route}")
+            navController.navigate(Scenes.FeedList.route)
         }
     }
+
     if (identity == null) {
-        LoadIdentity(identListViewModel, ::setIdentity)
+        LoadIdentity(serverUrl.value!!, ::setIdentity)
     } else {
         if (invite == null) {
             if (inviteUrl != null) {
                 InviteWebRequest(inviteUrl!!, ::setInvite)
             } else {
-                doneWithoutInvite();
+                doneWithoutInvite()
             }
         } else {
             IdentNewEdit(navController, identity!!, invite!!)
