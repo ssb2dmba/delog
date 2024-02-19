@@ -19,9 +19,10 @@ package `in`.delog.db.model
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity( indices = [Index(value = ["key"], unique = true)])
 data class Blob(
 
     @PrimaryKey(autoGenerate = true)

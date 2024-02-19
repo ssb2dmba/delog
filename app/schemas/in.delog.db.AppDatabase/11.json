@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 11,
-    "identityHash": "570c85b0d7de7898c42481a27ea0ebd4",
+    "identityHash": "6efa8267eaf2d836a9838481186019b2",
     "entities": [
       {
         "tableName": "Ident",
@@ -381,7 +381,17 @@
             "oid"
           ]
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_Blob_key",
+            "unique": true,
+            "columnNames": [
+              "key"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_Blob_key` ON `${TABLE_NAME}` (`key`)"
+          }
+        ],
         "foreignKeys": []
       }
     ],
@@ -393,7 +403,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '570c85b0d7de7898c42481a27ea0ebd4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6efa8267eaf2d836a9838481186019b2')"
     ]
   }
 }

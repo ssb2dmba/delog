@@ -194,11 +194,14 @@ class DraftViewModel(
                 if (blob == null) {
                     throw Exception("unable to insert blob")
                 }
+                if (_messageViewData.value.blobs.filter { it.key == blob.key }.isNotEmpty()) {
+                    throw Exception("file is already attached to message")
+                }
                 _messageViewData.update { it.copy(blobs = it.blobs.plus(blob)) }
                 blobsInContentAsText()
                 isLoadingImage = false
             } catch (e: Exception) {
-                MainApplication.toastify(e.toString())
+                MainApplication.toastify(e.message.toString())
             }
         }
     }

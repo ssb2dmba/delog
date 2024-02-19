@@ -64,7 +64,7 @@ class BlobRepositoryImpl(
         val mimeType = contentResolver.getType(uri)
         val size = getSize(uri)
         if (size>5e6) {
-            throw Error("file is bigger than network 5Mb limit: $size")
+            throw Exception("file is bigger than network 5Mb limit: $size")
         }
         val inputStream: InputStream? = contentResolver.openInputStream(uri)
         if (inputStream == null || mimeType == null) {
@@ -73,8 +73,11 @@ class BlobRepositoryImpl(
         }
         val hash = SHA256Hash.hash(SHA256Hash.Input.fromBytes(getBytes(inputStream)));
         inputStream.close()
-
         val b64hash = hash.bytes().toBase64String()
+        val key = "&$b64hash.sha256"
+        if (blobDao.get(key) != null) {
+            return BlobItem(key = key, size = size, type = mimeType, uri = uri)
+        }
         val hexHash = hash.bytes().toHexString().substring(2)
         val subdir = hexHash.substring(0, 2)
         val fileName = hexHash.substring(2)
@@ -84,7 +87,7 @@ class BlobRepositoryImpl(
         val input: InputStream? = contentResolver.openInputStream(uri)
         input!!.copyTo(outputFile.outputStream())
         input.close()
-        val key = "&" + b64hash + ".sha256"
+
         val blob = Blob(
             oid = 0,
             author = author,
