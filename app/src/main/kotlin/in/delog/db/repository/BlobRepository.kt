@@ -63,6 +63,9 @@ class BlobRepositoryImpl(
 
         val mimeType = contentResolver.getType(uri)
         val size = getSize(uri)
+        if (size>5e6) {
+            throw Error("file is bigger than network 5Mb limit: $size")
+        }
         val inputStream: InputStream? = contentResolver.openInputStream(uri)
         if (inputStream == null || mimeType == null) {
             Log.e(TAG, "unable to open file input stream is null:" + uri)

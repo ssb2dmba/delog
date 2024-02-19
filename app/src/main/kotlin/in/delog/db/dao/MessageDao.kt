@@ -49,7 +49,7 @@ interface MessageDao {
 
 
     @Transaction
-    @Query("SELECT * FROM message WHERE key = :key order by oid desc") // union in reply to
+    @Query("SELECT * FROM message WHERE 'key' = :key order by oid desc") // union in reply to
     fun getPagedMessages(key: String): PagingSource<Int, MessageAndAbout>
 
     @Query("SELECT * FROM message WHERE author = :author and sequence > :sequence order by sequence asc LIMIT :limit")

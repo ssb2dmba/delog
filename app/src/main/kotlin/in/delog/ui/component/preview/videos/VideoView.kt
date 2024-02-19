@@ -715,7 +715,7 @@ fun Waveform(
                 // doesn't consider the mutex because the screen can turn off if the video
                 // being played in the mutex is not visible.
                 if (isPlaying) {
-                    restartFlow.value += 1
+                    restartFlow.intValue += 1
                 }
             }
 
@@ -733,7 +733,7 @@ fun Waveform(
         }
     }
 
-    LaunchedEffect(key1 = restartFlow.value) {
+    LaunchedEffect(key1 = restartFlow.intValue) {
         pollCurrentDuration(controller).collect() { value ->
             waveformProgress.value = value
         }

@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Ident
@@ -185,16 +186,20 @@ class DraftViewModel(
         }
     }
 
-
     fun selectImage(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             val author = _messageViewData.value.author
-            val blob: BlobItem = blobRepository.insert(author,uri)
-                ?: // Todo toast error
-                return@launch
-            _messageViewData.update { it.copy(blobs = it.blobs.plus(blob)) }
-            blobsInContentAsText()
-            isLoadingImage = false
+            try {
+                val blob: BlobItem? = blobRepository.insert(author, uri)
+                if (blob == null) {
+                    throw Exception("unable to insert blob")
+                }
+                _messageViewData.update { it.copy(blobs = it.blobs.plus(blob)) }
+                blobsInContentAsText()
+                isLoadingImage = false
+            } catch (e: Exception) {
+                MainApplication.toastify(e.toString())
+            }
         }
     }
 
