@@ -24,8 +24,6 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.BlobRepositoryImpl
 import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.ContactRepositoryImpl
-import `in`.delog.db.repository.DidRepository
-import `in`.delog.db.repository.DidRepositoryImpl
 import `in`.delog.db.repository.DraftRepository
 import `in`.delog.db.repository.DraftRepositoryImpl
 import `in`.delog.db.repository.FeedRepositoryImpl
@@ -34,6 +32,8 @@ import `in`.delog.db.repository.MessageRepository
 import `in`.delog.db.repository.MessageRepositoryImpl
 import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.db.repository.MessageTreeRepositoryImpl
+import `in`.delog.repository.DidRepository
+import `in`.delog.repository.DidRepositoryImpl
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.ContactListViewModel
 import `in`.delog.viewmodel.DraftListViewModel

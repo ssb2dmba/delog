@@ -26,9 +26,9 @@ import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.isOnion
 import `in`.delog.db.model.toJsonResponse
-import `in`.delog.repository.AboutRepository
-import `in`.delog.repository.ContactRepository
-import `in`.delog.repository.MessageRepository
+import `in`.delog.db.repository.AboutRepository
+import `in`.delog.db.repository.ContactRepository
+import `in`.delog.db.repository.MessageRepository
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.tuweni.bytes.Bytes

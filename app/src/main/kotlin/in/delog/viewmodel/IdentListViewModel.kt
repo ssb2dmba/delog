@@ -25,7 +25,7 @@ import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
-import `in`.delog.repository.IdentRepository
+import `in`.delog.db.repository.IdentRepository
 import `in`.delog.service.ssb.SsbService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope

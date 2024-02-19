@@ -20,7 +20,6 @@ package `in`.delog.db.repository
 import androidx.lifecycle.LiveData
 import `in`.delog.db.dao.AboutDao
 import `in`.delog.db.dao.IdentDao
-import `in`.delog.db.dao.setFeedAsDefaultFeed
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import kotlinx.coroutines.flow.Flow
