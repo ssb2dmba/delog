@@ -15,22 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.service.ssb
+package `in`.delog.db.dao
 
-import androidx.compose.runtime.Composable
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
+import `in`.delog.db.model.Blob
 
-@Composable
-fun ForkSsbService() {
-    /**
-    val feed = LocalActiveFeed.current ?: return
-    val ssbService: SsbService = get()
-    LaunchedEffect(feed) {
-    try {
-    ssbService.reconnect(feed.ident)
-    } catch (e: Exception) {
-    // TODO snackbar
-    e.printStackTrace()
-    }
-    }
-     */
+@Dao
+interface BlobDao {
+
+    @Delete
+    fun delete(blob: Blob)
+
+    @Insert
+    fun insert(blob: Blob)
+
+    @Update
+    fun update(blob: Blob)
+
+
+    @Query("SELECT * FROM blob WHERE `key` = :key")
+    suspend fun get(key: String): Blob
+
 }

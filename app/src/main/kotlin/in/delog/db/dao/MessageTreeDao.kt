@@ -20,16 +20,18 @@ package `in`.delog.db.dao
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import `in`.delog.db.AppDatabaseView
-import java.util.*
 
 @Dao
 interface MessageTreeDao {
 
+    @Transaction
     @Query("select m1.*  from MessageTree m1 where  m1.author = :author or m1.author IN (select follow from contact where author = :author  and value = 1)")
     fun getPagedFeed(author: String): PagingSource<Int, AppDatabaseView.MessageInTree>
 
 
+    @Transaction
     @Query("select m1.*  from MessageTree m1 where  m1.key = :key or m1.root = :key")
     fun getPagedMessage(key: String): PagingSource<Int, AppDatabaseView.MessageInTree>
 

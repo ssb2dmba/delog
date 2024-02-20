@@ -22,18 +22,23 @@ import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
-import java.util.*
 
 @Dao
 interface MessageDao {
 
+    // expensive query used for message deletion check only
+    @Query("select count(*) from message where contentAsText like :key")
+    fun countMessagesWithBlob(key: String): Int
 
+    @Transaction
     @Query("SELECT * FROM message WHERE type='post' and author = :author or author IN (select follow from contact where author = :author and value = 1) order by oid desc")
     fun getPagedPosts(author: String): PagingSource<Int, MessageAndAbout>
 
+    @Transaction
     @Query(
         "select m1.*  from message m1\n" +
                 "left join message  m2 on m2.`key`=m1.root \n" +
@@ -43,7 +48,8 @@ interface MessageDao {
     fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout>
 
 
-    @Query("SELECT * FROM message WHERE key = :key order by oid desc") // union in reply to
+    @Transaction
+    @Query("SELECT * FROM message WHERE 'key' = :key order by oid desc") // union in reply to
     fun getPagedMessages(key: String): PagingSource<Int, MessageAndAbout>
 
     @Query("SELECT * FROM message WHERE author = :author and sequence > :sequence order by sequence asc LIMIT :limit")
@@ -76,6 +82,7 @@ interface MessageDao {
     @Query("SELECT * FROM ident WHERE public_key = :pk LIMIT 1")
     fun getFeed(pk: String): IdentAndAbout
 
+    @Transaction
     @Query("SELECT * FROM message WHERE key = :key LIMIT 1")
     fun getMessageAndAbout(key: String): MessageAndAbout?
 

@@ -159,7 +159,7 @@ class SecureScuttlebuttVertxClient(
                             val headerAndBodyLength = bodyLength + headerSize
                             val wholeMessage = messageBuffer.slice(0, headerAndBodyLength)
                             if (isGoodbye(wholeMessage)) {
-                                Log.i(TAG, "Goodbye received from remote peer")
+                                Log.d(TAG, "Goodbye received from remote peer")
                                 socket.close()
                             } else {
                                 handler!!.receivedMessage(wholeMessage)

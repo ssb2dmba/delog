@@ -18,8 +18,8 @@
 package `in`.delog.ui.scene
 
 
-import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +35,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -52,8 +53,7 @@ import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
-import `in`.delog.db.AppDatabaseView
-import `in`.delog.db.toMessageViewData
+import `in`.delog.model.MessageViewData
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.GoToTop
@@ -74,9 +74,6 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun MessagesList(navController: NavController, feedToReadKey: String) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    if (feedToReadKey == null) {
-        return
-    }
     val viewModel =
         koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
     val uiState by viewModel.uiState.observeAsState(FeedMainUIState())
@@ -84,7 +81,9 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
 
     LaunchedEffect(feedToReadKey) {
         bottomBarViewModel.setActions {
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f)
+                .background(MaterialTheme.colorScheme.onSurfaceVariant)
+            )
             NewDraftFab(navController)
         }
     }
@@ -100,14 +99,14 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
         return
     }
 
-    val JumpToBottomThreshold = 56.dp
+    val jumpToBottomThreshold = 56.dp
     val scrollState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    val fpgMessages: Flow<PagingData<AppDatabaseView.MessageInTree>> = viewModel.messagesPaged!!
-    val lazyMessageItems: LazyPagingItems<AppDatabaseView.MessageInTree> =
+    val fpgMessages: Flow<PagingData<MessageViewData>> = viewModel.messagesPaged!!
+    val lazyMessageItems: LazyPagingItems<MessageViewData> =
         fpgMessages.collectAsLazyPagingItems()
-    if (uiState.syncing || uiState.identAndAbout == null) {
+    if (uiState.syncing) {
         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
     }
     Box {
@@ -115,7 +114,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
         var previousRoot: String? = null
         LazyColumn(
             state = scrollState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().padding(8.dp)
         ) {
             items(
                 count = lazyMessageItems.itemCount,
@@ -129,7 +128,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                         colors = CardDefaults.cardColors(),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
-                            .padding(16.dp)
+                            .padding(bottom=8.dp)
                             .wrapContentHeight()
                     ) {
                         IdentityBox(
@@ -140,10 +139,13 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                 }
 
                 lazyMessageItems[index]?.let {
+                    if ((it.root != previousRoot)) { // // it.root == null || (it.replies == 0L) ||
+                        ListSpacer()
+                    }
                     val argUri = makeArgUri(it.key)
                     MessageItem(
                         navController = navController,
-                        message = it.toMessageViewData(),
+                        messageViewData = it,
                         showToolbar = true,
                         truncate = it.key != feedToReadKey,
                         hasDivider = it.replies > 0 || it.level > 0,
@@ -153,14 +155,9 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                             }
                         }
                     )
-                    if (it.root == null || it.root != previousRoot) {
-                        ListSpacer()
-                    }
+
                     previousRoot = it.root ?: it.key
-
                 }
-
-
             }
         }
 
@@ -168,7 +165,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
         // Jump to bottom button shows up when user scrolls past a threshold.
         // Convert to pixels:
         val jumpThreshold = with(LocalDensity.current) {
-            JumpToBottomThreshold.toPx()
+            jumpToBottomThreshold.toPx()
         }
 
         // Show the button if the first visible item is not the first one or if the offset is
@@ -202,6 +199,8 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                 Toast.LENGTH_LONG
             )
             .show()
+        viewModel.clearError()
+
     }
 }
 

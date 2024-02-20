@@ -19,7 +19,7 @@ package `in`.delog.db.model
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import `in`.delog.service.ssb.SsbMessageContent
+import `in`.delog.model.SsbMessageContent
 import kotlinx.serialization.json.Json
 
 /**

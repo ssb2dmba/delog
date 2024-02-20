@@ -15,39 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.service.ssb
+package `in`.delog.model
 
-import `in`.delog.db.model.Ident
-import `in`.delog.db.model.asKeyPair
 import `in`.delog.service.ssb.BaseSsbService.Companion.format
 import kotlinx.serialization.Serializable
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.sodium.SHA256Hash
-import org.apache.tuweni.crypto.sodium.Signature
-
-
-@Serializable()
-data class SsbMessageContent(
-    var text: String? = null,
-    var type: String,
-    val contentWarning: String? = null,
-    val about: String? = null,
-    val image: String? = null,
-    val name: String? = null,
-    val root: String? = null,
-    val branch: String? = null,
-    val description: String? = null
-)
-
-@Serializable
-data class SsbSignableMessage(
-    var previous: String?,
-    var sequence: Long,
-    var author: String,
-    val timestamp: Long,
-    var hash: String,
-    val content: SsbMessageContent
-)
 
 
 @Serializable
@@ -69,28 +42,14 @@ data class SsbSignedMessage(
         content = signable.content,
         signature = sequence.toBase64String() + ".sig.ed25519"
     )
+
+    fun makeHash(): SHA256Hash.Hash? {
+        val message = format.encodeToString(
+            serializer(),
+            this
+        )
+        return SHA256Hash.hash(SHA256Hash.Input.fromBytes(Bytes.wrap(message.toByteArray())))
+    }
 }
 
-fun SsbSignableMessage.signMessage(feed: Ident): Bytes {
-    val kp = feed.asKeyPair()
-    return Signature.signDetached(
-        Bytes.wrap(getMessageString(this).encodeToByteArray()),
-        kp!!.secretKey()
-    );
-}
 
-fun getMessageString(message: SsbSignableMessage): String {
-    var message = format.encodeToString(
-        SsbSignableMessage.serializer(),
-        message
-    )
-    return message;
-}
-
-fun SsbSignedMessage.makeHash(): SHA256Hash.Hash? {
-    val message = format.encodeToString(
-        SsbSignedMessage.serializer(),
-        this
-    )
-    return SHA256Hash.hash(SHA256Hash.Input.fromBytes(Bytes.wrap(message.toByteArray())))
-}

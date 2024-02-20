@@ -20,6 +20,7 @@ package `in`.delog.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import `in`.delog.db.dao.AboutDao
+import `in`.delog.db.dao.BlobDao
 import `in`.delog.db.dao.ContactDao
 import `in`.delog.db.dao.DraftDao
 import `in`.delog.db.dao.IdentDao
@@ -27,6 +28,7 @@ import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.dao.MessageTreeDao
 import `in`.delog.db.dao.RelayDao
 import `in`.delog.db.model.About
+import `in`.delog.db.model.Blob
 import `in`.delog.db.model.Contact
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Ident
@@ -41,11 +43,12 @@ import `in`.delog.db.model.RelayServer
         Contact::class,
         About::class,
         RelayServer::class,
+        Blob::class,
     ],
     views = [
         AppDatabaseView.MessageInTree::class
     ],
-    version = 10
+    version = 11
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun identDao(): IdentDao
@@ -55,4 +58,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun contactDao(): ContactDao
     abstract fun authorInfoDao(): AboutDao
     abstract fun pubServerDao(): RelayDao
+    abstract fun wantDao(): BlobDao
 }

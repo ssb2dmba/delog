@@ -17,11 +17,14 @@
  */
 package `in`.delog
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import `in`.delog.di.modules.dataBaseModule
 import `in`.delog.di.modules.mainViewModel
 import `in`.delog.di.modules.ssbModule
@@ -84,8 +87,25 @@ class MainApplication : Application() {
         newCache
     }
 
+
 }
 
+class GetMediaActivityResultContract : ActivityResultContracts.GetContent() {
+    @SuppressLint("MissingSuperCall")
+    override fun createIntent(
+            context: Context,
+            input: String,
+    ): Intent {
+        // Force OPEN Document because of the resulting URI must be passed to the
+        // Playback service and the picker's permissions only allow the activity to read the URI
+        return Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            // Force only images and videos to be selectable
+            type = "*/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("*/*"))
+        }
+    }
+}
 
 
 

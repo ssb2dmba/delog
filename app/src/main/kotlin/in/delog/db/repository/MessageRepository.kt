@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.repository
+package `in`.delog.db.repository
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.lifecycle.LiveData
@@ -40,12 +40,17 @@ interface MessageRepository {
     fun getMessageAndAbout(key: String): MessageAndAbout?
 
     fun getMessage(key: String): Message?
+    fun blobIsUsefull(key: String):Boolean
 }
 
 class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageRepository {
 
     override fun getMessage(key: String): Message? {
         return messageDao.getMessage(key)
+    }
+
+    override fun blobIsUsefull(key: String): Boolean {
+       return messageDao.countMessagesWithBlob(key)>0
     }
 
     override fun getMessageAndAbout(key: String): MessageAndAbout? {

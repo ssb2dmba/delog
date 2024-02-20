@@ -22,23 +22,43 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import `in`.delog.repository.DraftRepository
+import androidx.paging.map
+import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.DraftRepository
+import `in`.delog.model.MessageViewData
+import `in`.delog.model.toMessageViewData
+import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 
 class DraftListViewModel(
     private val author: String,
-    private val repository: DraftRepository
+    private val repository: DraftRepository,
+    private val blobRepository: BlobRepository,
 ) : ViewModel() {
 
-    var draftsPaged = Pager(
-        PagingConfig(
-            pageSize = 10,
-            prefetchDistance = 10,
-            enablePlaceholders = false,
-        )
-    ) {
-        repository.getPagedDraft(author)
-    }.flow.cachedIn(viewModelScope)
+    var messageViewData: Flow<PagingData<MessageViewData>>? = null
+    init {
+        viewModelScope.launch(Dispatchers.IO){
+            messageViewData = Pager(
+                PagingConfig(
+                    pageSize = 10,
+                    prefetchDistance = 10,
+                    enablePlaceholders = false,
+                )
+            ) {
+                repository.getPagedDraft(author)
+            }.flow.map { pagingData ->
+                pagingData.map { draft ->
+                    draft.toMessageViewData(format, blobRepository)
+                }
+            }.cachedIn(viewModelScope)
+        }
+    }
 
 }

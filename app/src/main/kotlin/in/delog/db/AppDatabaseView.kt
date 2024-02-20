@@ -1,10 +1,6 @@
 package `in`.delog.db
 
 import androidx.room.DatabaseView
-import `in`.delog.ui.component.MessageContent
-import `in`.delog.ui.component.MessageViewData
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 
 class AppDatabaseView {
     @DatabaseView(
@@ -69,27 +65,6 @@ class AppDatabaseView {
     )
 }
 
-fun AppDatabaseView.MessageInTree.content(format: Json): MessageContent {
-    return try {
-        format.decodeFromString(
-            MessageContent.serializer(),
-            this.contentAsText
-        )
-    } catch (e: SerializationException) {
-        // TODO incomming .box message here
-        // at insert in db with type text that should not happen
-        MessageContent(this.contentAsText, "error")
-    }
-}
 
-fun AppDatabaseView.MessageInTree.toMessageViewData() = MessageViewData(
-    key = key,
-    timestamp = timestamp,
-    author = author,
-    contentAsText = contentAsText,
-    root = root,
-    branch = branch,
-    authorName = name,
-    authorImage = image,
-    pName = pName
-)
+
+

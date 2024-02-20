@@ -29,10 +29,15 @@ import androidx.paging.map
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message
-import `in`.delog.repository.MessageRepository
-import `in`.delog.repository.MessageTreeRepository
+import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.MessageRepository
+import `in`.delog.db.repository.MessageTreeRepository
+import `in`.delog.model.MessageViewData
+import `in`.delog.model.toMessageViewData
+import `in`.delog.service.ssb.BaseSsbService.Companion.format
 import `in`.delog.service.ssb.SsbService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,19 +59,28 @@ class MessageListViewModel(
     private var key: String,
     private val messageTreeRepository: MessageTreeRepository,
     private val messageRepository: MessageRepository,
-    private val ssbService: SsbService
+    private val ssbService: SsbService,
+    private val blobRepository: BlobRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FeedMainUIState())
     val uiState: StateFlow<FeedMainUIState> = _uiState.asStateFlow()
 
-    var messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null
+    var messagesPaged: Flow<PagingData<MessageViewData>>? = null
 
-    fun onError(e: Exception) {
+    private fun onError(e: Exception) {
+
         _uiState.update { it.copy(error = e, syncing = false) }
     }
 
-    fun synchronize() {
+    fun clearError() {
+        viewModelScope.launch {
+            delay(1000)
+            _uiState.update { it.copy(error = null) }
+        }
+    }
+
+    private fun synchronize() {
         viewModelScope.launch {
             if (_uiState.value.identAndAbout==null) return@launch
             _uiState.update { it.copy(error = null, syncing = true) }
@@ -98,7 +112,6 @@ class MessageListViewModel(
                     enablePlaceholders = false
                 )
             ) {
-
                 if (key.startsWith("@")) {
                     messageTreeRepository.getPagedMessageByAuthor(key)
                 } else { // starts with %
@@ -107,8 +120,7 @@ class MessageListViewModel(
             }
                 .flow.map { pagingData ->
                     pagingData.map { msgAndAbout ->
-                        //UrlCachedPreviewer. preloadPreviewsFor(msgAndAbout)
-                        msgAndAbout
+                        msgAndAbout.toMessageViewData(format, blobRepository)
                     }
                 }.cachedIn(viewModelScope)
             _uiState.update { it.copy(loaded = true) }

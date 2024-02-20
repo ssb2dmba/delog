@@ -20,25 +20,20 @@ package `in`.delog.ui.component.preview.videos
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import android.util.LruCache
 import androidx.core.net.toUri
 import androidx.media3.common.C
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Player.STATE_IDLE
 import androidx.media3.common.Player.STATE_READY
-import androidx.media3.exoplayer.ExoPlaybackException
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.session.MediaSession
 import `in`.delog.MainActivity
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.IOException
 import kotlin.math.abs
 
 class MultiPlayerPlaybackManager(
@@ -58,7 +53,6 @@ class MultiPlayerPlaybackManager(
                 newValue: MediaSession?
             ) {
                 super.entryRemoved(evicted, key, oldValue, newValue)
-                Log.i(TAG,"entry removed!!!!!!!!!!!!!!!!!!!")
                 if (!playingMap.contains(key)) {
                     oldValue?.let {
                         it.player.release()

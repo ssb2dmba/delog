@@ -39,7 +39,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
-import `in`.delog.service.ssb.ForkSsbService
 import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppBottomAppBar
@@ -84,8 +83,6 @@ fun MyApp() {
     CompositionLocalProvider(
         LocalActiveFeed provides defaultFeed
     ) {
-
-        ForkSsbService()
 
         val context = MainApplication.applicationContext()
         var darkTheme = true

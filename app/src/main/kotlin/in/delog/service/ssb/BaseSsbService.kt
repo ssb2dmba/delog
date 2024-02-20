@@ -90,7 +90,6 @@ open class BaseSsbService {
             params["feed"] = feed.publicKey
             val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
             val rpcMessageAsyncResult = ssbClient.rawRequestService.makeAsyncRequest(asyncRequest)
-            Log.i(TAG, rpcMessageAsyncResult.asString())
             callBack(rpcMessageAsyncResult)
         } catch (ex: Exception) {
             if (errorCb != null) {

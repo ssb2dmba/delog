@@ -23,6 +23,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import `in`.delog.db.AppDatabase
 import `in`.delog.db.dao.AboutDao
+import `in`.delog.db.dao.BlobDao
 import `in`.delog.db.dao.ContactDao
 import `in`.delog.db.dao.DraftDao
 import `in`.delog.db.dao.IdentDao
@@ -72,6 +73,10 @@ val dataBaseModule = module(createdAtStart = true) {
         return dataBase.authorInfoDao()
     }
 
+    fun provideWantDao(dataBase: AppDatabase): BlobDao {
+        return dataBase.wantDao()
+    }
+
     single { provideDataBase(androidApplication()) }
     single { provideFeedDao(get()) }
     single { provideMessageDao(get()) }
@@ -79,4 +84,5 @@ val dataBaseModule = module(createdAtStart = true) {
     single { provideDraftDao(get()) }
     single { provideContactDao(get()) }
     single { provideAuthorInfoDao(get()) }
+    single { provideWantDao(get()) }
 }

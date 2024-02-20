@@ -15,12 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.repository
+package `in`.delog.db.repository
 
 import androidx.lifecycle.LiveData
 import `in`.delog.db.dao.AboutDao
 import `in`.delog.db.dao.IdentDao
-import `in`.delog.db.dao.setFeedAsDefaultFeed
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import kotlinx.coroutines.flow.Flow

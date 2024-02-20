@@ -95,7 +95,6 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.google.common.util.concurrent.MoreExecutors
 import com.linc.audiowaveform.infiniteLinearGradient
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.ui.component.preview.images.ImageUrlWithDownloadButton
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.Dispatchers
@@ -716,16 +715,14 @@ fun Waveform(
                 // doesn't consider the mutex because the screen can turn off if the video
                 // being played in the mutex is not visible.
                 if (isPlaying) {
-                    restartFlow.value += 1
+                    restartFlow.intValue += 1
                 }
             }
 
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 super.onPlayWhenReadyChanged(playWhenReady, reason)
-                Log.i(TAG, "got itttttttttttt2!" + playWhenReady + reason)
             }
             override fun onPlayerError(error: PlaybackException) {
-                Log.i(TAG, "got itttttttttttt!")
                 super.onPlayerError(error)
             }
         }
@@ -736,7 +733,7 @@ fun Waveform(
         }
     }
 
-    LaunchedEffect(key1 = restartFlow.value) {
+    LaunchedEffect(key1 = restartFlow.intValue) {
         pollCurrentDuration(controller).collect() { value ->
             waveformProgress.value = value
         }

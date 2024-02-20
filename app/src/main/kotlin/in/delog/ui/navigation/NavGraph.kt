@@ -108,7 +108,6 @@ fun NavGraph(navController: NavHostController) {
             var linkKey = backStackEntry.arguments?.getString(LINK)
             val draftType = backStackEntry.arguments?.getString(TYPE)
             if (linkKey == null) linkKey = ""
-            System.out.println("here" + draftType + linkKey)
             DraftEdit(navController = navController, draftMode =draftType!!,  draftId = 0L, link= linkKey!!)
         }
 
@@ -119,7 +118,6 @@ fun NavGraph(navController: NavHostController) {
             route = Scenes.DraftEdit.route + "/{" + OID + "}",
             arguments = listOf(navArgument(OID) { type = NavType.LongType})
         ) { backStackEntry ->
-            System.out.println("there")
             var oid = backStackEntry.arguments?.getLong(OID)
             if (oid == null) oid = 0
             DraftEdit(navController, draftMode="", draftId= oid,link="")

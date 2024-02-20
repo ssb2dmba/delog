@@ -25,7 +25,9 @@ import org.apache.tuweni.io.Base64
 
 @Entity
 data class Ident(
+
     @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "oid")
     var oid: Long,
 
     @ColumnInfo(name = "public_key")

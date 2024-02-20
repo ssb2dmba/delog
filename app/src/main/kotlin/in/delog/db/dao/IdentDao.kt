@@ -18,7 +18,12 @@
 package `in`.delog.db.dao
 
 import androidx.lifecycle.LiveData
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import kotlinx.coroutines.flow.Flow
@@ -29,12 +34,15 @@ interface IdentDao {
     @Query("SELECT * FROM ident")
     fun getAll(): List<Ident>
 
+    @Transaction
     @Query("SELECT * FROM ident")
     fun getAllLive(): Flow<List<IdentAndAbout>>
 
+    @Transaction
     @Query("SELECT * FROM ident WHERE oid = :oid LIMIT 1")
     fun findByOId(oid: String): IdentAndAbout
 
+    @Transaction
     @Query("SELECT * FROM ident WHERE public_key = :pk LIMIT 1")
     fun findByPublicKey(pk: String): IdentAndAbout?
 
@@ -56,6 +64,7 @@ interface IdentDao {
     @Query("SELECT count(*) FROM ident")
     fun liveCount(): LiveData<Int>
 
+    @Transaction
     @Query("SELECT * FROM ident ORDER BY default_ident desc LIMIT 1")
     fun getDefaultFeed(): Flow<IdentAndAbout>
 
