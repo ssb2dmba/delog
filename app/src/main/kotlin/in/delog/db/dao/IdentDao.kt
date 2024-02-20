@@ -42,6 +42,7 @@ interface IdentDao {
     @Query("SELECT * FROM ident WHERE oid = :oid LIMIT 1")
     fun findByOId(oid: String): IdentAndAbout
 
+
     @Transaction
     @Query("SELECT * FROM ident WHERE public_key = :pk LIMIT 1")
     fun findByPublicKey(pk: String): IdentAndAbout?
@@ -83,5 +84,7 @@ interface IdentDao {
         unsetDefault()
         setDefault(oid)
     }
+
+
 }
 

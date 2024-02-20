@@ -22,7 +22,9 @@ import `in`.delog.db.dao.AboutDao
 import `in`.delog.db.dao.IdentDao
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 
 /**
@@ -30,26 +32,39 @@ import kotlinx.coroutines.flow.Flow
  */
 
 interface IdentRepository {
-    val default: Flow<IdentAndAbout>
-    val idents: Flow<List<IdentAndAbout>>
+    val default: Flow<IdentAndAboutWithBlob>
+    val idents: Flow<List<IdentAndAboutWithBlob>>
     val count: LiveData<Int>
     suspend fun insert(feed: IdentAndAbout): Long
     suspend fun update(feed: Ident)
     suspend fun delete(feed: Ident)
-    suspend fun findById(id: String): IdentAndAbout
+    suspend fun findByIdOLD(id: String): IdentAndAbout
+
+    suspend fun findById(id: String): IdentAndAboutWithBlob
     suspend fun getLive(id: String): LiveData<Ident>
     fun setFeedAsDefaultFeed(it: Ident)
     suspend fun findByPublicKey(pk: String): IdentAndAbout?
     suspend fun cleanInvite(newIdent: Ident)
+    suspend fun getFeed(author: String): IdentAndAboutWithBlob?
 
 }
 
-class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: AboutDao) :
+class FeedRepositoryImpl(
+    private val identDao: IdentDao,
+    private val aboutDao: AboutDao,
+    private val blobRepository: BlobRepository
+) :
     IdentRepository {
 
-    override val idents: Flow<List<IdentAndAbout>> = identDao.getAllLive()
+    override val idents: Flow<List<IdentAndAboutWithBlob>> = identDao.getAllLive().map { list ->
+        list.map { identAndAbout ->
+            makeIdentAndAboutWithBlob(identAndAbout)
+        }
+    }
 
-    override val default: Flow<IdentAndAbout> = identDao.getDefaultFeed()
+    override val default: Flow<IdentAndAboutWithBlob> = identDao.getDefaultFeed().map { identAndAbout ->
+        makeIdentAndAboutWithBlob(identAndAbout)
+    }
 
     override val count = identDao.liveCount()
 
@@ -61,7 +76,7 @@ class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: A
         val id = identDao.insert(feed = feed.ident)
         identDao.setFeedAsDefaultFeed(id)
         aboutDao.insert(feed.about!!)
-        return id;
+        return id
     }
 
     override suspend fun update(feed: Ident) {
@@ -72,8 +87,26 @@ class FeedRepositoryImpl(private val identDao: IdentDao, private val aboutDao: A
         identDao.delete(feed)
     }
 
-    override suspend fun findById(id: String): IdentAndAbout {
+    override suspend fun findByIdOLD(id: String): IdentAndAbout {
         return identDao.findByOId(id)
+    }
+
+    override suspend fun findById(id: String): IdentAndAboutWithBlob {
+        return makeIdentAndAboutWithBlob(identDao.findByOId(id))
+    }
+
+    override suspend fun getFeed(author: String): IdentAndAboutWithBlob? {
+        return identDao.findByPublicKey(author)?.let { makeIdentAndAboutWithBlob(it) }
+    }
+
+    private suspend fun makeIdentAndAboutWithBlob(identAndAbout: IdentAndAbout): IdentAndAboutWithBlob {
+        return IdentAndAboutWithBlob(
+            ident = identAndAbout.ident,
+            about = identAndAbout.about!!,
+            profileImage = identAndAbout.about!!.image?.let {
+                blobRepository.getAsBlobItem(it).uri
+            }
+        )
     }
 
     override suspend fun findByPublicKey(pk: String): IdentAndAbout? {

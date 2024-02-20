@@ -24,12 +24,12 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
-import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import kotlinx.coroutines.flow.Flow
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-val LocalActiveFeed = compositionLocalOf<IdentAndAbout?> { null }
+val LocalActiveFeed = compositionLocalOf<IdentAndAboutWithBlob?> { null }
 
 @Composable
 fun <T> Flow<T>.observeAsState(

@@ -18,6 +18,7 @@
 package `in`.delog.viewmodel
 
 
+import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,8 +26,10 @@ import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.AboutRepository
+import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.model.SsbSignableMessage
@@ -43,16 +46,15 @@ import kotlinx.coroutines.launch
 
 @Immutable
 data class AboutUIState(
-    val identAndAbout: IdentAndAbout? = null,
     val dirty: Boolean = false,
     val didValid: Boolean? = null,
     val showExportDialogState: Boolean = false,
     val showPublishDialogState: Boolean = false,
     val showDeleteDialogState: Boolean = false,
-    val image: String = "",
-    val error: String = "",
-    val alias: String = "",
-    val description: String = ""
+    val didValidationErrorMessage: String = "",
+    val didLoading : Boolean = false,
+    var identAndAboutWithBlob: IdentAndAboutWithBlob,
+    var imageToPick: Uri? = null
 )
 
 class IdentAndAboutViewModel(
@@ -61,31 +63,46 @@ class IdentAndAboutViewModel(
     private val aboutRepository: AboutRepository,
     private val messageRepository: MessageRepository,
     private val didRepository: DidRepository,
-    private val ssbService: SsbService
+    private val ssbService: SsbService,
+    private val blobRepository: BlobRepository
 ) : ViewModel() {
 
-    private val _uiState: MutableStateFlow<AboutUIState> = MutableStateFlow(AboutUIState())
-    val uiState: StateFlow<AboutUIState> = _uiState.asStateFlow()
+    private var _uiState: MutableStateFlow<AboutUIState?> = MutableStateFlow(null)
+    var uiState: StateFlow<AboutUIState?> = _uiState.asStateFlow()
     private var _redirect: MutableStateFlow<Ident?> = MutableStateFlow(null)
     var redirect: StateFlow<Ident?> = _redirect.asStateFlow()
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            val iAndA = identRepository.findById(pubKey)
-            _uiState.update {
-                it.copy(
-                    identAndAbout = iAndA,
-                    alias = iAndA.about?.name ?: "",
-                    description = iAndA.about?.description ?: ""
-                )
-            }
-            uiState.value.identAndAbout?.about?.name?.let {
-                checkName(
-                    uiState.value.identAndAbout,
-                    it
-                )
+            _uiState.value = AboutUIState(identAndAboutWithBlob = identRepository.findById(pubKey))
+        }
+    }
+
+    fun update(input: AboutUIState) {
+        if(_uiState.value==null) return
+        _uiState.value = input
+        if (input.imageToPick!=null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val blob =
+                        blobRepository.insert(input.identAndAboutWithBlob.about.about, input.imageToPick!!)
+                            ?: throw Exception("unable to insert blob")
+                    if (_uiState.value!!.identAndAboutWithBlob.about.image == blob.key) {
+                        throw Exception("file is already attached to message")
+                    }
+                    val newState = _uiState.value!!.copy()
+                    newState.identAndAboutWithBlob.about.image = blob.key
+                    newState.identAndAboutWithBlob.profileImage = blob.uri
+                    newState.imageToPick = null
+                    _uiState.value = newState
+                } catch (e: Exception) {
+                    MainApplication.toastify(e.message.toString())
+                }
             }
         }
     }
+
+
 
     fun onSavingIdent(ident: Ident) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -144,6 +161,8 @@ class IdentAndAboutViewModel(
                 ssbSignableMessage.sequence = 1
             }
             ssbSignableMessage.content.type = "about"
+            ssbSignableMessage.content.image = iAndA.about!!.image
+            ssbSignableMessage.content.description = iAndA.about!!.description
             ssbSignableMessage.previous = last?.key
             // sign message
             ssbSignableMessage.hash = "sha256"
@@ -164,57 +183,48 @@ class IdentAndAboutViewModel(
 
 
     fun setDirty(b: Boolean) {
-        _uiState.update { it.copy(dirty = b) }
+        _uiState.update { it!!.copy(dirty = b) }
     }
 
-    // text fields
-    fun updateAlias(newValue: String) {
-        _uiState.update { newUiState ->
-            checkName(uiState.value.identAndAbout, newValue)
-            newUiState.copy(
-                alias = newValue.filter { it.isLetter() }.lowercase().trim()
-            )
 
-        }
-    }
 
     private fun checkName(identAndAbout: IdentAndAbout?, newValue: String) {
+        _uiState.update { it!!.copy(didLoading = true) }
         viewModelScope.launch {
-            val r = didRepository.checkIfValid(identAndAbout, newValue)
-            if (r.error != null) {
-                _uiState.update { it.copy(error = r.error) }
+            val response = didRepository.checkIfValid(identAndAbout, newValue)
+            if (!response.valid) {
+                _uiState.update { it!!.copy(didValidationErrorMessage = response.error ?:"", didValid = false, didLoading = false) }
+            } else {
+                _uiState.update { it!!.copy(didValidationErrorMessage = "", didValid = true, didLoading = false) }
             }
-            _uiState.update { it.copy(didValid = r.valid) }
         }
     }
 
-    fun updateDescription(value: String) {
-        _uiState.update { it.copy(description = value.trim()) }
-    }
 
     // Dialogs
     fun closeExportDialog() {
-        _uiState.update { it.copy(showExportDialogState = false) }
+        _uiState.update { it!!.copy(showExportDialogState = false) }
     }
 
     fun closePublishDialog() {
-        _uiState.update { it.copy(showPublishDialogState = false) }
+        _uiState.update { it!!.copy(showPublishDialogState = false) }
     }
 
     fun closeDeteDialog() {
-        _uiState.update { it.copy(showDeleteDialogState = false) }
+        _uiState.update { it!!.copy(showDeleteDialogState = false) }
     }
 
 
     fun openExportDialog() {
-        _uiState.update { it.copy(showExportDialogState = true) }
+        _uiState.update { it!!.copy(showExportDialogState = true) }
     }
 
     fun openDeleteDialog() {
-        _uiState.update { it.copy(showDeleteDialogState = true) }
+        _uiState.update { it!!.copy(showDeleteDialogState = true) }
     }
 
     fun showPublishDialog() {
-        _uiState.update { it.copy(showPublishDialogState = true) }
+        _uiState.update { it!!.copy(showPublishDialogState = true) }
     }
+
 }

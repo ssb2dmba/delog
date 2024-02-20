@@ -25,6 +25,7 @@ import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.service.ssb.SsbService
 import kotlinx.coroutines.Dispatchers
@@ -43,8 +44,8 @@ class IdentListViewModel(
 
     private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
     var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
-    var idents: LiveData<List<IdentAndAbout>> = repository.idents.asLiveData()
-    val default: LiveData<IdentAndAbout> = repository.default.asLiveData()
+    var idents: LiveData<List<IdentAndAboutWithBlob>> = repository.idents.asLiveData()
+    val default: LiveData<IdentAndAboutWithBlob> = repository.default.asLiveData()
     val count: LiveData<Int> = repository.count
 
     fun insert(ident: Ident, alias: String? = null) {

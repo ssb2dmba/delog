@@ -136,7 +136,7 @@ suspend fun AppDatabaseView.MessageInTree.toMessageViewData(format: Json, blobRe
         root = root,
         branch = branch,
         authorName = name,
-        authorImage = image,
+        authorImage = image?.let { blobRepository.getAsBlobItem(it).uri.toString() },
         pName = pName,
         replies = replies,
         level = level,

@@ -27,9 +27,10 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import `in`.delog.db.AppDatabaseView
-import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.model.MessageViewData
@@ -49,7 +50,7 @@ import kotlinx.coroutines.launch
 @Immutable
 data class FeedMainUIState(
     val messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null,
-    val identAndAbout: IdentAndAbout? = null,
+    val identAndAbout: IdentAndAboutWithBlob? = null,
     val loaded: Boolean = false,
     val syncing: Boolean = false,
     val error: Exception? = null
@@ -58,6 +59,7 @@ data class FeedMainUIState(
 class MessageListViewModel(
     private var key: String,
     private val messageTreeRepository: MessageTreeRepository,
+    private val identRepository: IdentRepository,
     private val messageRepository: MessageRepository,
     private val ssbService: SsbService,
     private val blobRepository: BlobRepository
@@ -95,11 +97,12 @@ class MessageListViewModel(
             if (key.startsWith("%")) {
                 val m: Message? = messageRepository.getMessage(key)
                 if (m != null) {
-                    _uiState.update { it.copy(identAndAbout = messageRepository.getFeed(m.author)) }
+                    identRepository
+                    _uiState.update { it.copy(identAndAbout = identRepository.getFeed(m.author)) }
                 }
             }
             if (_uiState.value.identAndAbout == null) { // fallback to our
-                _uiState.update { it.copy(identAndAbout = messageRepository.getFeed(key)) }
+                _uiState.update { it.copy(identAndAbout = identRepository.getFeed(key)) }
             }
             synchronize()
         }

@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import `in`.delog.R
-import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
@@ -53,7 +53,7 @@ fun IdentList(navController: NavHostController) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     val identListViewModel = koinViewModel<IdentListViewModel>()
 
-    val idents: State<List<IdentAndAbout>> = identListViewModel.idents.observeAsState(listOf())
+    val idents: State<List<IdentAndAboutWithBlob>> = identListViewModel.idents.observeAsState(listOf())
 
     LaunchedEffect(Unit) {
         bottomBarViewModel.setActions {}
@@ -66,7 +66,7 @@ fun IdentList(navController: NavHostController) {
 
     LazyColumn {
         items(idents.value) { identAndAbout ->
-            var argUri = identAndAbout.ident.oid
+            val argUri = identAndAbout.ident.oid
 
             Card(
                 colors = CardDefaults.cardColors(),
@@ -88,7 +88,7 @@ fun IdentList(navController: NavHostController) {
                     )
             ) {
                 IdentityBox(
-                    identAndAbout = identAndAbout,
+                    identAndAboutWithBlob = identAndAbout,
                     short = true,
                     onClick = {
                         navController.navigate("${Scenes.AboutEdit.route}/${argUri}")

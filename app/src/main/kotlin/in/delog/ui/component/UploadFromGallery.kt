@@ -25,17 +25,20 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import `in`.delog.GetMediaActivityResultContract
 import `in`.delog.R
+import `in`.delog.ui.scene.PermissionStatePreview
 import java.util.concurrent.atomic.AtomicBoolean
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun UploadFromGallery(
-        isUploading: Boolean,
-        tint: Color,
-        modifier: Modifier,
-        onImageChosen: (Uri) -> Unit,
+    isUploading: Boolean,
+    tint: Color,
+    modifier: Modifier,
+    onImageChosen: (Uri) -> Unit,
+    mockPermissionsState: PermissionStatePreview? = null,
+    mimeFilter: String = "*/*"
 ) {
-    val cameraPermissionState =
+    val cameraPermissionState = mockPermissionsState ?:
             rememberPermissionState(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         android.Manifest.permission.READ_MEDIA_IMAGES
@@ -54,6 +57,7 @@ fun UploadFromGallery(
                             onImageChosen(uri)
                         }
                     },
+                mimeFilter = mimeFilter,
             )
         }
         UploadBoxButton(isUploading, tint, modifier) { showGallerySelect = true }
@@ -91,8 +95,8 @@ private fun UploadBoxButton(
 
 
 @Composable
-fun GallerySelect(onImageUri: (Uri?) -> Unit = {}) {
-    var hasLaunched by remember { mutableStateOf(AtomicBoolean(false)) }
+fun GallerySelect(onImageUri: (Uri?) -> Unit = {}, mimeFilter: String = "*/*") {
+    val hasLaunched by remember { mutableStateOf(AtomicBoolean(false)) }
     val launcher =
             rememberLauncherForActivityResult(
                     contract = GetMediaActivityResultContract(),
@@ -106,7 +110,7 @@ fun GallerySelect(onImageUri: (Uri?) -> Unit = {}) {
     fun LaunchGallery() {
         SideEffect {
             if (!hasLaunched.getAndSet(true)) {
-                launcher.launch("*/*")
+                launcher.launch(mimeFilter)
             }
         }
     }

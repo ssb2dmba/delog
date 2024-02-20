@@ -54,6 +54,7 @@ import `in`.delog.db.model.About
 import `in`.delog.db.model.Contact
 import `in`.delog.db.model.ContactAndAbout
 import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.IdentityBox
@@ -75,7 +76,7 @@ fun ContactList(navController: NavController) {
         bottomBarViewModel.setActions {}
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
-            ContactListFab({ showAddContactDialog = true })
+            ContactListFab { showAddContactDialog = true }
         }
     }
 
@@ -87,7 +88,7 @@ fun ContactList(navController: NavController) {
     if (showAddContactDialog) {
 
         fun addContact(strContact: String) {
-            var contact = Contact(0, feed.ident.publicKey, strContact, true)
+            val contact = Contact(0, feed.ident.publicKey, strContact, true)
             contactListViewModel.insert(contact)
             showAddContactDialog = false
         }
@@ -95,7 +96,7 @@ fun ContactList(navController: NavController) {
         var publicKey by remember { mutableStateOf("") }
         var isError by remember { mutableStateOf(false) }
         fun validate(text: String) {
-            isError = publicKey.length > 5
+            isError = text.length > 5
         }
         AlertDialog(
             onDismissRequest = { showAddContactDialog = false },
@@ -170,11 +171,12 @@ fun ContactListItem(
         About(about = contactAndAbout.contact.follow)
     Box(modifier = Modifier.fillMaxWidth()) {
 
-        val identAndAbout = IdentAndAbout(
+        val identAndAbout = IdentAndAboutWithBlob(
             ident = IdentAndAbout.empty(contactAndAbout.about!!.about),
-            about = contactAndAbout.about
+            about = contactAndAbout.about!!,
+            profileImage = null // TODO
         )
-        IdentityBox(identAndAbout = identAndAbout)
+        IdentityBox(identAndAboutWithBlob = identAndAbout)
         Button(
             modifier = Modifier
                 .align(Alignment.TopEnd)

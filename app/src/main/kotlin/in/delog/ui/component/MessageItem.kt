@@ -22,7 +22,6 @@ import android.content.Intent
 import android.net.Uri
 import android.text.format.DateUtils
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,7 +37,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -60,11 +58,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -73,8 +69,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import `in`.delog.MainApplication
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.serializeMessageContent
@@ -252,19 +246,10 @@ fun MessageItem(
                     .fillMaxHeight()
                     .width(44.dp)
             ) {
-
-                AsyncImage(
-                    model = "https://robohash.org/${messageViewData.author}.png",
-                    placeholder = rememberAsyncImagePainter("https://robohash.org/${messageViewData.author}.png"),
-                    contentDescription = "Profile Image",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .size(size = 36.dp)
-                        .clip(shape = CircleShape)
-                        .background(MaterialTheme.colorScheme.outline),
+                ProfileImage(
+                    identAndAboutWithBlob = null,
+                    authorImage = messageViewData.authorImage
                 )
-
             }
             // spacer
             Column(modifier = Modifier.width(8.dp)) {}

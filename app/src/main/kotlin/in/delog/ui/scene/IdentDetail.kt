@@ -18,7 +18,6 @@
 package `in`.delog.ui.scene
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -86,7 +85,8 @@ fun IdentDetailTopBarMenu(
     onOpenDeleteDialogClicked: () -> Unit
 
 ) {
-    val uiState by vm.uiState.observeAsState(AboutUIState())
+    val uiState: AboutUIState? by vm.uiState.observeAsState(null)
+    if (uiState==null) return
     var showMenu by remember { mutableStateOf(false) }
     IconButton(onClick = { showMenu = !showMenu }) {
         Icon(imageVector = Icons.Outlined.Plumbing, contentDescription = null)
@@ -102,17 +102,16 @@ fun IdentDetailTopBarMenu(
                     enabled = true,
                     onClick = {
                         showMenu = false
-                        navHostController.navigate("${Scenes.FeedDetail.route}/${uiState.identAndAbout!!.ident.oid}")
+                        navHostController.navigate("${Scenes.FeedDetail.route}/${uiState!!.identAndAboutWithBlob.ident.oid}")
                     },
                     text = { Text(text = stringResource(R.string.network)) }
                 )
             } else {
-
                 DropdownMenuItem(
                     enabled = true,
                     onClick = {
                         showMenu = false
-                        navHostController.navigate("${Scenes.AboutEdit.route}/${uiState.identAndAbout!!.ident.oid}")
+                        navHostController.navigate("${Scenes.AboutEdit.route}/${uiState!!.identAndAboutWithBlob.ident.oid}")
                     },
                     text = { Text(text = stringResource(R.string.about)) })
             }
@@ -144,28 +143,19 @@ fun IdentDetail(
     id: String
 ) {
     val vm = koinViewModel<IdentAndAboutViewModel>(parameters = { parametersOf(id) })
-    val uiState by vm.uiState.observeAsState(AboutUIState())
-
-    if (uiState.identAndAbout == null) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator()
-        }
-        return
-    }
+    val uiState: AboutUIState? by vm.uiState.observeAsState(null)
+    if (uiState==null) return
 
 
-    if (uiState.showDeleteDialogState) {
+
+    if (uiState!!.showDeleteDialogState) {
         IdentDetailConfirmDeleteDialog(navHostController, vm) { vm.closeDeteDialog() }
     }
-    if (uiState.showExportDialogState) {
-        ExportMnemonicDialog(identAndAbout = uiState.identAndAbout!!) { vm.closeExportDialog() }
+    if (uiState!!.showExportDialogState) {
+        ExportMnemonicDialog(identAndAbout = uiState!!.identAndAboutWithBlob) { vm.closeExportDialog() }
     }
 
-    IdentEdit(ident = uiState.identAndAbout!!.ident, navHostController, vm)
+    IdentEdit(ident = uiState!!.identAndAboutWithBlob.ident, navHostController, vm)
 
 }
 
@@ -176,7 +166,8 @@ fun IdentDetailConfirmDeleteDialog(
     viewModel: IdentAndAboutViewModel,
     onDismissRequest: () -> Unit
 ) {
-    val uiState by viewModel.uiState.observeAsState(AboutUIState())
+    val uiState by viewModel.uiState.observeAsState(null)
+    if (uiState == null) return
     AlertDialog(onDismissRequest = onDismissRequest,
         containerColor = MaterialTheme.colorScheme.surface,
         title = {
@@ -211,7 +202,7 @@ fun IdentDetailConfirmDeleteDialog(
                 modifier = Modifier
                     .padding(15.dp)
                     .clickable {
-                        viewModel.delete(uiState.identAndAbout!!.ident)
+                        viewModel.delete(uiState!!.identAndAboutWithBlob.ident)
                         onDismissRequest.invoke()
                         navHostController.navigate(Scenes.FeedList.route) {
                             popUpTo(Scenes.FeedDetail.route) {
@@ -227,6 +218,8 @@ fun IdentDetailConfirmDeleteDialog(
 
 @Composable
 fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAboutViewModel) {
+    val uiState: AboutUIState? by vm.uiState.observeAsState(null)
+    if (uiState==null) return
     var server by remember { mutableStateOf(ident.server) }
     var port by remember { mutableIntStateOf(ident.port) }
     var defaultIdent by remember { mutableStateOf(ident.defaultIdent) }
@@ -234,8 +227,8 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     var showDeleteDialogState by remember { mutableStateOf(false) }
     var showInviteRequest by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
-    val uiState by vm.uiState.observeAsState(AboutUIState())
-    val identAndAbout = uiState.identAndAbout
+
+    val identAndAbout = uiState!!.identAndAboutWithBlob
 
     val redirect by vm.redirect.observeAsState(null)
     if (redirect != null) {
@@ -248,7 +241,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     }
 
 
-    if (loading || identAndAbout == null) {
+    if (loading) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
@@ -325,7 +318,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            IdentityBox(identAndAbout = identAndAbout)
+            IdentityBox(identAndAboutWithBlob = identAndAbout)
 
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -398,7 +391,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                 }
 
             }
-        } else if (identAndAbout.ident.server != null) {
+        } else if (identAndAbout.ident.server .isNotEmpty()) {
             Row {
                 Button(
                     onClick = {
