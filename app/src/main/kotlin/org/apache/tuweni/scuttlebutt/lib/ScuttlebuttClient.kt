@@ -16,7 +16,7 @@
  */
 package org.apache.tuweni.scuttlebutt.lib
 
-import org.apache.tuweni.scuttlebutt.rpc.mux.Multiplexer
+import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
 
 /**
  * A client for making requests to a scuttlebutt instance with. This is the entry point for accessing service classes
@@ -26,20 +26,33 @@ import org.apache.tuweni.scuttlebutt.rpc.mux.Multiplexer
  *
  * @param multiplexer the multiplexer to make RPC requests with.
  */
-class ScuttlebuttClient(multiplexer: Multiplexer) {
+class ScuttlebuttClient(
+    val clientId: String,
+    multiplexer: RPCHandler,
+    ssbRequiredRepositories: SsbRequiredRepositories
+) {
+
+    private val aboutRepository = ssbRequiredRepositories.aboutRepository
+
+    private val feedRepository = ssbRequiredRepositories.feedRepository
+
+    private val blobRepository = ssbRequiredRepositories.blobRepository
+
+    val rpcHandler = multiplexer
+
     /**
      * Provides a service for operations that concern scuttlebutt feeds.
      *
      * @return a service for operations that concern scuttlebutt feeds
      */
-    val feedService = FeedService(multiplexer)
+    val feedService = FeedService(multiplexer, aboutRepository, feedRepository)
 
     /**
      * Provides a service for operations that connect nodes together.
      *
      * @return a service for operations that connect nodes together
      */
-    val networkService = NetworkService(multiplexer)
+    val blobService = BlobService(multiplexer, blobRepository)
 
     /**
      * Provides a service for operations concerning social connections and updating the instance's profile

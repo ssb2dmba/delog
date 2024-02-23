@@ -25,7 +25,7 @@ import androidx.core.net.toUri
 import `in`.delog.MainApplication
 import `in`.delog.db.dao.BlobDao
 import `in`.delog.db.model.Blob
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.viewmodel.BlobItem
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.sodium.SHA256Hash
@@ -39,6 +39,8 @@ interface BlobRepository {
     suspend fun insert(author: String, uri: Uri): BlobItem?
     suspend fun deleteIfKeyUnused(key: String)
     suspend fun getAsBlobItem(b64hash: String): BlobItem
+    suspend fun getBlobItem(b64hash: String): BlobItem?
+    suspend fun getWants(author: String): HashMap<String, Long>
 }
 
 class BlobRepositoryImpl(
@@ -51,7 +53,7 @@ class BlobRepositoryImpl(
     private fun getSize(uri: Uri): Long {
         var size: Long = -1L
         contentResolver.query(uri, null, null, null, null).use {
-            if (it !== null && it.moveToFirst() == true) {
+            if (it !== null && it.moveToFirst()) {
                 val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
                 if (sizeIndex != null && sizeIndex > -1) size = it.getLong(sizeIndex)
             }
@@ -95,7 +97,7 @@ class BlobRepositoryImpl(
             type = mimeType,
             size = size,
             own = true,
-            want = false,
+            has = true,
             contentWarning = null
         )
         blobDao.insert(blob)
@@ -144,8 +146,30 @@ class BlobRepositoryImpl(
         return BlobItem(key = b64hash, size = blob.size, type = blob.type, uri = uri)
     }
 
+    override suspend fun getBlobItem(b64hash: String): BlobItem? {
+        val uri = getUri(b64hash)
+        val blob = blobDao.get(b64hash) ?: return null
+        val blobItem = BlobItem(key = b64hash, size = blob.size, type = blob.type, uri = uri)
+        val file = File(blobItem.uri.path!!)
+        if (!file.exists()) return null
+        return blobItem
+    }
+
+
     override suspend fun deleteIfKeyUnused(key: String) {
         messageRepository.blobIsUsefull(key)
+    }
+
+    override suspend fun getWants(author: String): HashMap<String, Long> {
+        val blobs = blobDao.getWants(author)
+        val blobItems = mutableListOf<BlobItem>()
+        val wants = HashMap<String, Long>()
+        for (blob in blobs) {
+            val blobItem = getAsBlobItem(blob.key)
+            wants[blobItem.key] = blobItem.size
+        }
+        return wants
+
     }
 
 }

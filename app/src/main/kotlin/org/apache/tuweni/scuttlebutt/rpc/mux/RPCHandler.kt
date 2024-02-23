@@ -59,6 +59,9 @@ open class RPCHandler(
         val result = AsyncResult.incomplete<RPCResponse>()
         vertx.runOnContext {
             if (closed) {
+                val message = RPCMessage(bodyBytes)
+                val requestNumber: Int = message.requestNumber()
+                Log.e(TAG, "Connection $requestNumber closed, cannot open stream.")
                 result.completeExceptionally(ConnectionClosedException())
             } else {
                 val message = RPCMessage(bodyBytes)
@@ -93,6 +96,7 @@ open class RPCHandler(
             val scuttlebuttStreamHandler: ScuttlebuttStreamHandler =
                 streamFactory.apply(closeStreamHandler)
             if (closed) {
+                Log.e(TAG, "Connection $requestNumber closed, cannot open stream.")
                 scuttlebuttStreamHandler.onStreamError(ConnectionClosedException())
             } else {
                 streams[requestNumber] = scuttlebuttStreamHandler
@@ -192,7 +196,7 @@ open class RPCHandler(
                     scuttlebuttStreamHandler.onStreamError(exception.get())
                 } else {
                     val successfulResponse = RPCResponse(response.body(), response.bodyType())
-                    scuttlebuttStreamHandler.onMessage(successfulResponse)
+                    scuttlebuttStreamHandler.onMessage(response.requestNumber(), successfulResponse)
                 }
             } else {
                 Log.w(
@@ -247,6 +251,8 @@ open class RPCHandler(
                 val logMessage = String.format("[%d] Sending close stream message.", requestNumber)
                 Log.d(TAG, logMessage)
                 sendBytes(streamEnd)
+            } else {
+                Log.d("RCPHandler","stream $requestNumber have been closed at other end")
             }
         } catch (e: JsonProcessingException) {
             Log.e(

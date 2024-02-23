@@ -43,7 +43,20 @@ data class About(
     @ColumnInfo(name = "dirty")
     var dirty: Boolean = false,
 
-    )
+    ) {
+    companion object {
+        fun empty(key: String): About {
+            return About(
+                key,
+                "",
+                "",
+                "",
+                false
+            )
+
+        }
+    }
+}
 
 /*
 WITH RECURSIVE tree_view AS (
@@ -98,14 +111,6 @@ data class IdentAndAbout(
     var about: About?
 ) {
 
-    fun getNetworkIdentifier(): String {
-        if (this.about?.name == null || this.about?.name!!.isEmpty()) {
-            return this.ident.publicKey.subSequence(0, 5).toString()
-        }
-        val server = if (this.ident.server.isNullOrEmpty()) "" else "@" + this.ident.server
-        return this.about?.name + server
-    }
-
     companion object {
         fun empty(about: String): Ident {
             return Ident(
@@ -130,7 +135,7 @@ data class IdentAndAboutWithBlob(
 ) {
     fun getNetworkIdentifier(): String {
         if (this.about.name == null || this.about.name!!.isEmpty()) {
-            return this.ident.publicKey.subSequence(0, 5).toString()
+            return this.ident.publicKey.subSequence(0, this.ident.publicKey.length.coerceAtMost(5)).toString()
         }
         val server = if (this.ident.server.isEmpty()) "" else "@" + this.ident.server
         return about.name + server

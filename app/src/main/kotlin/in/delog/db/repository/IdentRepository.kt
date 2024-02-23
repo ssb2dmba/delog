@@ -20,6 +20,7 @@ package `in`.delog.db.repository
 import androidx.lifecycle.LiveData
 import `in`.delog.db.dao.AboutDao
 import `in`.delog.db.dao.IdentDao
+import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.IdentAndAboutWithBlob
@@ -100,10 +101,17 @@ class FeedRepositoryImpl(
     }
 
     private suspend fun makeIdentAndAboutWithBlob(identAndAbout: IdentAndAbout): IdentAndAboutWithBlob {
+        if (identAndAbout==null) { // TODO used at startup ...
+            return IdentAndAboutWithBlob(
+                ident = Ident.empty(""),
+                about = About.empty(""),
+                profileImage = null
+            )
+        }
         return IdentAndAboutWithBlob(
             ident = identAndAbout.ident,
-            about = identAndAbout.about!!,
-            profileImage = identAndAbout.about!!.image?.let {
+            about = identAndAbout.about ?: About.empty(identAndAbout.ident.publicKey),
+            profileImage = identAndAbout.about?.image?.let {
                 blobRepository.getAsBlobItem(it).uri
             }
         )

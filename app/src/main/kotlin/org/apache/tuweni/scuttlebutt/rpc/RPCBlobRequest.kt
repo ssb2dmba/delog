@@ -14,31 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.tuweni.scuttlebutt.rpc.mux
+package org.apache.tuweni.scuttlebutt.rpc
 
-import org.apache.tuweni.scuttlebutt.rpc.RPCResponse
 
-/**
- * Handles incoming items from a result stream
- */
-interface ScuttlebuttStreamHandler {
-
-    /**
-     * Handles a new message from the result stream.
-     *
-     * @param message a new message appearing.
-     */
-    fun onMessage(requestNumber: Int, message: RPCResponse)
-
-    /**
-     * Invoked when the stream has been closed.
-     */
-    fun onStreamEnd()
-
-    /**
-     * Invoked when there is an error in the stream.
-     *
-     * @param ex the underlying error
-     */
-    fun onStreamError(ex: Exception)
+data class RPCBlobRequest(
+    val name: List<String>,
+    val args: List<Map<String, Any>>,
+    val type: String
+) {
+    var key: String = args[0]["key"].toString()
 }

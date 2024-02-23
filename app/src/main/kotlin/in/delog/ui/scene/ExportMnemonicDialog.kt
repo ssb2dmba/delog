@@ -2,7 +2,6 @@ package `in`.delog.ui.scene
 
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -40,7 +39,6 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.zachklipp.richtext.ui.printing.Printable
 import com.zachklipp.richtext.ui.printing.rememberPrintableController
 import `in`.delog.db.model.IdentAndAboutWithBlob
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.service.ssb.Dict
 import `in`.delog.service.ssb.WordList
 import `in`.delog.service.ssb.secretKeyToMnemonic
@@ -103,7 +101,7 @@ fun rememberQrBitmapPainter(
                     sizePx, sizePx, encodeHints
                 )
             } catch (ex: WriterException) {
-                ex.message?.let { Log.e(TAG, it) }
+                ex.printStackTrace()
                 null
             }
 

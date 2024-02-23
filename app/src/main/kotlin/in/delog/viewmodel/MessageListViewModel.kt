@@ -35,8 +35,8 @@ import `in`.delog.db.repository.MessageRepository
 import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.toMessageViewData
-import `in`.delog.service.ssb.BaseSsbService.Companion.format
 import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -85,9 +85,7 @@ class MessageListViewModel(
     private fun synchronize() {
         viewModelScope.launch {
             if (_uiState.value.identAndAbout==null) return@launch
-            _uiState.update { it.copy(error = null, syncing = true) }
-            ssbService.synchronize(_uiState.value.identAndAbout!!.ident, ::onError)
-            _uiState.update { it.copy(syncing = false) }
+            ssbService.reconnect(_uiState.value.identAndAbout!!.ident)
         }
     }
 

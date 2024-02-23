@@ -19,7 +19,7 @@ package `in`.delog.model
 
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.asKeyPair
-import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.serialization.Serializable
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.sodium.Signature
@@ -34,7 +34,7 @@ class SsbSignableMessage(
     var hash: String,
     val content: SsbMessageContent
 ) {
-    fun deserialize(): String {
+    private fun deserialize(): String {
         return format.encodeToString(
             serializer(),
             this
@@ -46,7 +46,7 @@ class SsbSignableMessage(
         return Signature.signDetached(
             Bytes.wrap(this.deserialize().encodeToByteArray()),
             kp!!.secretKey()
-        );
+        )
     }
 }
 

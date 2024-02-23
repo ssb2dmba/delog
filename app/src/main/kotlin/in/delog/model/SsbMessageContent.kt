@@ -1,6 +1,6 @@
 package `in`.delog.model
 
-import `in`.delog.service.ssb.BaseSsbService
+import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -32,7 +32,7 @@ data class SsbMessageContent(
         }
 
         fun serialize(str: String): SsbMessageContent {
-            if (str.isNullOrBlank()) {
+            if (str.isBlank()) {
                 return SsbMessageContent(type = "post")
             }
             return Json.decodeFromString(
@@ -44,7 +44,7 @@ data class SsbMessageContent(
     }
 
     fun deserialize(): String {
-        return BaseSsbService.format.encodeToString(
+        return format.encodeToString(
             serializer(),
             this
         )

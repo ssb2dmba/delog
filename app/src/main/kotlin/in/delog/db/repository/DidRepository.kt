@@ -1,11 +1,9 @@
 package `in`.delog.repository
 
-import android.util.Log
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.getHttpScheme
 import `in`.delog.db.model.isOnion
 import `in`.delog.service.HttpClient
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -45,7 +43,6 @@ class DidRepositoryImpl(
                 JSONObject().put("error", e.message).toString()
             }
         }
-        Log.i(TAG, textResponse)
         val jsonObject = JSONObject(textResponse)
         if (jsonObject.has("error")) {
             return DidValid(false, jsonObject.getString("error"))

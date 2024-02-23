@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 11,
-    "identityHash": "6efa8267eaf2d836a9838481186019b2",
+    "identityHash": "46227da7321bc1f2842ce49509906991",
     "entities": [
       {
         "tableName": "Ident",
@@ -324,7 +324,7 @@
       },
       {
         "tableName": "Blob",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`oid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `author` TEXT NOT NULL, `key` TEXT NOT NULL, `type` TEXT NOT NULL, `size` INTEGER NOT NULL, `own` INTEGER NOT NULL, `want` INTEGER NOT NULL, `contentWarning` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`oid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `author` TEXT NOT NULL, `key` TEXT NOT NULL, `type` TEXT NOT NULL, `size` INTEGER NOT NULL, `own` INTEGER NOT NULL, `has` INTEGER NOT NULL, `contentWarning` TEXT)",
         "fields": [
           {
             "fieldPath": "oid",
@@ -363,8 +363,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "want",
-            "columnName": "want",
+            "fieldPath": "has",
+            "columnName": "has",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -383,13 +383,14 @@
         },
         "indices": [
           {
-            "name": "index_Blob_key",
+            "name": "index_Blob_key_author",
             "unique": true,
             "columnNames": [
-              "key"
+              "key",
+              "author"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_Blob_key` ON `${TABLE_NAME}` (`key`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_Blob_key_author` ON `${TABLE_NAME}` (`key`, `author`)"
           }
         ],
         "foreignKeys": []
@@ -403,7 +404,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6efa8267eaf2d836a9838481186019b2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '46227da7321bc1f2842ce49509906991')"
     ]
   }
 }

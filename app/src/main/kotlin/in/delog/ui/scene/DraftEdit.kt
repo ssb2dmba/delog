@@ -77,7 +77,6 @@ import `in`.delog.ui.component.BlobsEdit
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.CancelIcon
 import `in`.delog.ui.component.EmojiPicker
-import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.UploadFromGallery
 import `in`.delog.ui.navigation.Scenes
@@ -139,7 +138,6 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                             onClickCallBack = {}
                         )
                     }
-                    IdentityBox(identAndAboutWithBlob = identAndAbout)
                     if (linkState != null) {
                         MessageItem(
                             navController = navController,
@@ -319,6 +317,7 @@ fun ReplyHeader(link: MessageAndAbout?, draftMode: String?) {
     }
     if (txt != null) {
         Text(
+            modifier = Modifier.padding(8.dp),
             text = txt,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.tertiary,

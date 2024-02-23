@@ -72,7 +72,7 @@ import androidx.navigation.compose.rememberNavController
 import `in`.delog.MainApplication
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.serializeMessageContent
-import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.SsbService.Companion.format
 import `in`.delog.ui.component.richtext.RichTextViewer
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
@@ -295,7 +295,7 @@ fun MessageItem(
                     val maxLines = if (truncate) 6 else Int.MAX_VALUE
                     RichTextViewer(text, { onClickCallBack.invoke() }, maxLines)
                 }
-                if (messageViewData.blobs.size>0) {
+                if (messageViewData.blobs.isNotEmpty()) {
                     Row(
                         modifier = Modifier
                             .height(200.dp)

@@ -16,6 +16,12 @@
  */
 package org.apache.tuweni.scuttlebutt.lib
 
+import `in`.delog.db.model.Ident
+import `in`.delog.db.model.asKeyPair
+import `in`.delog.db.model.toCanonicalForm
+import `in`.delog.db.repository.AboutRepository
+import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.MessageRepository
 import io.vertx.core.Vertx
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes32
@@ -23,15 +29,46 @@ import org.apache.tuweni.crypto.sodium.Signature
 import org.apache.tuweni.io.Base64
 import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.handshake.vertx.SecureScuttlebuttVertxClient
+import org.apache.tuweni.scuttlebutt.rpc.RPCMessage
 import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
+
+
+class SsbRequiredRepositories(
+    val feedRepository: MessageRepository,
+    val aboutRepository: AboutRepository,
+    val blobRepository: BlobRepository
+)
 
 /**
  * A factory for constructing a new instance of ScuttlebuttClient with the given configuration parameters
  */
 object ScuttlebuttClientFactory {
     @JvmStatic
-    val DEFAULT_NETWORK =
+    val DEFAULT_NETWORK: Bytes32 =
         Bytes32.wrap(Base64.decode("1KHLiKZvAvjbY1ziZEHMXawbCEIM6qwjCDm3VYRan/s="))
+
+    @JvmStatic
+    fun fromFeedWithVertx(vertx: Vertx,
+                          pFeed: Ident,
+                          ssbRequiredRepositories: SsbRequiredRepositories,
+                          onRPCRequest: (rpcM: RPCMessage) -> Unit) : ScuttlebuttClient {
+        val invite: Invite = Invite.fromCanonicalForm(pFeed.invite!!)
+        val remotePublicKey = invite.identity.ed25519PublicKey()
+        val clientId = pFeed.toCanonicalForm()
+        return fromNetWithNetworkKey(
+            clientId,
+            vertx,
+            pFeed.server,
+            pFeed.port,
+            pFeed.asKeyPair(),
+            remotePublicKey,
+            DEFAULT_NETWORK,
+            ssbRequiredRepositories,
+            onRPCRequest
+        )
+
+
+    }
 
     /**
      * Creates a scuttlebutt client by connecting with the given host, port and keypair using the given vertx instance.
@@ -45,13 +82,16 @@ object ScuttlebuttClientFactory {
      */
     @JvmStatic
     fun fromNetWithVertx(
+        clientId: String,
         vertx: Vertx,
         host: String,
         port: Int,
         keyPair: Signature.KeyPair,
-        serverPublicKey: Signature.PublicKey
+        serverPublicKey: Signature.PublicKey,
+        ssbRequiredRepositories: SsbRequiredRepositories,
+        onRPCRequest: (rpcM: RPCMessage) -> Unit
     ): ScuttlebuttClient {
-        return fromNetWithNetworkKey(vertx, host, port, keyPair, serverPublicKey, DEFAULT_NETWORK)
+        return fromNetWithNetworkKey(clientId, vertx, host, port, keyPair, serverPublicKey, DEFAULT_NETWORK, ssbRequiredRepositories,onRPCRequest)
     }
 
     /**
@@ -67,12 +107,15 @@ object ScuttlebuttClientFactory {
      */
     @JvmStatic
     fun fromNetWithNetworkKey(
+        clientId: String,
         vertx: Vertx,
         host: String,
         port: Int,
         keyPair: Signature.KeyPair?,
         serverPublicKey: Signature.PublicKey?,
-        networkIdentifier: Bytes32?
+        networkIdentifier: Bytes32?,
+        ssbRequiredRepositories: SsbRequiredRepositories,
+        onRPCRequest: (rpcM: RPCMessage) -> Unit
     ): ScuttlebuttClient {
         val secureScuttlebuttVertxClient = SecureScuttlebuttVertxClient(
             vertx,
@@ -90,10 +133,11 @@ object ScuttlebuttClientFactory {
                     vertx,
                     sender,
                     terminationFn,
-                    {}
+                    onRPCRequest
                 )
             } as RPCHandler
-            return@runBlocking ScuttlebuttClient(client)
+
+            return@runBlocking ScuttlebuttClient(clientId, client, ssbRequiredRepositories)
         }
     }
 
@@ -108,10 +152,12 @@ object ScuttlebuttClientFactory {
      */
     @JvmStatic
     fun withInvite(
+        clientId: String,
         vertx: Vertx,
         keyPair: Signature.KeyPair,
         invite: Invite,
-        networkIdentifier: Bytes32
+        networkIdentifier: Bytes32,
+        ssbRequiredRepositories: SsbRequiredRepositories
     ): ScuttlebuttClient {
         val secureScuttlebuttVertxClient = SecureScuttlebuttVertxClient(
             vertx,
@@ -129,11 +175,10 @@ object ScuttlebuttClientFactory {
                     RPCHandler(
                         vertx,
                         sender,
-                        terminationFn,
-                        {}
-                    )
+                        terminationFn
+                    ) {}
                 } as RPCHandler
-            return@runBlocking ScuttlebuttClient(multiplexer)
+            return@runBlocking ScuttlebuttClient(clientId, multiplexer,ssbRequiredRepositories)
         }
     }
 }

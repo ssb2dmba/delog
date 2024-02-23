@@ -29,7 +29,7 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.DraftRepository
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.toMessageViewData
-import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
