@@ -66,7 +66,7 @@ fun DraftList(navController: NavHostController) {
     val lazyMessageItems: LazyPagingItems<MessageViewData> = fpgDrafts?.collectAsLazyPagingItems()
         ?: return
     Column {
-        IdentityBox(identAndAbout = identAndAbout)
+        IdentityBox(identAndAboutWithBlob = identAndAbout)
         if (lazyMessageItems.itemCount == 0) {
             AppEmptyList()
         }

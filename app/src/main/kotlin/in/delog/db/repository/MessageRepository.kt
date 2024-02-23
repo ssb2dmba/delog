@@ -21,7 +21,6 @@ import android.database.sqlite.SQLiteConstraintException
 import androidx.lifecycle.LiveData
 import androidx.paging.PagingSource
 import `in`.delog.db.dao.MessageDao
-import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
 
@@ -36,7 +35,7 @@ interface MessageRepository {
     fun getLastMessage(author: String): Message?
     fun getLastSequence(author: String): Long
     fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout>
-    fun getFeed(key: String): IdentAndAbout
+
     fun getMessageAndAbout(key: String): MessageAndAbout?
 
     fun getMessage(key: String): Message?
@@ -89,9 +88,6 @@ class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageReposit
         return messageDao.findByDefaultFeed()
     }
 
-    override fun getFeed(key: String): IdentAndAbout {
-        return messageDao.getFeed(key)
-    }
 
     override fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout> {
         return messageDao.getPagedFeed(author)

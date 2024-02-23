@@ -17,6 +17,7 @@
  */
 package `in`.delog.db.model
 
+import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
@@ -42,8 +43,7 @@ data class About(
     @ColumnInfo(name = "dirty")
     var dirty: Boolean = false,
 
-    ) {
-}
+    )
 
 /*
 WITH RECURSIVE tree_view AS (
@@ -91,6 +91,7 @@ data class MessageAndAbout(
 data class IdentAndAbout(
     @Embedded val ident: Ident,
     @Relation(
+        entity = About::class,
         parentColumn = "public_key",
         entityColumn = "about"
     )
@@ -102,8 +103,7 @@ data class IdentAndAbout(
             return this.ident.publicKey.subSequence(0, 5).toString()
         }
         val server = if (this.ident.server.isNullOrEmpty()) "" else "@" + this.ident.server
-        val name = this.about?.name + server
-        return name
+        return this.about?.name + server
     }
 
     companion object {
@@ -120,6 +120,20 @@ data class IdentAndAbout(
                 null
             )
         }
+    }
+}
+
+data class IdentAndAboutWithBlob(
+    val ident: Ident,
+    val about: About,
+    var profileImage: Uri?
+) {
+    fun getNetworkIdentifier(): String {
+        if (this.about.name == null || this.about.name!!.isEmpty()) {
+            return this.ident.publicKey.subSequence(0, 5).toString()
+        }
+        val server = if (this.ident.server.isEmpty()) "" else "@" + this.ident.server
+        return about.name + server
     }
 }
 

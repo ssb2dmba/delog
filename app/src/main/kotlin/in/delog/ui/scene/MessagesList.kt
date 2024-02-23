@@ -132,7 +132,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                             .wrapContentHeight()
                     ) {
                         IdentityBox(
-                            identAndAbout = uiState.identAndAbout!!,
+                            identAndAboutWithBlob = uiState.identAndAbout!!,
                             short = true,
                         )
                     }

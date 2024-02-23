@@ -39,7 +39,7 @@ import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import com.zachklipp.richtext.ui.printing.Printable
 import com.zachklipp.richtext.ui.printing.rememberPrintableController
-import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.service.ssb.Dict
 import `in`.delog.service.ssb.WordList
@@ -139,7 +139,7 @@ fun rememberQrBitmapPainter(
 
 @Composable
 fun ExportMnemonicDialog(
-    identAndAbout: IdentAndAbout,
+    identAndAbout: IdentAndAboutWithBlob,
     onDismissRequest: () -> Unit
 ) {
     val printController = rememberPrintableController()
@@ -201,7 +201,7 @@ fun ExportMnemonicDialog(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                        rememberMnemonicText(pk = identAndAbout.ident.privateKey!!)?.let {
+                        rememberMnemonicText(pk = identAndAbout.ident.privateKey)?.let {
                             Text(
                                 text = it,
                                 modifier = Modifier.padding(32.dp),

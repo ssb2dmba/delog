@@ -17,17 +17,18 @@
  */
 package `in`.delog.ui.component
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
@@ -42,8 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -51,11 +50,10 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.ui.scene.ExportPublickKeyDialog
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.ui.theme.keySmall
@@ -63,9 +61,9 @@ import `in`.delog.ui.theme.keySmall
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IdentityBox(
-    identAndAbout: IdentAndAbout,
+    identAndAboutWithBlob: IdentAndAboutWithBlob,
     short: Boolean = false,
-    onClick: ((IdentAndAbout) -> Unit)? = null,
+    onClick: ((IdentAndAboutWithBlob) -> Unit)? = null
 ) {
 
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
@@ -73,47 +71,36 @@ fun IdentityBox(
     var showExportDialog by remember { mutableStateOf(false) }
 
     if (showExportDialog) {
-        ExportPublickKeyDialog(identAndAbout = identAndAbout, onDismissRequest = {
+        ExportPublickKeyDialog(identAndAbout = identAndAboutWithBlob, onDismissRequest = {
             showExportDialog = false
         })
         return
     }
 
-    if (identAndAbout.about == null) {
-        identAndAbout.about = About(identAndAbout.ident.publicKey)
-    }
+
     Row(modifier = Modifier.padding(16.dp)) {
         // column image
         Column(modifier = Modifier.width(56.dp)) {
-            AsyncImage(
-                model = "https://robohash.org/${identAndAbout.about!!.about}.png",
-                placeholder = rememberAsyncImagePainter("https://robohash.org/${identAndAbout.about!!.about}.png"),
-                contentDescription = "Profile Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(size = 48.dp)
-                    .clip(shape = CircleShape)
-                    .background(MaterialTheme.colorScheme.outline),
-            )
+            ProfileImage(identAndAboutWithBlob= identAndAboutWithBlob)
         }
         // spacer
         Column(modifier = Modifier.width(8.dp)) {}
         // column text
-        Column() {
+        Column {
             // private Key
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = identAndAbout.ident.publicKey,
+                    text = identAndAboutWithBlob.ident.publicKey,
                     modifier = Modifier
                         .combinedClickable(
                             onClick = {
-                                clipboardManager.setText(buildAnnotatedString { append(identAndAbout.ident.publicKey) })
+                                clipboardManager.setText(buildAnnotatedString { append(identAndAboutWithBlob.ident.publicKey) })
                                 Toast
                                     .makeText(
                                         context,
-                                        String.format("%s copied!", identAndAbout.ident.publicKey),
+                                        String.format("%s copied!", identAndAboutWithBlob.ident.publicKey),
                                         Toast.LENGTH_LONG
                                     )
                                     .show()
@@ -135,16 +122,16 @@ fun IdentityBox(
                     .padding(top = 8.dp)
             ) {
                 Text(
-                    text = identAndAbout.getNetworkIdentifier(),
+                    text = identAndAboutWithBlob.getNetworkIdentifier(),
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                if (identAndAbout.ident.defaultIdent && onClick != null) {
+                if (identAndAboutWithBlob.ident.defaultIdent && onClick != null) {
                     FilledTonalIconButton(
                         onClick = {
-                            onClick.invoke(identAndAbout)
+                            onClick.invoke(identAndAboutWithBlob)
                         }
                     ) {
                         Icon(
@@ -155,12 +142,14 @@ fun IdentityBox(
                     }
                 }
             }
-
+            if (!short)  {
+                Spacer(modifier =Modifier.height(24.dp))
+            }
             // biography
-            if (identAndAbout.about?.description != null && identAndAbout.about?.description != "") {
+            if (identAndAboutWithBlob.about.description != null && identAndAboutWithBlob.about.description != "") {
                 Text(
-                    text = identAndAbout.about!!.description!!,
-                    style = MaterialTheme.typography.bodySmall,
+                    text = identAndAboutWithBlob.about.description ?:"",
+                    style = if (short)  MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = if (short) 2 else Int.MAX_VALUE,
                 )
@@ -188,22 +177,26 @@ fun IdentityCardPreview() {
         about = About(
             about = "@YpSbE5/7oWuf7k6zhU/wwbm28EffUggYEwVpDkOAdIg=.ed25519",
             name = "Oreo Cookie",
-            //description = "we made healthy  \uD83D\uDD25  drinks and we are rewilding community across #Britain with the @Orchad project. Find out more at https://www.voila.co.uk",
+            description = "we made healthy  \uD83D\uDD25  drinks and we are rewilding community across #Britain with the @Orchad project. Find out more at https://www.voila.co.uk",
             image = "image",
-            description = "",
             dirty = false
         )
     )
+    val identAndAboutWithBlob = IdentAndAboutWithBlob(ident=identAndAbout.ident, about=identAndAbout.about!!, profileImage=Uri.EMPTY)
     MyTheme(
         darkTheme = false,
         dynamicColor = false
     ) {
         Column {
             IdentityBox(
-                identAndAbout = identAndAbout,
+                identAndAboutWithBlob = identAndAboutWithBlob ,
                 short = true,
             )
             ListSpacer()
+            IdentityBox(
+                identAndAboutWithBlob = identAndAboutWithBlob ,
+                short = false,
+            )
         }
     }
 }

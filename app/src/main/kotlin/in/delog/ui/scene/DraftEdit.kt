@@ -67,6 +67,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import `in`.delog.R
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.model.SsbMessageContent
@@ -87,6 +88,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long, link: String) {
     val identAndAbout = LocalActiveFeed.current ?: return
@@ -137,7 +139,7 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                             onClickCallBack = {}
                         )
                     }
-                    IdentityBox(identAndAbout = identAndAbout)
+                    IdentityBox(identAndAboutWithBlob = identAndAbout)
                     if (linkState != null) {
                         MessageItem(
                             navController = navController,
@@ -238,9 +240,11 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                 isUploading = draftViewModel.isLoadingImage,
                 tint = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier,
-            ) {
-                draftViewModel.selectImage(it)
-            }
+                mockPermissionsState = null,
+                onImageChosen = { uri ->
+                    draftViewModel.selectImage(uri)
+                }
+            )
         }
 
         IconButton(

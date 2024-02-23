@@ -19,11 +19,11 @@ data class SsbMessageContent(
     var type: String,
     val contentWarning: String? = null,
     val about: String? = null,
-    val image: String? = null,
+    var image: String? = null,
     val name: String? = null,
     var root: String? = null,
     var branch: String? = null,
-    val description: String? = null,
+    var description: String? = null,
     var mentions: Array<Mention>? = null
 ) {
     companion object {

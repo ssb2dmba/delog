@@ -23,12 +23,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.zachklipp.richtext.ui.printing.Printable
 import com.zachklipp.richtext.ui.printing.rememberPrintableController
-import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.db.model.IdentAndAboutWithBlob
 
 
 @Composable
 fun ExportPublickKeyDialog(
-    identAndAbout: IdentAndAbout,
+    identAndAbout: IdentAndAboutWithBlob,
     onDismissRequest: () -> Unit
 ) {
     val printController = rememberPrintableController()
@@ -60,7 +60,7 @@ fun ExportPublickKeyDialog(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = identAndAbout.about!!.name!!,
+                            text = identAndAbout.about.name ?: "",
                             modifier = Modifier.padding(16.dp),
                         )
                         val pubKey = identAndAbout.ident.publicKey
@@ -104,7 +104,7 @@ fun ExportPublickKeyDialog(
                     }
                     Button(
                         onClick = {
-                            printController.print(identAndAbout.about!!.name!!)
+                            printController.print(identAndAbout.about.name ?:"")
                         },
                         modifier = Modifier.padding(8.dp),
                     ) {
