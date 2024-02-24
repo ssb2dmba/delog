@@ -27,6 +27,8 @@ import org.apache.tuweni.concurrent.CompletableAsyncResult
 import org.apache.tuweni.concurrent.coroutines.await
 import org.apache.tuweni.scuttlebutt.handshake.vertx.ClientHandler
 import org.apache.tuweni.scuttlebutt.rpc.*
+import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeBlobEnd
+import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeBlobSlice
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeRequest
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeStreamEndRequest
 import java.util.concurrent.ConcurrentHashMap
@@ -52,7 +54,9 @@ open class RPCHandler(
         ConcurrentHashMap()
     private val streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
     private var closed = false
-
+    init {
+        Log.i("RPCHandler", "RPCHandler init")
+    }
     @Throws(JsonProcessingException::class)
     override suspend fun makeAsyncRequest(request: RPCAsyncRequest): RPCResponse {
         val bodyBytes = request.toEncodedRpcMessage(objectMapper)
@@ -119,6 +123,7 @@ open class RPCHandler(
 
     override fun close() {
         vertx.runOnContext { terminationFn.run() }
+        streams.clear()
     }
 
     override fun receivedMessage(message: Bytes) {
@@ -138,7 +143,8 @@ open class RPCHandler(
     override fun streamClosed() {
         val synchronizedCloseStream = Handler { _: Void? ->
             closed = true
-            streams.forEach { (_: Int, streamHandler: ScuttlebuttStreamHandler) ->
+            streams.forEach { (i: Int, streamHandler: ScuttlebuttStreamHandler) ->
+                println(i)
                 streamHandler.onStreamError(
                     ConnectionClosedException()
                 )
@@ -165,6 +171,7 @@ open class RPCHandler(
                 TAG,
                 String.format("incoming RPC request not implemented: %s", rpcMessage.asString())
             )
+
         } else {
             val isEnd = RPCFlag.EndOrError.END.isApplied(rpcFlags)
             if (isEnd) {
@@ -260,6 +267,25 @@ open class RPCHandler(
                 "Unexpectedly could not encode stream end message to JSON. %s".format(e.message)
             )
         }
+    }
+
+    /**
+     * Sends an end blob message over the RPC channel to for the given request number
+     * @param requestNumber the request number of the stream to send a close message over RPC for
+     */
+    fun sendEndBlob(requestNumber: Int) {
+        var streamBlobEnd = encodeBlobEnd(requestNumber)
+        sendBytes(streamBlobEnd)
+    }
+
+    /**
+     * Sends an blob slice message over the RPC channel to for the given request number
+     * @param  requestNumber the request number of the stream to send a close message over RPC for
+     * @param  buff the blob slice to send
+     */
+    fun sendBlobSlice(requestNumber: Int, buff: Bytes) {
+        var streamBlobSlice = encodeBlobSlice(requestNumber, buff)
+        sendBytes(streamBlobSlice)
     }
 
     companion object {

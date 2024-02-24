@@ -68,7 +68,7 @@ class MainApplication : Application() {
             return instance!!.applicationContext
         }
 
-        fun getApplicationScope(): CoroutineScope {
+        fun getTorScope(): CoroutineScope {
             return instance!!.applicationScope
         }
 

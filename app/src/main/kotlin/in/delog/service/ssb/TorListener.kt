@@ -44,7 +44,7 @@ class TorListener : TorManagerEvent.Listener() {
 
         // these events are many many many lines and should be moved
         // off the main thread if ever needed to be dealt with.
-        MainApplication.getApplicationScope().launch(Dispatchers.IO) {
+        MainApplication.getTorScope().launch(Dispatchers.IO) {
             Log.d("TorListener", "-------------- multi-line event START: $event --------------")
             for (line in output) {
                 Log.d("TorListener", line)

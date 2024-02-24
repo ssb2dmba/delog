@@ -18,7 +18,6 @@
 package `in`.delog.service.ssb
 
 import android.util.Log
-import androidx.lifecycle.LifecycleService
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import `in`.delog.MainApplication
@@ -31,10 +30,6 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.MessageRepository
 import io.vertx.core.Vertx
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.apache.tuweni.scuttlebutt.Invite
@@ -54,7 +49,7 @@ class SsbService(
     private val contactRepository: ContactRepository,
     blobRepository: BlobRepository,
     private val torService: TorService
-) : LifecycleService() {
+) {
 
     val vertx: Vertx = Vertx.vertx()
     private var feed: Ident? = null
@@ -78,15 +73,7 @@ class SsbService(
         }
     }
 
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Default + job)
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-        if (ssbClient!=null) {
-            ssbClient!!.rpcHandler.close()
-        }
-    }
+
 
     suspend fun reconnect(ident: Ident) {
         feed = ident
@@ -94,6 +81,7 @@ class SsbService(
             torService.start()
         }
         try {
+            ssbClient?.rpcHandler?.close()
             ssbClient = ScuttlebuttClientFactory.fromFeedWithVertx(
                 vertx,
                 ident,
@@ -117,16 +105,15 @@ class SsbService(
             return
         }
         val feedCannonicalForm = feed!!.toCanonicalForm()
-        scope.launch {
             try {
                 // let's check @self for a backup or moved device
                 var ourSequence = messageRepository.getLastSequence(feedCannonicalForm)
-                Log.d("ssb", "createHistoryStream")
+                // createHistoryStream
                 ssbClient!!.feedService.createHistoryStream(
                     feedCannonicalForm,
                     ourSequence
                 )
-                Log.d("ssb", "createWantStream")
+                // createWantStream
                 ssbClient!!.blobService.createWantStream(ssbClient!!.blobService::wantStreamHandler)
                 // let's call all of our friends
                 contactRepository.geContacts(feedCannonicalForm).forEach {
@@ -139,8 +126,6 @@ class SsbService(
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-        }
-
     }
 
     /**

@@ -241,6 +241,8 @@ dependencies {
     androidTestImplementation 'io.cucumber:cucumber-android:4.10.0'
     androidTestImplementation 'io.cucumber:cucumber-picocontainer:4.8.1'
 
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-1'
+
 }
 
 task('generateSWIGsource') {

@@ -27,7 +27,7 @@ interface StreamHandler<T> {
      *
      * @param item the item appearing in the stream
      */
-    fun onMessage(item: T)
+    fun onMessage(requestNumber: Int, item: T)
 
     /**
      * Invoked when the stream has been closed.

@@ -26,11 +26,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import `in`.delog.MainApplication
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
+import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.scuttlebutt.lib.model.StreamHandler
 import org.apache.tuweni.scuttlebutt.rpc.RPCBlobRequest
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec
@@ -62,7 +62,7 @@ import java.util.function.Function
 class BlobService(
     private val multiplexer: RPCHandler,
     private val blobRepository: BlobRepository
-): LifecycleService() {
+) : LifecycleService() {
     companion object {
         // We don't represent all the fields returned over RPC in our java classes, so we configure the mapper
         // to ignore JSON fields without a corresponding Java field
@@ -71,7 +71,8 @@ class BlobService(
     }
 
     private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Default + job)
+
+    private var wantRequestNumber: Int? = null
     override fun onDestroy() {
         super.onDestroy()
         job.cancel()
@@ -93,7 +94,7 @@ class BlobService(
                     try {
                         val str = message.body().toArrayUnsafe()
                         val map = mapper.readValue<HashMap<String, Long>>(str)
-                        wantStream.onMessage(map)
+                        wantStream.onMessage(requestNumber, map)
                     } catch (e: IOException) {
                         wantStream.onStreamError(e)
                         closer.run()
@@ -118,39 +119,46 @@ class BlobService(
      */
     fun wantStreamHandler(runnable: Runnable?): StreamHandler<HashMap<String, Long>?> {
         return object : StreamHandler<HashMap<String, Long>?> {
-
-            override fun onMessage(item: HashMap<String, Long>?) {
-                val wants:HashMap<String, Long> = HashMap()
-                scope.launch {
-                    for (key in item!!.keys) {
-                        val blobItem = blobRepository.getBlobItem(key)
-                        if (blobItem != null) {
-                            wants[key] = blobItem.size
-                        }
+            val streamEnded = AsyncResult.incomplete<Void>()
+            override fun onMessage(requestNumber: Int, item: HashMap<String, Long>?) {
+                val wants: HashMap<String, Long> = HashMap()
+                for (key in item!!.keys) {
+                    val blobItem = runBlocking { blobRepository.getBlobItem(key) }
+                    if (blobItem != null) {
+                        wants[key] = blobItem.size
                     }
-                    val responseString: String = JSONObject((wants as Map<String, Long>?)!!).toString()
-                    val response = RPCCodec.encodeResponse(
-                        Bytes.wrap(responseString.toByteArray()),
-                        1,
-                        RPCFlag.Stream.STREAM,
-                        RPCFlag.BodyType.JSON
-                    )
-                    multiplexer.sendBytes(response)
-                    multiplexer.endStream(1 * -1)
                 }
+                if (wants.isEmpty()) {
+                    //streamEnded.complete(null)
+                    return
+                }
+                val responseString: String =
+                    JSONObject((wants as Map<String, Long>?)!!).toString()
+                val response = RPCCodec.encodeResponse(
+                    Bytes.wrap(responseString.toByteArray()),
+                    wantRequestNumber!!, //wantRequestNumber!! *-1, //?: requestNumber, //requestNumber * -1,
+                    RPCFlag.Stream.STREAM,
+                    RPCFlag.BodyType.JSON
+                )
+                multiplexer.sendBytes(response)
             }
 
             override fun onStreamEnd() {
+                streamEnded.complete(null)
 
             }
 
             override fun onStreamError(ex: Exception?) {
                 ex?.printStackTrace()
                 MainApplication.toastify(ex?.message ?: "error on wantStreamHandler")
+                streamEnded.completeExceptionally(ex)
             }
         }
     }
 
+    /**
+     * handle RPC messages for namespace 'blobs'
+     */
     fun onBlobsRPC(clientId: String, rpcRequestBody: RPCRequestBody, rpcMessage: RPCMessage) {
         if (rpcRequestBody.name.size < 2) {
             Log.w(SsbService.TAG, "unhandled blob function : " + rpcMessage.asString())
@@ -159,7 +167,7 @@ class BlobService(
         when (rpcRequestBody.name[1]) {
             "get" -> onRPCBlobsGet(rpcMessage)
             "createWants" -> onRPCBlobsCreateWants(clientId, rpcMessage)
-            else -> Log.w(SsbService.TAG, "unhandled blob function : " + rpcMessage.asString())
+            else -> Log.w(TAG, "unhandled blob function : " + rpcMessage.asString())
         }
     }
 
@@ -168,63 +176,56 @@ class BlobService(
      *  server asked us blob.createWants and we reply all blobs we need to get
      */
     private fun onRPCBlobsCreateWants(clientId: String, rpcMessage: RPCMessage) {
-        scope.launch {
-            val wants = blobRepository.getWants(clientId)
-            val responseString: String = JSONObject((wants as Map<String, Long>?)!!).toString()
-            val response = RPCCodec.encodeResponse(
-                Bytes.wrap(responseString.toByteArray()),
-                rpcMessage.requestNumber(),
-                rpcMessage.rpcFlags()
-            )
-            val requestNumber = rpcMessage.requestNumber() * -1
-            Log.d(" onRPCBlobsCreateWants", "$requestNumber > $wants")
-            multiplexer.sendBytes(response)
-            multiplexer.endStream(requestNumber)
-        }
-
+        wantRequestNumber = rpcMessage.requestNumber()
+        val wants = runBlocking { blobRepository.getWants(clientId) }
+        val responseString: String = JSONObject((wants as Map<String, Long>?)!!).toString()
+        val response = RPCCodec.encodeResponse(
+            Bytes.wrap(responseString.toByteArray()),
+            wantRequestNumber!!,
+            RPCFlag.BodyType.JSON,
+            RPCFlag.Stream.STREAM
+        )
+        Log.d(" onRPCBlobsCreateWants", "$wantRequestNumber > $wants")
+        multiplexer.sendBytes(response)
     }
 
     /**
      *  return file as stream of bytes if possible
      */
     private fun onRPCBlobsGet(rpcMessage: RPCMessage) {
-        val rpcStreamRequest = rpcMessage.asJSON(SsbService.objectMapper, RPCBlobRequest::class.java)
+        val rpcStreamRequest =
+            rpcMessage.asJSON(SsbService.objectMapper, RPCBlobRequest::class.java)
         val key = rpcStreamRequest.key
-        scope.launch {
-            val blobItem = blobRepository.getBlobItem(key)
-            if (blobItem!=null) {
-                val file = blobItem.uri.toFile()
-                val size = file.length().toInt()
-                val bytes = ByteArray(size)
-                var offset = 0
-                var oldRead =0
-                try {
-                    val buff = ByteArray(1230)
-                    File(blobItem.uri.path).inputStream().buffered().use { input ->
-                        while(true) {
-                            val sz = input.read(buff)
-                            if (sz <= 0) break
-                            offset += sz
-                            val pct: Int = offset * 100 / size
-                            if (oldRead!=pct) {
-                                oldRead = pct
-                                println("read $pct $offset $size")
-                            }
-                            ///at that point we have a sz bytes in the buff to process
-                            multiplexer.sendBytes(Bytes.wrap(bytes))
+
+        val blobItem = runBlocking { blobRepository.getBlobItem(key) }
+        if (blobItem != null) {
+            val file = blobItem.uri.toFile()
+            val size = file.length().toInt()
+            var offset = 0
+            var oldRead = 0
+            var remaining = size
+            try {
+                var buff = ByteArray(1230)
+                File(blobItem.uri.path).inputStream().buffered().use { input ->
+                    while (true) {
+                        val sz = input.read(buff)
+                        if (sz <= 0) break
+                        if (sz < 1230) {
+                            buff = buff.copyOfRange(0, sz)
                         }
+                        offset += sz
+                        multiplexer.sendBlobSlice(rpcMessage.requestNumber(), Bytes.wrap(buff))
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    MainApplication.toastify(e.toString())
-                } finally {
-                    Log.d("onRPCBlobsGet", "file sent")
-                    multiplexer.endStream(rpcMessage.requestNumber() * -1)
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                MainApplication.toastify(e.toString())
+            } finally {
+                multiplexer.sendEndBlob(rpcMessage.requestNumber())
+                Log.d("onRPCBlobsGet", "file sent")
             }
         }
     }
-
 
 
 }

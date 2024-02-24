@@ -162,7 +162,6 @@ class BlobRepositoryImpl(
 
     override suspend fun getWants(author: String): HashMap<String, Long> {
         val blobs = blobDao.getWants(author)
-        val blobItems = mutableListOf<BlobItem>()
         val wants = HashMap<String, Long>()
         for (blob in blobs) {
             val blobItem = getAsBlobItem(blob.key)

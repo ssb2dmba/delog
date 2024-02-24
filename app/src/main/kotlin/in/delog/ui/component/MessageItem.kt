@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -60,11 +59,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
@@ -235,16 +232,12 @@ fun MessageItem(
             }
     ) {
         Row(
-            modifier = Modifier.threadIndicator(
-                    strokeWidth = 1.dp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    dry= (messageViewData.level == 0L) and (messageViewData.replies == 0L)
-                )
+            modifier = Modifier.threadIndicator(messageViewData.level.toInt())
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(44.dp)
+                    .width(64.dp)
             ) {
                 ProfileImage(
                     identAndAboutWithBlob = null,
@@ -258,8 +251,7 @@ fun MessageItem(
                 Row(
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
 
                     Row {
@@ -295,25 +287,33 @@ fun MessageItem(
                     val maxLines = if (truncate) 6 else Int.MAX_VALUE
                     RichTextViewer(text, { onClickCallBack.invoke() }, maxLines)
                 }
-                if (messageViewData.blobs.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier
-                            .height(200.dp)
-                            .padding(top = 8.dp)
-                    ) {
-                        BlobsEdit(
-                            blobs = messageViewData.blobs,
-                            action = { openView(it) }, actionIcon = { PageViewIcon() })
-                    }
+
+
+            }
+        }
+        if (messageViewData.blobs.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .fillMaxWidth()
+                    .threadIndicator(messageViewData.level.toInt())
+            ) {
+                Row(modifier=Modifier.padding(start = (messageViewData.level * 40).toInt().dp)) {
+                    BlobsEdit(
+                        blobs = messageViewData.blobs,
+                        action = { openView(it) }, actionIcon = { PageViewIcon() })
                 }
-                if (showToolbar) {
-                    MsgToolbar(
-                        navController = navController,
-                        message = messageViewData,
-                        truncated = truncated,
-                        onClickCallBack = onClickCallBack
-                    )
-                }
+
+            }
+        }
+        if (showToolbar) {
+            Row(modifier=Modifier.threadIndicator(messageViewData.level.toInt())) {
+                MsgToolbar(
+                    navController = navController,
+                    message = messageViewData,
+                    truncated = truncated,
+                    onClickCallBack = onClickCallBack
+                )
             }
         }
     }
@@ -433,21 +433,24 @@ fun MessageItemPreview() {
     }
 }
 
-fun Modifier.threadIndicator(strokeWidth: Dp, color: Color, dry: Boolean) = composed(
+fun Modifier.threadIndicator(level: Int) = composed(
     factory = {
-        if (dry) return@composed this
+        if (level == 0) return@composed this
         val density = LocalDensity.current
+        val strokeWidth = 1.dp
+        val color = MaterialTheme.colorScheme.onSurfaceVariant
         val strokeWidthPx = density.run { strokeWidth.toPx() }
 
         Modifier.drawBehind {
-            val height = size.height - strokeWidthPx/2
-
-            drawLine(
-                color = color,
-                start = Offset(x = 44f, y = 0f),
-                end = Offset(x = 44f , y = height),
-                strokeWidth = strokeWidthPx
-            )
+            val height = size.height - strokeWidthPx / 2
+            for (i in 1..level) {
+                drawLine(
+                    color = color,
+                    start = Offset(x = 64f * (level), y = 0f),
+                    end = Offset(x = 64f * (level), y = height),
+                    strokeWidth = strokeWidthPx
+                )
+            }
         }
     }
 )

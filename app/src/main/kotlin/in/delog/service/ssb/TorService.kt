@@ -92,7 +92,7 @@ class TorService {
     init {
         val store = SettingStore(MainApplication.applicationContext())
 
-        MainApplication.getApplicationScope().launch {
+        MainApplication.getTorScope().launch {
             store.getData(TOR_SOCK_PROXY_PORT).collect {
                 if (it != null && it!!.toIntOrNull() != null) {
                     torProxyPort = it.toInt()
@@ -116,7 +116,7 @@ class TorService {
     }
 
     fun stop() {
-        MainApplication.getApplicationScope().launch {
+        MainApplication.getTorScope().launch {
             torOperationManager.stopQuietly()
             _connected.value = false
         }

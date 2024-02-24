@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 object RPCCodec {
     val counter = AtomicInteger(1000)
-    private val mapper = ObjectMapper()
+    val mapper = ObjectMapper()
     private fun nextRequestNumber(): Int {
         val requestNumber = counter.getAndIncrement()
         if (requestNumber < 1) {
@@ -182,5 +182,26 @@ object RPCCodec {
      */
     fun encodeResponse(body: Bytes, requestNumber: Int, vararg flags: RPCFlag): Bytes {
         return encodeResponse(body, requestNumber, 0.toByte(), *flags)
+    }
+
+    fun encodeBlobEnd(requestNumber: Int): Bytes {
+        val bool = true
+        val bytes = mapper.writeValueAsBytes(bool)
+        return encodeResponse(
+            Bytes.wrap(bytes),
+            requestNumber,
+            RPCFlag.Stream.STREAM,
+            RPCFlag.BodyType.JSON,
+            RPCFlag.EndOrError.END
+        )
+    }
+
+    fun encodeBlobSlice(requestNumber: Int, buffer: Bytes): Bytes {
+        return encodeResponse(
+            buffer,
+            requestNumber,
+            RPCFlag.Stream.STREAM,
+            RPCFlag.BodyType.BINARY
+        )
     }
 }

@@ -102,6 +102,7 @@ class FeedService(
         params["seq"] = sequence
         params["limit"] = 100
         params["keys"] = true
+        params["live"] = true
         Log.i(TAG, "createHistoryStream: $params")
         val streamRequest = RPCStreamRequest(RPCFunction("createHistoryStream"), listOf(params))
 
@@ -168,7 +169,7 @@ class FeedService(
     fun onCreateHistoryStream(rpcMessage: RPCMessage) {
         val rpcStreamRequest = rpcMessage.asJSON(SsbService.objectMapper, RPCStreamRequest2::class.java)
         val id = rpcStreamRequest.id
-        val sequence = rpcStreamRequest.seq
+        val sequence = 0 // rpcStreamRequest.seq
         val remoteLimit = rpcStreamRequest.limit
 
         if (sequence < 1) {
@@ -201,8 +202,8 @@ class FeedService(
             }
 
         }
-        Log.d(TAG, "sending endstream for: " + rpcMessage.requestNumber())
-        multiplexer.endStream(rpcMessage.requestNumber() * -1)
+        //Log.d(TAG, "sending endstream for: " + rpcMessage.requestNumber())
+        //multiplexer.endStream(rpcMessage.requestNumber() * -1)
     }
 
     private fun updateLastPush(it: Message) {

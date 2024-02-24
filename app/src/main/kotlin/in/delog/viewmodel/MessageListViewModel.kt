@@ -70,11 +70,6 @@ class MessageListViewModel(
 
     var messagesPaged: Flow<PagingData<MessageViewData>>? = null
 
-    private fun onError(e: Exception) {
-
-        _uiState.update { it.copy(error = e, syncing = false) }
-    }
-
     fun clearError() {
         viewModelScope.launch {
             delay(1000)
@@ -83,7 +78,7 @@ class MessageListViewModel(
     }
 
     private fun synchronize() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (_uiState.value.identAndAbout==null) return@launch
             ssbService.reconnect(_uiState.value.identAndAbout!!.ident)
         }
