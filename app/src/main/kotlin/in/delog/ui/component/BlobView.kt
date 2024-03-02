@@ -98,25 +98,9 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
                     contentDescription = blobItem.type
                 )
             }
-
         }
-        Text(
-            blobItem.key,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier
-                .width(128.dp)
-                .align(Alignment.BottomCenter)
-                .padding(8.dp),
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            textAlign = TextAlign.Center
-        )
         IconButton(
-            modifier = Modifier
-                .size(30.dp)
-                .padding(end = 5.dp)
-                .align(Alignment.TopEnd),
+            modifier = Modifier.size(48.dp).align(Alignment.TopEnd),
             onClick = { action(blobItem) },
         ) {
             cta()

@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.map
  */
 
 interface IdentRepository {
-    val default: Flow<IdentAndAboutWithBlob>
+    val default: Flow<IdentAndAboutWithBlob?>
     val idents: Flow<List<IdentAndAboutWithBlob>>
     val count: LiveData<Int>
     suspend fun insert(feed: IdentAndAbout): Long
@@ -63,8 +63,12 @@ class FeedRepositoryImpl(
         }
     }
 
-    override val default: Flow<IdentAndAboutWithBlob> = identDao.getDefaultFeed().map { identAndAbout ->
-        makeIdentAndAboutWithBlob(identAndAbout)
+    override val default: Flow<IdentAndAboutWithBlob?> = identDao.getDefaultFeed().map { identAndAbout ->
+        if (identAndAbout != null) {
+            makeIdentAndAboutWithBlob(identAndAbout)
+        } else {
+            null
+        }
     }
 
     override val count = identDao.liveCount()

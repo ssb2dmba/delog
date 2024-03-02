@@ -23,6 +23,7 @@ import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.MessageRepository
 import io.vertx.core.Vertx
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes32
 import org.apache.tuweni.crypto.sodium.Signature
@@ -37,7 +38,9 @@ class SsbRequiredRepositories(
     val feedRepository: MessageRepository,
     val aboutRepository: AboutRepository,
     val blobRepository: BlobRepository
-)
+) {
+    lateinit var scope: CoroutineScope
+}
 
 /**
  * A factory for constructing a new instance of ScuttlebuttClient with the given configuration parameters
@@ -48,10 +51,12 @@ object ScuttlebuttClientFactory {
         Bytes32.wrap(Base64.decode("1KHLiKZvAvjbY1ziZEHMXawbCEIM6qwjCDm3VYRan/s="))
 
     @JvmStatic
-    fun fromFeedWithVertx(vertx: Vertx,
-                          pFeed: Ident,
-                          ssbRequiredRepositories: SsbRequiredRepositories,
-                          onRPCRequest: (rpcM: RPCMessage) -> Unit) : ScuttlebuttClient {
+    fun fromFeedWithVertx(
+        vertx: Vertx,
+        pFeed: Ident,
+        ssbRequiredRepositories: SsbRequiredRepositories,
+        onRPCRequest:  (RPCMessage) -> Unit
+    ) : ScuttlebuttClient {
         val invite: Invite = Invite.fromCanonicalForm(pFeed.invite!!)
         val remotePublicKey = invite.identity.ed25519PublicKey()
         val clientId = pFeed.toCanonicalForm()
@@ -115,7 +120,7 @@ object ScuttlebuttClientFactory {
         serverPublicKey: Signature.PublicKey?,
         networkIdentifier: Bytes32?,
         ssbRequiredRepositories: SsbRequiredRepositories,
-        onRPCRequest: (rpcM: RPCMessage) -> Unit
+        onRPCRequest: (RPCMessage) -> Unit
     ): ScuttlebuttClient {
         val secureScuttlebuttVertxClient = SecureScuttlebuttVertxClient(
             vertx,
@@ -175,8 +180,9 @@ object ScuttlebuttClientFactory {
                     RPCHandler(
                         vertx,
                         sender,
-                        terminationFn
-                    ) {}
+                        terminationFn,
+                        { rpcMessage -> }
+                    )
                 } as RPCHandler
             return@runBlocking ScuttlebuttClient(clientId, multiplexer,ssbRequiredRepositories)
         }

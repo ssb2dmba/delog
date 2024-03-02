@@ -45,7 +45,7 @@ class ScuttlebuttClient(
      *
      * @return a service for operations that concern scuttlebutt feeds
      */
-    val feedService = FeedService(multiplexer, aboutRepository, feedRepository)
+    val feedService = FeedService(multiplexer, blobRepository, aboutRepository, feedRepository)
 
     /**
      * Provides a service for operations that connect nodes together.
@@ -53,13 +53,6 @@ class ScuttlebuttClient(
      * @return a service for operations that connect nodes together
      */
     val blobService = BlobService(multiplexer, blobRepository)
-
-    /**
-     * Provides a service for operations concerning social connections and updating the instance's profile
-     *
-     * @return a service for operations concerning social connections and updating the instance's profile
-     */
-    val socialService = SocialService(multiplexer, feedService)
 
     /**
      * Provides a service for making lower level requests that are not supported by higher level services.

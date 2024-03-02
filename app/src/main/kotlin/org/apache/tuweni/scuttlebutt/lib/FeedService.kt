@@ -25,6 +25,7 @@ import `in`.delog.db.model.About
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.toJsonResponse
 import `in`.delog.db.repository.AboutRepository
+import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
@@ -60,6 +61,7 @@ import java.util.*
  */
 class FeedService(
     private val multiplexer: RPCHandler,
+    private val blobRepository: BlobRepository,
     private val aboutRepository: AboutRepository,
     private val messageRepository: MessageRepository) : LifecycleService() {
     companion object {
@@ -112,7 +114,7 @@ class FeedService(
         ) { _: Runnable ->
             object : ScuttlebuttStreamHandler {
 
-                override fun onMessage(requestNumber: Int, message: RPCResponse) {
+                override  fun onMessage(requestNumber: Int, message: RPCResponse) {
                     routeFeedMessage(message)
                 }
 
@@ -162,18 +164,18 @@ class FeedService(
     private fun storePostMessage(m: FeedMessage) {
         val message: Message = m.toMessage()
         scope.launch {
-            messageRepository.maybeAddMessage(message)
+            messageRepository.maybeAddMessageAndBlobs(blobRepository ,message)
         }
     }
 
     fun onCreateHistoryStream(rpcMessage: RPCMessage) {
         val rpcStreamRequest = rpcMessage.asJSON(SsbService.objectMapper, RPCStreamRequest2::class.java)
         val id = rpcStreamRequest.id
-        val sequence = 0 // rpcStreamRequest.seq
+        val sequence = rpcStreamRequest.seq
         val remoteLimit = rpcStreamRequest.limit
 
         if (sequence < 1) {
-            Log.w(TAG, String.format("pub is requesting the whole history: %s", sequence))
+            Log.w(TAG, String.format("pub is requesting complete history !", sequence))
         }
         var remoteSequence = sequence.toLong()
         val batchSize = 100.coerceAtMost(remoteLimit) // TODO put in config
@@ -182,7 +184,6 @@ class FeedService(
         while (hasMoreResults) {
             val messages = messageRepository.getMessagePage(id, remoteSequence, batchSize)
             if (messages.isEmpty()) {
-                Log.w(TAG, "db return empty: $ct")
                 hasMoreResults = false
             }
             for (m: Message in messages) {
@@ -200,10 +201,7 @@ class FeedService(
                 ct++
                 updateLastPush(m)
             }
-
         }
-        //Log.d(TAG, "sending endstream for: " + rpcMessage.requestNumber())
-        //multiplexer.endStream(rpcMessage.requestNumber() * -1)
     }
 
     private fun updateLastPush(it: Message) {

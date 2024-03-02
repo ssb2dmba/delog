@@ -18,17 +18,19 @@
 package `in`.delog.db.repository
 
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.paging.PagingSource
 import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
+import `in`.delog.model.SsbMessageContent
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 
 
 interface MessageRepository {
     suspend fun addMessage(feedOid: Message)
     suspend fun existsMessage(key: String): Boolean
-    suspend fun maybeAddMessage(message: Message)
     suspend fun findByDefaultFeed(): LiveData<List<Message>>
     fun getPagedMessages(msgKey: String): PagingSource<Int, MessageAndAbout>
     fun getMessagePage(author: String, seqStart: Long, limit: Int): List<Message>
@@ -40,9 +42,12 @@ interface MessageRepository {
 
     fun getMessage(key: String): Message?
     fun blobIsUsefull(key: String):Boolean
+    suspend fun maybeAddMessageAndBlobs(blobRepository: BlobRepository, message: Message)
 }
 
-class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageRepository {
+class MessageRepositoryImpl(
+    private val messageDao: MessageDao,
+    ) : MessageRepository {
 
     override fun getMessage(key: String): Message? {
         return messageDao.getMessage(key)
@@ -72,14 +77,28 @@ class MessageRepositoryImpl(private val messageDao: MessageDao) : MessageReposit
         return messageDao.existsByKey(key)
     }
 
-    override suspend fun maybeAddMessage(message: Message) {
+    override suspend fun maybeAddMessageAndBlobs(blobRepository: BlobRepository,message: Message) {
         // TODO validate signature here
         if (!existsMessage(message.key)) {
             try {
                 addMessage(message)
+                addBlobs(blobRepository, message.author, message)
             } catch (e: SQLiteConstraintException) {
+                e.printStackTrace()
                 // some race conditions can occur
-                // not in @Transaction for now cause otherwise might introducte too slowess
+                // not in @Transaction for now cause otherwise might introduce too slowess
+            }
+        }
+    }
+
+    private fun addBlobs(blobRepository: BlobRepository,author: String, message: Message) {
+        Log.i(TAG, "add wants")
+        val ssbMessageContent = SsbMessageContent.serialize(message.contentAsText)
+        val blobs = ssbMessageContent.mentions?.filter { it.link.startsWith("&") }
+        if (blobs != null) {
+            for (blob in blobs) {
+                Log.i(TAG, "add wants" + blob.link)
+                blobRepository.createWant(author, blob)
             }
         }
     }

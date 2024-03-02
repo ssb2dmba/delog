@@ -85,7 +85,7 @@ class IdentAndAboutViewModel(
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val blob =
-                        blobRepository.insert(input.identAndAboutWithBlob.about.about, input.imageToPick!!)
+                        blobRepository.insertOwnBlob(input.identAndAboutWithBlob.about.about, input.imageToPick!!)
                             ?: throw Exception("unable to insert blob")
                     if (_uiState.value!!.identAndAboutWithBlob.about.image == blob.key) {
                         throw Exception("file is already attached to message")

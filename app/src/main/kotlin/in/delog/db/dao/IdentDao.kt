@@ -67,7 +67,7 @@ interface IdentDao {
 
     @Transaction
     @Query("SELECT * FROM ident ORDER BY default_ident desc LIMIT 1")
-    fun getDefaultFeed(): Flow<IdentAndAbout>
+    fun getDefaultFeed(): Flow<IdentAndAbout?>
 
     @Query("UPDATE ident set default_ident = 0 ")
     fun unsetDefault()

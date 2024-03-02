@@ -30,6 +30,7 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.MessageRepository
 import io.vertx.core.Vertx
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.apache.tuweni.scuttlebutt.Invite
@@ -74,14 +75,14 @@ class SsbService(
     }
 
 
-
-    suspend fun reconnect(ident: Ident) {
+    suspend fun reconnect(scope: CoroutineScope, ident: Ident) {
         feed = ident
         if (ident.isOnion()) {
             torService.start()
         }
         try {
             ssbClient?.rpcHandler?.close()
+            ssbRequiredRepositories.scope = scope
             ssbClient = ScuttlebuttClientFactory.fromFeedWithVertx(
                 vertx,
                 ident,
@@ -105,40 +106,46 @@ class SsbService(
             return
         }
         val feedCannonicalForm = feed!!.toCanonicalForm()
-            try {
-                // let's check @self for a backup or moved device
-                var ourSequence = messageRepository.getLastSequence(feedCannonicalForm)
-                // createHistoryStream
-                ssbClient!!.feedService.createHistoryStream(
-                    feedCannonicalForm,
-                    ourSequence
-                )
-                // createWantStream
-                ssbClient!!.blobService.createWantStream(ssbClient!!.blobService::wantStreamHandler)
-                // let's call all of our friends
-                contactRepository.geContacts(feedCannonicalForm).forEach {
-                    ourSequence = messageRepository.getLastSequence(it.follow)
-                    ssbClient?.feedService?.createHistoryStream(
-                        it.follow,
-                        ourSequence
-                    )
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        try {
+            // let's check @self for a backup or moved device
+            var ourSequence = messageRepository.getLastSequence(feedCannonicalForm)
+            // createHistoryStream
+            ssbClient!!.feedService.createHistoryStream(
+                feedCannonicalForm,
+                ourSequence
+            )
+            // createWantStream
+            ssbClient!!.blobService.createWantStream(ssbClient!!.clientId)
+
+            // let's call all of our friends
+//            contactRepository.geContacts(feedCannonicalForm).forEach {
+//                ourSequence = messageRepository.getLastSequence(it.follow)
+//                ssbClient?.feedService?.createHistoryStream(
+//                    it.follow,
+//                    ourSequence
+//                )
+//            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     /**
      * Handle incoming RPC messages and route them accordingly
      */
-    private fun onRPC(rpcMessage: RPCMessage) {
-        if (ssbClient==null) return
+    private  fun onRPC(rpcMessage: RPCMessage) {
+        if (ssbClient == null) return
         try {
             val rpcStreamRequest =
                 rpcMessage.asJSON(jacksonObjectMapper(), RPCRequestBody::class.java)
             when (rpcStreamRequest.name.first()) {
                 "createHistoryStream" -> ssbClient!!.feedService.onCreateHistoryStream(rpcMessage)
-                "blobs" -> ssbClient?.blobService?.onBlobsRPC(ssbClient!!.clientId, rpcStreamRequest, rpcMessage)
+                "blobs" -> ssbClient?.blobService?.onBlobsRPC(
+                    ssbClient!!.clientId,
+                    rpcStreamRequest,
+                    rpcMessage
+                )
+
                 else -> Log.w(TAG, "unhandled function : " + rpcMessage.asString())
             }
         } catch (e: JsonProcessingException) {

@@ -16,9 +16,10 @@
  */
 package org.apache.tuweni.scuttlebutt.lib
 
+import android.content.ContentResolver
 import android.util.Log
 import androidx.core.net.toFile
-import androidx.lifecycle.LifecycleService
+import androidx.core.net.toUri
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -27,10 +28,10 @@ import `in`.delog.MainApplication
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
+import org.apache.tuweni.crypto.sodium.SHA256Hash
 import org.apache.tuweni.scuttlebutt.lib.model.StreamHandler
 import org.apache.tuweni.scuttlebutt.rpc.RPCBlobRequest
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec
@@ -46,6 +47,7 @@ import org.apache.tuweni.scuttlebutt.rpc.mux.ScuttlebuttStreamHandler
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Function
 
 
@@ -62,7 +64,8 @@ import java.util.function.Function
 class BlobService(
     private val multiplexer: RPCHandler,
     private val blobRepository: BlobRepository
-) : LifecycleService() {
+)  {
+
     companion object {
         // We don't represent all the fields returned over RPC in our java classes, so we configure the mapper
         // to ignore JSON fields without a corresponding Java field
@@ -70,98 +73,20 @@ class BlobService(
             ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    private val job = Job()
+    private val runningFileHandler: MutableMap<String, File> = ConcurrentHashMap()
 
     private var wantRequestNumber: Int? = null
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-    }
 
-    @Throws(JsonProcessingException::class, ConnectionClosedException::class)
-    fun createWantStream(streamHandler: Function<Runnable?, StreamHandler<HashMap<String, Long>?>>) {
-        val function = RPCFunction(listOf("blobs"), "createWants")
-        val request = RPCStreamRequest(function, listOf())
-        multiplexer.openStream(
-            request
-        ) { closer: Runnable ->
-            object : ScuttlebuttStreamHandler {
+    val context = MainApplication.applicationContext()
 
-                var wantStream: StreamHandler<HashMap<String, Long>?> =
-                    streamHandler.apply(closer)
-
-                override fun onMessage(requestNumber: Int, message: RPCResponse) {
-                    try {
-                        val str = message.body().toArrayUnsafe()
-                        val map = mapper.readValue<HashMap<String, Long>>(str)
-                        wantStream.onMessage(requestNumber, map)
-                    } catch (e: IOException) {
-                        wantStream.onStreamError(e)
-                        closer.run()
-                    }
-                }
-
-                override fun onStreamEnd() {
-                    wantStream.onStreamEnd()
-                }
-
-                override fun onStreamError(ex: Exception) {
-                    wantStream.onStreamError(ex)
-                }
-            }
-        }
-    }
-
-    /**
-     * we asked server a createWantStream RPC and we got a response
-     * we reply with the matching list of blob we have
-     * (this shall be enhanced for further replication as for ex. storing the want for someone else)
-     */
-    fun wantStreamHandler(runnable: Runnable?): StreamHandler<HashMap<String, Long>?> {
-        return object : StreamHandler<HashMap<String, Long>?> {
-            val streamEnded = AsyncResult.incomplete<Void>()
-            override fun onMessage(requestNumber: Int, item: HashMap<String, Long>?) {
-                val wants: HashMap<String, Long> = HashMap()
-                for (key in item!!.keys) {
-                    val blobItem = runBlocking { blobRepository.getBlobItem(key) }
-                    if (blobItem != null) {
-                        wants[key] = blobItem.size
-                    }
-                }
-                if (wants.isEmpty()) {
-                    //streamEnded.complete(null)
-                    return
-                }
-                val responseString: String =
-                    JSONObject((wants as Map<String, Long>?)!!).toString()
-                val response = RPCCodec.encodeResponse(
-                    Bytes.wrap(responseString.toByteArray()),
-                    wantRequestNumber!!, //wantRequestNumber!! *-1, //?: requestNumber, //requestNumber * -1,
-                    RPCFlag.Stream.STREAM,
-                    RPCFlag.BodyType.JSON
-                )
-                multiplexer.sendBytes(response)
-            }
-
-            override fun onStreamEnd() {
-                streamEnded.complete(null)
-
-            }
-
-            override fun onStreamError(ex: Exception?) {
-                ex?.printStackTrace()
-                MainApplication.toastify(ex?.message ?: "error on wantStreamHandler")
-                streamEnded.completeExceptionally(ex)
-            }
-        }
-    }
+    private val contentResolver: ContentResolver = this.context.contentResolver
 
     /**
      * handle RPC messages for namespace 'blobs'
      */
     fun onBlobsRPC(clientId: String, rpcRequestBody: RPCRequestBody, rpcMessage: RPCMessage) {
         if (rpcRequestBody.name.size < 2) {
-            Log.w(SsbService.TAG, "unhandled blob function : " + rpcMessage.asString())
+            Log.w(TAG, "unhandled blob function : " + rpcMessage.asString())
             return
         }
         when (rpcRequestBody.name[1]) {
@@ -171,13 +96,175 @@ class BlobService(
         }
     }
 
+    /**
+     * Send blobs.createWants TPC to the server and setup receive stream
+     */
+    @Throws(JsonProcessingException::class, ConnectionClosedException::class)
+    fun createWantStream(author: String) {
+        val rpcFunction = RPCFunction(listOf("blobs"), "createWants")
+        val request = RPCStreamRequest(rpcFunction, listOf())
+
+        multiplexer.openStream(
+            request
+        ) { _: Runnable ->
+            object : ScuttlebuttStreamHandler {
+
+                override  fun onMessage(requestNumber: Int, message: RPCResponse) {
+                        val str = message.body().toArrayUnsafe()
+                        val map = mapper.readValue<HashMap<String, Long>>(str)
+
+                        onHasMessage(author, map)
+                }
+
+                override fun onStreamEnd() {
+                    //stream ended successfully
+                }
+
+                override fun onStreamError(ex: Exception) {
+                    ex.printStackTrace()
+                    MainApplication.toastify(ex.message ?: "error in createWantStream")
+                }
+            }
+        }
+    }
+
+
+    private fun onHasMessage(author: String, item: HashMap<String, Long>?) {
+        val has: HashMap<String, Long> = HashMap()
+        for (key in item!!.keys) {
+            val blobItem = runBlocking {  blobRepository.getBlobItem(key) }
+            if (blobItem != null) {
+                has[key] = blobItem.size
+            }
+        }
+        for (key in has.keys) {
+            createBlobGetStream(author, key)
+        }
+    }
+
+    /**
+     * Send blobs.createWants RPC to the server and setup receive stream
+     */
+    @Throws(JsonProcessingException::class, ConnectionClosedException::class)
+    fun createBlobGetStream(author: String, hash: String, size: Long? = null, max: Long?=null) {
+        if (runningFileHandler.containsKey(hash)) {
+            Log.w(TAG, "createBlobGetStream: already running for $hash")
+            return
+        }
+        val params = java.util.HashMap<String, Any>()
+        params["hash"] = hash
+        if (size!=null) params["size"] = size
+        if (max!=null) params["max"] = max
+        Log.i(TAG, "createGetStream: $params")
+        val streamRequest = RPCStreamRequest(RPCFunction(listOf("blobs"),"get"), listOf(params))
+
+        val streamEnded = AsyncResult.incomplete<Void>()
+
+        multiplexer.openStream(
+            streamRequest
+        ) { _: Runnable ->
+            object : ScuttlebuttStreamHandler {
+
+                override fun onMessage(requestNumber: Int, message: RPCResponse) {
+                    onRPCResponseForBlobGet( hash, message)
+                }
+
+                override fun onStreamEnd() {
+                    onRPCResponseForBlobGetWithEnd(author, hash)
+                    //streamEnded.complete(null)
+                }
+
+                override fun onStreamError(ex: Exception) {
+                    onRPCResponseForBlobGetWithError(hash)
+                    streamEnded.completeExceptionally(ex)
+                }
+            }
+        }
+    }
+
+    /**
+     * end of blobs.get RPC with success
+     * remove tmp file if error
+     * @param hash the hash of the blob
+     */
+    private  fun onRPCResponseForBlobGetWithEnd(author: String, hash: String) {
+        if (runningFileHandler.containsKey(hash)) {
+            var tmpFile: File = runningFileHandler[hash]!!
+            val inputStream  = contentResolver.openInputStream(tmpFile.toUri()) //FileInputStream(f)
+            if (inputStream == null) {
+                Log.w(TAG, "stream blobs.get end tmp file not found: $hash")
+                return
+            }
+            val hashed = inputStream.use { SHA256Hash.hash(SHA256Hash.Input.fromBytes(it.readBytes())) }
+            inputStream.close()
+            val b64hash = hashed.bytes().toBase64String()
+            val key = "&$b64hash.sha256"
+            if (key == hash) {
+                // copy into blob to repository
+                runBlocking { blobRepository.update(author, tmpFile.toUri()) }
+                tmpFile.delete()
+                runningFileHandler.remove(hash)
+                return
+            }
+            val debug=Bytes.fromBase64String(hash.substring(1,hash.length - 7)).toHexString()
+            Log.w(TAG, "$debug end hash mismatch: $key != $hash ${tmpFile.length()}")
+            try {
+                contentResolver.delete(tmpFile.toUri(), null, null)
+            } catch (e: Exception) {
+                Log.e(TAG, "unable to delete tmp file: $hash")
+            }
+        } else {
+            // this can happen if we already have the file
+            Log.d(TAG, "stream blobs.get end tmp file not found: $hash ${runningFileHandler.keys}")
+        }
+    }
+
+    /**
+     * end of blobs.get RPC with error
+     * remove tmp file if error
+     * @param hash the hash of the blob
+     */
+    private fun onRPCResponseForBlobGetWithError(hash: String) {
+        if (runningFileHandler.containsKey(hash)) {
+            val tmpFile: File = runningFileHandler[hash]!!
+            tmpFile.delete()
+            runningFileHandler.remove(hash)
+            Log.e(TAG, "stream blobs.get error: $hash, tmp file removed")
+        }
+    }
+
+
+    /**
+     * store slice of the blob in the repository
+     * @param hash the hash of the blob
+     * @param message the RPC message containing binary body
+     */
+    private fun onRPCResponseForBlobGet(hash: String, message: RPCResponse) {
+        val tmpFile:File
+        if (runningFileHandler.containsKey(hash)) {
+            tmpFile = runningFileHandler[hash]!!
+        } else {
+            tmpFile = blobRepository.getTempFile(hash)
+            if (!tmpFile.exists()) {
+                tmpFile.createNewFile()
+            } else {
+                tmpFile.delete()
+                tmpFile.createNewFile()
+            }
+            runningFileHandler[hash] = tmpFile
+        }
+        contentResolver.openOutputStream(tmpFile.toUri(),"wa")?.use {
+            it.write(message.body().toArrayUnsafe())
+        }
+    }
+
 
     /**
      *  server asked us blob.createWants and we reply all blobs we need to get
      */
-    private fun onRPCBlobsCreateWants(clientId: String, rpcMessage: RPCMessage) {
+    private  fun onRPCBlobsCreateWants(clientId: String, rpcMessage: RPCMessage) {
         wantRequestNumber = rpcMessage.requestNumber()
-        val wants = runBlocking { blobRepository.getWants(clientId) }
+        val wants = runBlocking {  blobRepository.getWants(clientId) }
         val responseString: String = JSONObject((wants as Map<String, Long>?)!!).toString()
         val response = RPCCodec.encodeResponse(
             Bytes.wrap(responseString.toByteArray()),
@@ -226,6 +313,5 @@ class BlobService(
             }
         }
     }
-
 
 }

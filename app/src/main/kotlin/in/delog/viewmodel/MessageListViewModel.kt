@@ -80,7 +80,7 @@ class MessageListViewModel(
     private fun synchronize() {
         viewModelScope.launch(Dispatchers.IO) {
             if (_uiState.value.identAndAbout==null) return@launch
-            ssbService.reconnect(_uiState.value.identAndAbout!!.ident)
+            ssbService.reconnect(this, _uiState.value.identAndAbout!!.ident)
         }
     }
 

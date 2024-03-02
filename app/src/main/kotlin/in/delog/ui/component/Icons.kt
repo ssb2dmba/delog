@@ -1,5 +1,6 @@
 package `in`.delog.ui.component
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -20,7 +21,7 @@ fun CancelIcon() {
     Icon(
         imageVector = Icons.Default.Cancel,
         null,
-        modifier = Modifier.size(30.dp),
+        modifier = Modifier.fillMaxSize(),
         tint = MaterialTheme.colorScheme.onSecondaryContainer,
     )
 }
@@ -30,7 +31,7 @@ fun PageViewIcon() {
     Icon(
         imageVector = Icons.Default.Pageview,
         null,
-        modifier = Modifier.size(30.dp),
+        modifier = Modifier.fillMaxSize(),
         tint = MaterialTheme.colorScheme.onSecondaryContainer,
     )
 }

@@ -32,13 +32,13 @@ data class Blob(
     val author: String,
 
     @ColumnInfo(name = "key")
-    val key: String,
+    var key: String,
 
     @ColumnInfo(name = "type")
-    val type: String,
+    var type: String?,
 
     @ColumnInfo(name = "size")
-    val size: Long,
+    var size: Long,
 
     @ColumnInfo(name = "own")
     var own: Boolean,

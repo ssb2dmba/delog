@@ -21,6 +21,8 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.concurrent.CompletableAsyncResult
@@ -34,6 +36,7 @@ import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeStreamEndRequest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import java.util.function.Function
+import kotlin.reflect.KSuspendFunction1
 
 /**
  * Handles RPC requests and responses from an active connection to a scuttlebutt node.
@@ -47,7 +50,7 @@ open class RPCHandler(
     private val vertx: Vertx,
     private val messageSender: Consumer<Bytes>,
     private val terminationFn: Runnable,
-    private val onRPCRequest: (rpcM: RPCMessage) -> Unit,
+    private val onRPCRequest: (RPCMessage) -> Unit
 ) :
     Multiplexer, ClientHandler {
     private val awaitingAsyncResponse: MutableMap<Int, CompletableAsyncResult<RPCResponse>> =
@@ -56,6 +59,7 @@ open class RPCHandler(
     private var closed = false
     init {
         Log.i("RPCHandler", "RPCHandler init")
+
     }
     @Throws(JsonProcessingException::class)
     override suspend fun makeAsyncRequest(request: RPCAsyncRequest): RPCResponse {
@@ -95,10 +99,13 @@ open class RPCHandler(
             val closeStreamHandler = {
                 // Run on vertx context because this callback may be called from a different
                 // thread by the caller
-                vertx.runOnContext { endStream(requestNumber) }
+                vertx.runOnContext {
+                        endStream(requestNumber)
+                }
             }
             val scuttlebuttStreamHandler: ScuttlebuttStreamHandler =
                 streamFactory.apply(closeStreamHandler)
+
             if (closed) {
                 Log.e(TAG, "Connection $requestNumber closed, cannot open stream.")
                 scuttlebuttStreamHandler.onStreamError(ConnectionClosedException())
@@ -122,7 +129,9 @@ open class RPCHandler(
     }
 
     override fun close() {
-        vertx.runOnContext { terminationFn.run() }
+        vertx.runOnContext {
+            terminationFn.run()
+        }
         streams.clear()
     }
 
@@ -132,7 +141,8 @@ open class RPCHandler(
             // A negative request number indicates that this is a response, rather than a request that this node
             // should service
             if (rpcMessage.requestNumber() < 0) {
-                handleResponse(rpcMessage)
+                    handleResponse(rpcMessage)
+
             } else {
                 handleRequest(rpcMessage)
             }
@@ -144,7 +154,6 @@ open class RPCHandler(
         val synchronizedCloseStream = Handler { _: Void? ->
             closed = true
             streams.forEach { (i: Int, streamHandler: ScuttlebuttStreamHandler) ->
-                println(i)
                 streamHandler.onStreamError(
                     ConnectionClosedException()
                 )
@@ -185,9 +194,14 @@ open class RPCHandler(
 
     private fun handleResponse(response: RPCMessage) {
         val requestNumber = response.requestNumber() * -1
-        val logMessage =
-            String.format("[%d] incoming response: %s", requestNumber, response.asString())
-        Log.d(TAG, logMessage)
+        if (response.bodyType() == RPCFlag.BodyType.BINARY) {
+            //Log.d(TAG, "[%d] incoming response: binary data".format(requestNumber))
+        } else {
+            val logMessage =
+                String.format("[%d] incoming response: %s", requestNumber, response.asString())
+            Log.d(TAG, logMessage)
+        }
+
 
         val rpcFlags = response.rpcFlags()
         val isStream = RPCFlag.Stream.STREAM.isApplied(rpcFlags)
@@ -197,6 +211,7 @@ open class RPCHandler(
             val scuttlebuttStreamHandler = streams[requestNumber]
             if (scuttlebuttStreamHandler != null) {
                 if (response.isSuccessfulLastMessage) {
+                    scuttlebuttStreamHandler.onStreamEnd()
                     // Confirm our end of the stream close and inform the consumer of the stream that it is closed
                     endStream(requestNumber)
                 } else if (exception.isPresent) {
