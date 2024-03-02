@@ -214,6 +214,7 @@ class BlobRepositoryImpl(
     }
 
     override fun createWant(author: String, blob: Mention) {
+        // TODO check if exists
         val want: Blob = Blob(
             oid = 0,
             author = author,

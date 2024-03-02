@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ssb</string>
+    <string name="app_name">Delog</string>
     <string name="alias">alias</string>
     <string name="server">server</string>
     <string name="create_identity">create identity</string>
