@@ -28,11 +28,11 @@ import `in`.delog.MainApplication
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.crypto.sodium.SHA256Hash
-import org.apache.tuweni.scuttlebutt.lib.model.StreamHandler
 import org.apache.tuweni.scuttlebutt.rpc.RPCBlobRequest
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec
 import org.apache.tuweni.scuttlebutt.rpc.RPCFlag
@@ -46,9 +46,7 @@ import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
 import org.apache.tuweni.scuttlebutt.rpc.mux.ScuttlebuttStreamHandler
 import org.json.JSONObject
 import java.io.File
-import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.Function
 
 
 /**
@@ -71,6 +69,8 @@ class BlobService(
         // to ignore JSON fields without a corresponding Java field
         private val mapper =
             ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+        const val MAX_BLOB_SIZE = 25 * 1024 * 1024
     }
 
     private val runningFileHandler: MutableMap<String, File> = ConcurrentHashMap()
@@ -132,7 +132,7 @@ class BlobService(
     private fun onHasMessage(author: String, item: HashMap<String, Long>?) {
         val has: HashMap<String, Long> = HashMap()
         for (key in item!!.keys) {
-            val blobItem = runBlocking {  blobRepository.getBlobItem(key) }
+            val blobItem = runBlocking(Dispatchers.IO) {  blobRepository.getBlobItem(key) }
             if (blobItem != null) {
                 has[key] = blobItem.size
             }
@@ -155,7 +155,7 @@ class BlobService(
         params["hash"] = hash
         if (size!=null) params["size"] = size
         if (max!=null) params["max"] = max
-        Log.i(TAG, "createGetStream: $params")
+
         val streamRequest = RPCStreamRequest(RPCFunction(listOf("blobs"),"get"), listOf(params))
 
         val streamEnded = AsyncResult.incomplete<Void>()
@@ -201,7 +201,7 @@ class BlobService(
             val key = "&$b64hash.sha256"
             if (key == hash) {
                 // copy into blob to repository
-                runBlocking { blobRepository.update(author, tmpFile.toUri()) }
+                runBlocking(Dispatchers.IO) { blobRepository.update(author, tmpFile.toUri()) }
                 tmpFile.delete()
                 runningFileHandler.remove(hash)
                 return
@@ -264,7 +264,7 @@ class BlobService(
      */
     private  fun onRPCBlobsCreateWants(clientId: String, rpcMessage: RPCMessage) {
         wantRequestNumber = rpcMessage.requestNumber()
-        val wants = runBlocking {  blobRepository.getWants(clientId) }
+        val wants = runBlocking(Dispatchers.IO) {  blobRepository.getWants(clientId) }
         val responseString: String = JSONObject((wants as Map<String, Long>?)!!).toString()
         val response = RPCCodec.encodeResponse(
             Bytes.wrap(responseString.toByteArray()),
@@ -272,7 +272,6 @@ class BlobService(
             RPCFlag.BodyType.JSON,
             RPCFlag.Stream.STREAM
         )
-        Log.d(" onRPCBlobsCreateWants", "$wantRequestNumber > $wants")
         multiplexer.sendBytes(response)
     }
 
@@ -284,7 +283,7 @@ class BlobService(
             rpcMessage.asJSON(SsbService.objectMapper, RPCBlobRequest::class.java)
         val key = rpcStreamRequest.key
 
-        val blobItem = runBlocking { blobRepository.getBlobItem(key) }
+        val blobItem = runBlocking(Dispatchers.IO){ blobRepository.getBlobItem(key) }
         if (blobItem != null) {
             val file = blobItem.uri.toFile()
             val size = file.length().toInt()
@@ -309,7 +308,6 @@ class BlobService(
                 MainApplication.toastify(e.toString())
             } finally {
                 multiplexer.sendEndBlob(rpcMessage.requestNumber())
-                Log.d("onRPCBlobsGet", "file sent")
             }
         }
     }

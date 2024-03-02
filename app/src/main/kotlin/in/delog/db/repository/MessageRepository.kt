@@ -18,14 +18,12 @@
 package `in`.delog.db.repository
 
 import android.database.sqlite.SQLiteConstraintException
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.paging.PagingSource
 import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.model.SsbMessageContent
-import `in`.delog.service.ssb.SsbService.Companion.TAG
 
 
 interface MessageRepository {
@@ -92,12 +90,10 @@ class MessageRepositoryImpl(
     }
 
     private fun addBlobs(blobRepository: BlobRepository,author: String, message: Message) {
-        Log.i(TAG, "add wants")
         val ssbMessageContent = SsbMessageContent.serialize(message.contentAsText)
         val blobs = ssbMessageContent.mentions?.filter { it.link.startsWith("&") }
         if (blobs != null) {
             for (blob in blobs) {
-                Log.i(TAG, "add wants" + blob.link)
                 blobRepository.createWant(author, blob)
             }
         }

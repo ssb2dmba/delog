@@ -18,7 +18,6 @@
 package `in`.delog.viewmodel
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -41,7 +40,6 @@ import `in`.delog.model.SsbSignedMessage
 import `in`.delog.model.empty
 import `in`.delog.model.toDraft
 import `in`.delog.model.toMessageViewData
-import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -83,7 +81,6 @@ class DraftViewModel(
                 val draft = draftRepository.getById(draftId)
                 if (draft != null) {
                     _messageViewData.update { draft.toMessageViewData(format, blobRepository) }
-                    Log.i(TAG, "loading draft.toMessageViewData with _messageViewData: ${_messageViewData.value.contentAsText}")
                     if (!draft.branch.isNullOrEmpty()) {
                         // at first link key comes from navigation router
                         // in case we reopen a saved message link key comes from draft
@@ -124,7 +121,6 @@ class DraftViewModel(
 
     fun save(messageViewData: MessageViewData) {
         val draft = messageViewData.toDraft()
-        Log.d("DraftViewModel.save", "draft: ${draft.contentAsText}")
         viewModelScope.launch(Dispatchers.IO) {
             if (draft.oid<=0) {
                 messageViewData.oid = draftRepository.insert(draft)

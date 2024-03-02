@@ -105,7 +105,6 @@ class FeedService(
         params["limit"] = 100
         params["keys"] = true
         params["live"] = true
-        Log.i(TAG, "createHistoryStream: $params")
         val streamRequest = RPCStreamRequest(RPCFunction("createHistoryStream"), listOf(params))
 
         val streamEnded = AsyncResult.incomplete<Void>()

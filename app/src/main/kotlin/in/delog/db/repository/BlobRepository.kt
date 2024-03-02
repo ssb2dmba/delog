@@ -31,6 +31,7 @@ import `in`.delog.viewmodel.BlobItem
 import org.apache.tika.Tika
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.sodium.SHA256Hash
+import org.apache.tuweni.scuttlebutt.lib.BlobService.Companion.MAX_BLOB_SIZE
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -82,8 +83,8 @@ class BlobRepositoryImpl(
             }
         }
         val size = getSize(uri)
-        if (size>5e6) {
-            throw Exception("file is bigger than network 5Mb limit: $size")
+        if (size>MAX_BLOB_SIZE) {
+            throw Exception("file is bigger than network ${MAX_BLOB_SIZE / 1024 /1024} Mo limit: (${size / 1024 / 1024} Mo)")
         }
         val inputStream: InputStream? = contentResolver.openInputStream(uri)
         if (inputStream == null || mimeType == null) {
@@ -234,6 +235,9 @@ class BlobRepositoryImpl(
         val tmpFile =  File(context.cacheDir, hexhash)
         if (!tmpFile.exists()) tmpFile.createNewFile()
         return tmpFile
+    }
+
+    companion object {
     }
 
 }
