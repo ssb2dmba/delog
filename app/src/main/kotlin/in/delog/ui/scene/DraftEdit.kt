@@ -17,6 +17,7 @@
  */
 package `in`.delog.ui.scene
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,6 +31,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -41,6 +44,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,9 +73,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import `in`.delog.R
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.model.SsbMessageContent
 import `in`.delog.model.toMessageViewData
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.BlobsEdit
 import `in`.delog.ui.component.BottomBarMainButton
@@ -113,18 +119,21 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
     }
     val linkState by draftViewModel.link.observeAsState(null)
     var tfv by remember {
+        val initInput = SsbMessageContent.serialize(messageViewData!!.contentAsText).text
         mutableStateOf(
             TextFieldValue(
-                text = SsbMessageContent.serialize(messageViewData!!.contentAsText).text
+                text = initInput
                     ?: "",
-                selection = TextRange(messageViewData!!.contentAsText.length)
+                selection = TextRange(initInput?.length ?: 0)
             )
         )
     }
     if (dirtyStatus) {
+
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
+            IdentityBox(identAndAbout, true)
             Row(Modifier.weight(1f)) {
                 val state = rememberScrollState()
                 Column(
@@ -139,7 +148,6 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                             onClickCallBack = {}
                         )
                     }
-                    IdentityBox(identAndAboutWithBlob = identAndAbout)
                     if (linkState != null) {
                         MessageItem(
                             navController = navController,
@@ -157,7 +165,7 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                         "vote" -> {
                             showInputField = false
                             Text(
-                                text = messageViewData!!.contentAsText,
+                                text = tfv.text,
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
                                     .padding(12.dp)
@@ -208,9 +216,6 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                     }
                 }
             }
-
-            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.ime))
-
             if (messageViewData!!.blobs.isNotEmpty() && !isKeyboardOpen) {
                 Row(modifier = Modifier.weight(1f)) {
                     BlobsEdit(
@@ -220,17 +225,26 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                     )
                 }
             }
-
-
+            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.ime))
         }
     } else {
-        MessageItem(
-            navController = navController,
-            messageViewData = messageViewData!!,
-            showToolbar = false,
-            hasDivider = linkState != null,
-            onClickCallBack = itemClicked
-        )
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Column {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(1),
+                    modifier=Modifier.padding(8.dp)) {
+                    item {
+                        MessageItem(
+                            navController = navController,
+                            messageViewData = messageViewData!!,
+                            showToolbar = false,
+                            hasDivider = linkState != null,
+                            onClickCallBack = itemClicked
+                        )
+                    }
+                }
+            }
+        }
     }
 
 
@@ -263,7 +277,9 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
             val toastText = stringResource(R.string.draft_saved_confirmation)
             Spacer(Modifier.weight(1f))
             SaveDraftFab {
+                Log.i(TAG,"update draft content as text with:" + tfv.text)
                 draftViewModel.updateDraftContentAsText(tfv.text)
+                Log.i(TAG,"got:" + draftViewModel.messageViewData.value.contentAsText)
                 draftViewModel.save(messageViewData!!)
                 Toast
                     .makeText(
@@ -319,6 +335,7 @@ fun ReplyHeader(link: MessageAndAbout?, draftMode: String?) {
     }
     if (txt != null) {
         Text(
+            modifier = Modifier.padding(8.dp),
             text = txt,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.tertiary,

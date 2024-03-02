@@ -45,7 +45,7 @@ class IdentListViewModel(
     private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
     var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
     var idents: LiveData<List<IdentAndAboutWithBlob>> = repository.idents.asLiveData()
-    val default: LiveData<IdentAndAboutWithBlob> = repository.default.asLiveData()
+    val default: LiveData<IdentAndAboutWithBlob?> = repository.default.asLiveData()
     val count: LiveData<Int> = repository.count
 
     fun insert(ident: Ident, alias: String? = null) {

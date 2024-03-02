@@ -1,6 +1,5 @@
 package `in`.delog.ui.scene.identitifiers
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +37,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import `in`.delog.R
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.service.ssb.Dict
 import `in`.delog.service.ssb.WordList
 import `in`.delog.service.ssb.mnemonicToSignature
@@ -50,7 +48,7 @@ import java.util.Locale
 @Composable
 fun MnemonicForm(callBack: (Identity?) -> Unit) {
     val context = LocalContext.current
-    var filteringOptions: List<String>; // emptyList()
+    var filteringOptions: List<String>
     val options = WordList(Locale.ENGLISH).words
     val phrase = remember { mutableStateListOf<String>() }
 
@@ -60,7 +58,7 @@ fun MnemonicForm(callBack: (Identity?) -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
         Row {
 
-            Box() {
+            Box {
                 var expanded by remember { mutableStateOf(false) }
                 var selectedOptionText by remember { mutableStateOf("") }
                 ExposedDropdownMenuBox(
@@ -158,7 +156,7 @@ fun MnemonicForm(callBack: (Identity?) -> Unit) {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Row {
-            val toastText = stringResource(R.string.smthg_went_wrong);
+            val toastText = stringResource(R.string.smthg_went_wrong)
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,7 +167,6 @@ fun MnemonicForm(callBack: (Identity?) -> Unit) {
                     if (signature != null) {
                         callBack(Identity.fromKeyPair(signature))
                     } else {
-                        Log.e(TAG, "error creating keypair")
                         Toast.makeText(context, toastText, Toast.LENGTH_LONG).show()
                     }
                 },

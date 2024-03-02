@@ -22,7 +22,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity( indices = [Index(value = ["key"], unique = true)])
+@Entity( indices = [Index(value = ["key", "author"], unique = true)])
 data class Blob(
 
     @PrimaryKey(autoGenerate = true)
@@ -32,19 +32,19 @@ data class Blob(
     val author: String,
 
     @ColumnInfo(name = "key")
-    val key: String,
+    var key: String,
 
     @ColumnInfo(name = "type")
-    val type: String,
+    var type: String?,
 
     @ColumnInfo(name = "size")
-    val size: Long,
+    var size: Long,
 
     @ColumnInfo(name = "own")
     var own: Boolean,
 
-    @ColumnInfo(name = "want")
-    var want: Boolean,
+    @ColumnInfo(name = "has")
+    var has: Boolean,
 
     @ColumnInfo(name = "contentWarning")
     val contentWarning: String?,

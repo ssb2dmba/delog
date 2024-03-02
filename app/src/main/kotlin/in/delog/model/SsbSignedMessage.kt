@@ -17,7 +17,7 @@
  */
 package `in`.delog.model
 
-import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.serialization.Serializable
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.sodium.SHA256Hash

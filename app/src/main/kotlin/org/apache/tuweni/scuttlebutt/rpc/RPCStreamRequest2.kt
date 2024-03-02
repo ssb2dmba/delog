@@ -22,7 +22,7 @@ data class RPCStreamRequest2(
     val args: List<Map<String, Any>>,
     val type: String
 ) {
-    var id: String = args[0].get("id").toString()
+    var id: String = args[0]["id"].toString()
     var seq: Int = args[0].getOrDefault("seq", -1) as Int
     var limit: Int = args[0].getOrDefault("limit", -1) as Int
 }

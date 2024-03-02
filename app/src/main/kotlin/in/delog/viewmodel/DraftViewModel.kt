@@ -40,7 +40,7 @@ import `in`.delog.model.SsbSignedMessage
 import `in`.delog.model.empty
 import `in`.delog.model.toDraft
 import `in`.delog.model.toMessageViewData
-import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -190,11 +190,10 @@ class DraftViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val author = _messageViewData.value.author
             try {
-                val blob: BlobItem? = blobRepository.insert(author, uri)
-                if (blob == null) {
-                    throw Exception("unable to insert blob")
-                }
-                if (_messageViewData.value.blobs.filter { it.key == blob.key }.isNotEmpty()) {
+
+                val blob: BlobItem = blobRepository.insertOwnBlob(author, uri)
+                    ?: throw Exception("unable to insert blob")
+                if (_messageViewData.value.blobs.any { it.key == blob.key }) {
                     throw Exception("file is already attached to message")
                 }
                 _messageViewData.update { it.copy(blobs = it.blobs.plus(blob)) }
@@ -245,7 +244,7 @@ fun fromSsbSignedMessage(ssbSignedMessage: SsbSignedMessage): Message {
 
 private fun SsbSignableMessage.Companion.fromDraft(draft: Draft): SsbSignableMessage {
     val ssbMessageContent: SsbMessageContent = Json.decodeFromString<SsbMessageContent>(
-        `in`.delog.model.SsbMessageContent.serializer(),
+        SsbMessageContent.serializer(),
         draft.contentAsText
     )
 

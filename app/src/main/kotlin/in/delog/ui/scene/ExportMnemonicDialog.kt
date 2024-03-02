@@ -2,15 +2,16 @@ package `in`.delog.ui.scene
 
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -38,9 +40,9 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import com.zachklipp.richtext.ui.printing.Printable
+import com.zachklipp.richtext.ui.printing.PrintableController
 import com.zachklipp.richtext.ui.printing.rememberPrintableController
 import `in`.delog.db.model.IdentAndAboutWithBlob
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.service.ssb.Dict
 import `in`.delog.service.ssb.WordList
 import `in`.delog.service.ssb.secretKeyToMnemonic
@@ -103,7 +105,7 @@ fun rememberQrBitmapPainter(
                     sizePx, sizePx, encodeHints
                 )
             } catch (ex: WriterException) {
-                ex.message?.let { Log.e(TAG, it) }
+                ex.printStackTrace()
                 null
             }
 
@@ -165,8 +167,7 @@ fun ExportMnemonicDialog(
             ) {
                 Printable(printController) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -181,18 +182,17 @@ fun ExportMnemonicDialog(
                                 ":" +
                                 identAndAbout.ident.port
 
-                        val configuration = LocalConfiguration.current
-
-                        val screenWidth = configuration.screenWidthDp.dp
                         Image(
+                            modifier = Modifier.width(300.dp),
                             painter = rememberQrBitmapPainter(
                                 content = if (identAndAbout.ident.server.isNotEmpty())
                                     (pk + atServer)
                                 else
-                                    pk,
-                                size = screenWidth - 32.dp
+                                    pk
                             ),
-                            contentDescription = "QR Code"
+                            contentDescription = "QR Code",
+                            contentScale = ContentScale.FillWidth
+
                         )
                         if (identAndAbout.ident.server.isNotEmpty()) {
                             Text(

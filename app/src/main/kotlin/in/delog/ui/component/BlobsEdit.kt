@@ -1,10 +1,12 @@
 package `in`.delog.ui.component
 
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import `in`.delog.ui.theme.MyTheme
@@ -45,7 +48,7 @@ fun BlobsEdit(blobs: Array<BlobItem>, action: (key: BlobItem) -> Unit, actionIco
             listState.canScrollForward
         }
     }
-    Row {
+    Row (modifier = Modifier.fillMaxWidth()){
         if (showBefore) {
             Column(
                 modifier = Modifier
@@ -66,19 +69,25 @@ fun BlobsEdit(blobs: Array<BlobItem>, action: (key: BlobItem) -> Unit, actionIco
                 }
             }
         }
-        Column {
-            LazyHorizontalGrid(
-                rows = GridCells.Fixed(if (blobs.size >= 6) 2 else 1),
-                state = listState,
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp),
-                //modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(all = 1.dp)
-            ) {
-                items(blobs) { blobItem ->
-                    BlobView(blobItem, action, cta = actionIcon)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            if (blobs.size == 1) {
+                BlobView(blobs[0], action, cta = actionIcon)
+            } else {
+                LazyHorizontalGrid(
+                    rows = GridCells.Fixed(if (blobs.size >= 6) 2 else 1),
+                    state = listState,
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
+                    modifier = Modifier.height(300.dp),
+                    contentPadding = PaddingValues(all = 0.dp)
+                ) {
+                    items(blobs) { blobItem ->
+                        //Text("BlobEdit: ${blobItem.key}")
+                        BlobView(blobItem, action, cta = actionIcon)
+                    }
                 }
             }
+
         }
 
         if (showAfter) {
@@ -124,17 +133,19 @@ fun BlobEditPreview() {
         uri = Uri.fromFile(File("https://picsum.photos/300/300"))
     )
     blobs = blobs.plus(b1)
-    blobs = blobs.plus(b2)
+    //blobs = blobs.plus(b2)
     MyTheme(
         darkTheme = false,
         dynamicColor = false
     ) {
-        Card(modifier = Modifier.height(200.dp)) {
-            BlobsEdit(
-                blobs,
-                action = {  },
-                actionIcon = { CancelIcon() }
-            )
+        Row(modifier=Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                BlobsEdit(
+                    blobs,
+                    action = { },
+                    actionIcon = { CancelIcon() }
+                )
+            }
         }
     }
 }

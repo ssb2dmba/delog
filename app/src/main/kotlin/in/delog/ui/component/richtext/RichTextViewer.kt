@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.component.richtext
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,34 +48,16 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import dev.jeziellago.compose.markdowntext.MarkdownText
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.ui.component.preview.url.LoadUrlPreview
 import java.net.MalformedURLException
 import java.net.URISyntaxException
 import java.net.URL
 import java.util.regex.Pattern
 
-
-val imageExtension: Pattern = Pattern.compile("(.*/)*.+\\.(png|jpg|gif|bmp|jpeg|webp|svg)$")
-val videoExtension: Pattern = Pattern.compile("(.*/)*.+\\.(mp4|avi|wmv|mpg|amv|webm)$")
-val tagIndex = Pattern.compile("\\#\\[([0-9]+)\\](.*)")
 val hashTagsPattern: Pattern =
     Pattern.compile("#([^\\s!@#\$%^&*()=+./,\\[{\\]};:'\"?><]+)(.*)", Pattern.CASE_INSENSITIVE)
 
-//val noProtocolUrlValidator: Pattern = Pattern.compile("^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&//=]*)$")
-@Stable
-data class ImmutableListOfLists<T>(val lists: List<List<T>> = emptyList())
 
-fun isValidURL(url: String?): Boolean {
-    return try {
-        URL(url).toURI()
-        true
-    } catch (e: MalformedURLException) {
-        false
-    } catch (e: URISyntaxException) {
-        false
-    }
-}
 
 fun isMarkdown(content: String): Boolean {
     return content.startsWith("> ") ||
@@ -93,7 +74,7 @@ fun MeasureSpaceWidth(
 ) {
     SubcomposeLayout { constraints ->
         val measuredWidth =
-            subcompose("viewToMeasure", { Text(" ") })[0].measure(Constraints()).width.toDp()
+            subcompose("viewToMeasure") { Text(" ") }[0].measure(Constraints()).width.toDp()
 
         val contentPlaceable = subcompose("content") {
             content(measuredWidth)
@@ -180,8 +161,8 @@ private fun RenderRegular(
         )
     }
 
-    MeasureSpaceWidth() { spaceWidth ->
-        Column() {
+    MeasureSpaceWidth { spaceWidth ->
+        Column {
 
             // FlowRow doesn't work well with paragraphs. So we need to split them
             state.paragraphs.forEach { paragraph ->
@@ -202,7 +183,7 @@ private fun RenderRegular(
                                 state,
                                 textStyle,
                                 {
-                                    Log.d(TAG, "$it clicked!")
+                                    // TODO
                                 }
 
                             )

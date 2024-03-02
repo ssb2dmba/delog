@@ -25,10 +25,13 @@ import androidx.core.net.toUri
 import `in`.delog.MainApplication
 import `in`.delog.db.dao.BlobDao
 import `in`.delog.db.model.Blob
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
+import `in`.delog.model.Mention
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.viewmodel.BlobItem
+import org.apache.tika.Tika
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.crypto.sodium.SHA256Hash
+import org.apache.tuweni.scuttlebutt.lib.BlobService.Companion.MAX_BLOB_SIZE
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -36,9 +39,14 @@ import java.io.InputStream
 
 
 interface BlobRepository {
-    suspend fun insert(author: String, uri: Uri): BlobItem?
     suspend fun deleteIfKeyUnused(key: String)
     suspend fun getAsBlobItem(b64hash: String): BlobItem
+    suspend fun getBlobItem(b64hash: String): BlobItem?
+    suspend fun getWants(author: String): HashMap<String, Long>
+    fun createWant(author: String, blob: Mention)
+    suspend fun insertOwnBlob(author: String, uri: Uri): BlobItem?
+    suspend fun update(author: String, uri: Uri): BlobItem?
+    fun getTempFile(hash: String): File
 }
 
 class BlobRepositoryImpl(
@@ -51,33 +59,44 @@ class BlobRepositoryImpl(
     private fun getSize(uri: Uri): Long {
         var size: Long = -1L
         contentResolver.query(uri, null, null, null, null).use {
-            if (it !== null && it.moveToFirst() == true) {
+            if (it !== null && it.moveToFirst()) {
                 val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
-                if (sizeIndex != null && sizeIndex > -1) size = it.getLong(sizeIndex)
+                if (sizeIndex > -1) size = it.getLong(sizeIndex)
             }
         }
         return size
     }
 
-    override suspend fun insert(author: String, uri: Uri): BlobItem? {
+    private fun detectMime(inputStream: InputStream): String {
+        //return "image/jpeg"
+        val tika = Tika()
+        return tika.detect(inputStream)
+    }
 
-        val mimeType = contentResolver.getType(uri)
+    fun ingestBlob(uri:Uri): BlobItem? {
+        var mimeType = contentResolver.getType(uri)
+        if (mimeType==null) {
+            val inputStream = contentResolver.openInputStream(uri)
+            if (inputStream!=null) {
+                mimeType = detectMime(inputStream!!)
+                inputStream?.close()
+            }
+        }
         val size = getSize(uri)
-        if (size>5e6) {
-            throw Exception("file is bigger than network 5Mb limit: $size")
+        if (size>MAX_BLOB_SIZE) {
+            throw Exception("file is bigger than network ${MAX_BLOB_SIZE / 1024 /1024} Mo limit: (${size / 1024 / 1024} Mo)")
         }
         val inputStream: InputStream? = contentResolver.openInputStream(uri)
         if (inputStream == null || mimeType == null) {
             Log.e(TAG, "unable to open file input stream is null:$uri")
             return null
         }
+
         val hash = SHA256Hash.hash(SHA256Hash.Input.fromBytes(getBytes(inputStream)))
         inputStream.close()
         val b64hash = hash.bytes().toBase64String()
         val key = "&$b64hash.sha256"
-        if (blobDao.get(key) != null) {
-            return BlobItem(key = key, size = size, type = mimeType, uri = uri)
-        }
+
         val hexHash = hash.bytes().toHexString().substring(2)
         val subdir = hexHash.substring(0, 2)
         val fileName = hexHash.substring(2)
@@ -88,18 +107,43 @@ class BlobRepositoryImpl(
         input!!.copyTo(outputFile.outputStream())
         input.close()
 
+        return BlobItem(key = key, size = size, type = mimeType, uri = uri)
+    }
+    override suspend fun insertOwnBlob(author: String, uri: Uri): BlobItem? {
+
+        val blobItem = ingestBlob(uri) ?: return null
+        if (blobDao.get(blobItem!!.key) != null) {
+            Log.w(TAG, "blob already exists in db:${blobItem.key}")
+            return null
+        }
         val blob = Blob(
             oid = 0,
             author = author,
-            key = key,
-            type = mimeType,
-            size = size,
+            key = blobItem.key,
+            type = blobItem.type,
+            size = blobItem.size,
             own = true,
-            want = false,
+            has = true,
             contentWarning = null
         )
         blobDao.insert(blob)
-        return BlobItem(key = key, size = size, type = mimeType, uri = outputFile.toUri())
+        return blobItem
+    }
+
+
+    override suspend fun update(author: String, uri: Uri): BlobItem? {
+        val blobItem = ingestBlob(uri) ?: return null
+        val existing = blobDao.get(blobItem.key)
+        if (existing == null) {
+            Log.w(TAG, "ingesting not wanted blob ? :${blobItem.key}")
+            return null
+        }
+        existing.key = blobItem.key
+        existing.has = true
+        existing.size = blobItem.size
+        existing.type = blobItem.type
+        blobDao.update(existing)
+        return blobItem
     }
 
     @Throws(IOException::class)
@@ -107,7 +151,7 @@ class BlobRepositoryImpl(
         val byteBuffer = ByteArrayOutputStream()
         val bufferSize = 1024
         val buffer = ByteArray(bufferSize)
-        var len = 0
+        var len: Int
         while (inputStream.read(buffer).also { len = it } != -1) {
             byteBuffer.write(buffer, 0, len)
         }
@@ -141,11 +185,59 @@ class BlobRepositoryImpl(
             Log.e(TAG, "blob not found in db:$b64hash")
             return BlobItem(key = b64hash, size = -1, type = "/", uri = Uri.EMPTY)
         }
-        return BlobItem(key = b64hash, size = blob.size, type = blob.type, uri = uri)
+        return BlobItem(key = b64hash, size = blob.size, type = blob.type ?: "", uri = uri)
     }
+
+    override suspend fun getBlobItem(b64hash: String): BlobItem? {
+        val uri = getUri(b64hash)
+        val blob = blobDao.get(b64hash) ?: return null
+        val blobItem = BlobItem(key = b64hash, size = blob.size, type = blob.type ?: "", uri = uri)
+        val file = File(blobItem.uri.path!!)
+        if (!file.exists()) return null
+        return blobItem
+    }
+
 
     override suspend fun deleteIfKeyUnused(key: String) {
         messageRepository.blobIsUsefull(key)
+    }
+
+    override suspend fun getWants(author: String): HashMap<String, Long> {
+        val blobs = blobDao.getWants(author)
+        val wants = HashMap<String, Long>()
+        for (blob in blobs) {
+            val blobItem = getAsBlobItem(blob.key)
+            wants[blobItem.key] = blobItem.size
+        }
+        return wants
+
+    }
+
+    override fun createWant(author: String, blob: Mention) {
+        val want: Blob = Blob(
+            oid = 0,
+            author = author,
+            key = blob.link,
+            type = null,
+            size = 0,
+            own = false,
+            has = false,
+            contentWarning = null
+        )
+        blobDao.insert(want)
+    }
+
+
+    override fun getTempFile(hash: String): File {
+        val hashAsBytes = Bytes.fromBase64String(hash.subSequence(1, hash.length - 7).toString())
+        val hash = SHA256Hash.Input.fromBytes(hashAsBytes);
+        val hexhash = hash.bytes().toHexString()
+        val tmpFile =  File(context.cacheDir, hexhash)
+        if (!tmpFile.exists()) tmpFile.createNewFile()
+        return tmpFile
+    }
+
+    companion object {
     }
 
 }

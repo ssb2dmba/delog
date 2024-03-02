@@ -21,17 +21,22 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.concurrent.CompletableAsyncResult
 import org.apache.tuweni.concurrent.coroutines.await
 import org.apache.tuweni.scuttlebutt.handshake.vertx.ClientHandler
 import org.apache.tuweni.scuttlebutt.rpc.*
+import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeBlobEnd
+import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeBlobSlice
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeRequest
 import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeStreamEndRequest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import java.util.function.Function
+import kotlin.reflect.KSuspendFunction1
 
 /**
  * Handles RPC requests and responses from an active connection to a scuttlebutt node.
@@ -45,20 +50,26 @@ open class RPCHandler(
     private val vertx: Vertx,
     private val messageSender: Consumer<Bytes>,
     private val terminationFn: Runnable,
-    private val onRPCRequest: (rpcM: RPCMessage) -> Unit,
+    private val onRPCRequest: (RPCMessage) -> Unit
 ) :
     Multiplexer, ClientHandler {
     private val awaitingAsyncResponse: MutableMap<Int, CompletableAsyncResult<RPCResponse>> =
         ConcurrentHashMap()
     private val streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
     private var closed = false
+    init {
+        Log.i("RPCHandler", "RPCHandler init")
 
+    }
     @Throws(JsonProcessingException::class)
     override suspend fun makeAsyncRequest(request: RPCAsyncRequest): RPCResponse {
         val bodyBytes = request.toEncodedRpcMessage(objectMapper)
         val result = AsyncResult.incomplete<RPCResponse>()
         vertx.runOnContext {
             if (closed) {
+                val message = RPCMessage(bodyBytes)
+                val requestNumber: Int = message.requestNumber()
+                Log.e(TAG, "Connection $requestNumber closed, cannot open stream.")
                 result.completeExceptionally(ConnectionClosedException())
             } else {
                 val message = RPCMessage(bodyBytes)
@@ -88,11 +99,15 @@ open class RPCHandler(
             val closeStreamHandler = {
                 // Run on vertx context because this callback may be called from a different
                 // thread by the caller
-                vertx.runOnContext { endStream(requestNumber) }
+                vertx.runOnContext {
+                        endStream(requestNumber)
+                }
             }
             val scuttlebuttStreamHandler: ScuttlebuttStreamHandler =
                 streamFactory.apply(closeStreamHandler)
+
             if (closed) {
+                Log.e(TAG, "Connection $requestNumber closed, cannot open stream.")
                 scuttlebuttStreamHandler.onStreamError(ConnectionClosedException())
             } else {
                 streams[requestNumber] = scuttlebuttStreamHandler
@@ -114,7 +129,10 @@ open class RPCHandler(
     }
 
     override fun close() {
-        vertx.runOnContext { terminationFn.run() }
+        vertx.runOnContext {
+            terminationFn.run()
+        }
+        streams.clear()
     }
 
     override fun receivedMessage(message: Bytes) {
@@ -123,7 +141,8 @@ open class RPCHandler(
             // A negative request number indicates that this is a response, rather than a request that this node
             // should service
             if (rpcMessage.requestNumber() < 0) {
-                handleResponse(rpcMessage)
+                    handleResponse(rpcMessage)
+
             } else {
                 handleRequest(rpcMessage)
             }
@@ -134,7 +153,7 @@ open class RPCHandler(
     override fun streamClosed() {
         val synchronizedCloseStream = Handler { _: Void? ->
             closed = true
-            streams.forEach { (_: Int, streamHandler: ScuttlebuttStreamHandler) ->
+            streams.forEach { (i: Int, streamHandler: ScuttlebuttStreamHandler) ->
                 streamHandler.onStreamError(
                     ConnectionClosedException()
                 )
@@ -161,6 +180,7 @@ open class RPCHandler(
                 TAG,
                 String.format("incoming RPC request not implemented: %s", rpcMessage.asString())
             )
+
         } else {
             val isEnd = RPCFlag.EndOrError.END.isApplied(rpcFlags)
             if (isEnd) {
@@ -174,9 +194,14 @@ open class RPCHandler(
 
     private fun handleResponse(response: RPCMessage) {
         val requestNumber = response.requestNumber() * -1
-        val logMessage =
-            String.format("[%d] incoming response: %s", requestNumber, response.asString())
-        Log.d(TAG, logMessage)
+        if (response.bodyType() == RPCFlag.BodyType.BINARY) {
+            //Log.d(TAG, "[%d] incoming response: binary data".format(requestNumber))
+        } else {
+            val logMessage =
+                String.format("[%d] incoming response: %s", requestNumber, response.asString())
+            Log.d(TAG, logMessage)
+        }
+
 
         val rpcFlags = response.rpcFlags()
         val isStream = RPCFlag.Stream.STREAM.isApplied(rpcFlags)
@@ -186,13 +211,14 @@ open class RPCHandler(
             val scuttlebuttStreamHandler = streams[requestNumber]
             if (scuttlebuttStreamHandler != null) {
                 if (response.isSuccessfulLastMessage) {
+                    scuttlebuttStreamHandler.onStreamEnd()
                     // Confirm our end of the stream close and inform the consumer of the stream that it is closed
                     endStream(requestNumber)
                 } else if (exception.isPresent) {
                     scuttlebuttStreamHandler.onStreamError(exception.get())
                 } else {
                     val successfulResponse = RPCResponse(response.body(), response.bodyType())
-                    scuttlebuttStreamHandler.onMessage(successfulResponse)
+                    scuttlebuttStreamHandler.onMessage(response.requestNumber(), successfulResponse)
                 }
             } else {
                 Log.w(
@@ -247,6 +273,8 @@ open class RPCHandler(
                 val logMessage = String.format("[%d] Sending close stream message.", requestNumber)
                 Log.d(TAG, logMessage)
                 sendBytes(streamEnd)
+            } else {
+                Log.d("RCPHandler","stream $requestNumber have been closed at other end")
             }
         } catch (e: JsonProcessingException) {
             Log.e(
@@ -254,6 +282,25 @@ open class RPCHandler(
                 "Unexpectedly could not encode stream end message to JSON. %s".format(e.message)
             )
         }
+    }
+
+    /**
+     * Sends an end blob message over the RPC channel to for the given request number
+     * @param requestNumber the request number of the stream to send a close message over RPC for
+     */
+    fun sendEndBlob(requestNumber: Int) {
+        var streamBlobEnd = encodeBlobEnd(requestNumber)
+        sendBytes(streamBlobEnd)
+    }
+
+    /**
+     * Sends an blob slice message over the RPC channel to for the given request number
+     * @param  requestNumber the request number of the stream to send a close message over RPC for
+     * @param  buff the blob slice to send
+     */
+    fun sendBlobSlice(requestNumber: Int, buff: Bytes) {
+        var streamBlobSlice = encodeBlobSlice(requestNumber, buff)
+        sendBytes(streamBlobSlice)
     }
 
     companion object {

@@ -7,13 +7,14 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,7 +42,8 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
     val mediaType = blobItem.type
     Box(modifier = Modifier
         .border(1.dp, MaterialTheme.colorScheme.background)
-        .defaultMinSize(minHeight=120.dp)) {
+        .fillMaxWidth()
+        ) {
         if (mediaType.startsWith("image") || mediaType.startsWith("video")) {
             var model: ImageRequest? = null
             if (mediaType.startsWith("image")) {
@@ -63,8 +64,8 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
             AsyncImage(
                 model = model,
                 contentDescription = blobItem.uri.toString(),
-                contentScale = ContentScale.FillHeight,
-                modifier = Modifier.defaultMinSize(96.dp),
+                //contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth(),
             )
         } else {
             val intent = Intent(Intent.ACTION_VIEW)
@@ -97,25 +98,9 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
                     contentDescription = blobItem.type
                 )
             }
-
         }
-        Text(
-            blobItem.key,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier
-                .width(128.dp)
-                .align(Alignment.BottomCenter)
-                .padding(8.dp),
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            textAlign = TextAlign.Center
-        )
         IconButton(
-            modifier = Modifier
-                .size(30.dp)
-                .padding(end = 5.dp)
-                .align(Alignment.TopEnd),
+            modifier = Modifier.size(48.dp).align(Alignment.TopEnd),
             onClick = { action(blobItem) },
         ) {
             cta()
@@ -137,8 +122,10 @@ fun previewBlobView() {
         darkTheme = false,
         dynamicColor = false
     ) {
-        Card() {
-            BlobView(b1, {}) { CancelIcon() }
+        Row {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                BlobView(b1, {}) { CancelIcon() }
+            }
         }
     }
 }

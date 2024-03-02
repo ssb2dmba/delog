@@ -22,6 +22,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import org.apache.tuweni.crypto.sodium.Signature
 import org.apache.tuweni.io.Base64
+import org.apache.tuweni.scuttlebutt.Identity
 
 @Entity
 data class Ident(
@@ -72,6 +73,18 @@ data class Ident(
             return "${httpScheme}${server}/invite/"
         }
 
+        fun empty(s: String): Ident {
+            return Ident(
+                0,
+                s,
+                "",
+                0,
+                null,
+                false,
+                0,
+                null,
+                null)
+        }
 
     }
 }
@@ -93,4 +106,10 @@ fun Ident.asKeyPair(): Signature.KeyPair? {
     val privKeyBytes = Base64.decode(privateKey)
     val secretKey = Signature.SecretKey.fromBytes(privKeyBytes)
     return Signature.KeyPair.forSecretKey(secretKey)
+}
+
+
+fun Ident.toCanonicalForm(): String {
+    val identity = this.asKeyPair()?.let { Identity.fromKeyPair(it) }
+    return identity?.toCanonicalForm() ?: ""
 }

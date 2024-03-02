@@ -36,7 +36,6 @@ class RawRequestService(private val multiplexer: Multiplexer) {
     suspend fun makeAsyncRequest(request: RPCAsyncRequest): RPCResponse {
         return multiplexer.makeAsyncRequest(request)
     }
-
     @Throws(JsonProcessingException::class, ConnectionClosedException::class)
     fun openStream(
         request: RPCStreamRequest,

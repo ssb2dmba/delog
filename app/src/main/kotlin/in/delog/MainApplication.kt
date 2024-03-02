@@ -68,7 +68,7 @@ class MainApplication : Application() {
             return instance!!.applicationContext
         }
 
-        fun getApplicationScope(): CoroutineScope {
+        fun getTorScope(): CoroutineScope {
             return instance!!.applicationScope
         }
 
@@ -101,12 +101,11 @@ class GetMediaActivityResultContract : ActivityResultContracts.GetContent() {
         return Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             // Force only images and videos to be selectable
-            type = "*/*"
-            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("*/*"))
+            type = input
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(input))
         }
     }
 }
-
 
 
 

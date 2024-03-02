@@ -27,10 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.webkit.ProxyConfig
 import androidx.webkit.ProxyController
+import androidx.webkit.WebViewFeature
 import com.google.accompanist.web.LoadingState
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
-import `in`.delog.service.ssb.BaseSsbService.Companion.TAG
 import `in`.delog.service.ssb.TorService
 import org.koin.androidx.compose.get
 
@@ -76,17 +76,22 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
         //if (webError.value == "") {
             if (""".*\.onion(/.*)?$""".toRegex().matches(startUrl)) {
                 val torService: TorService = get()
-                val proxyConfig: ProxyConfig = ProxyConfig.Builder()
-                    .addProxyRule("socks5://127.0.0.1:" + torService.torProxyPort)
-                    .build()
-                ProxyController.getInstance()
-                    .setProxyOverride(proxyConfig, { Runnable { } }, { })
+
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
+                    val proxyConfig: ProxyConfig = ProxyConfig.Builder()
+                        .addProxyRule("socks5://127.0.0.1:" + torService.torProxyPort)
+                        .build()
+                    ProxyController.getInstance()
+                        .setProxyOverride(proxyConfig, { Runnable { } }, { })
+                    // rest of your code
+                }
+
+
                 LaunchedEffect(Unit) {
                     torService.start()
                 }
                 val torConnected: Boolean by torService.connected.collectAsState()
                 if (!torConnected) {
-                    Log.d(TAG, "tor not connected !")
                     loading.value = true
                     return
                 }

@@ -48,7 +48,7 @@ import `in`.delog.db.model.RelayServer
     views = [
         AppDatabaseView.MessageInTree::class
     ],
-    version = 11
+    version = 12
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun identDao(): IdentDao
