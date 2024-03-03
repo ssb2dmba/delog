@@ -55,11 +55,12 @@ open class RPCHandler(
     Multiplexer, ClientHandler {
     private val awaitingAsyncResponse: MutableMap<Int, CompletableAsyncResult<RPCResponse>> =
         ConcurrentHashMap()
-    private val streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
+    private var streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
     private var closed = false
     init {
         Log.i("RPCHandler", "RPCHandler init")
-
+        streams.clear()
+        closed  = false
     }
     @Throws(JsonProcessingException::class)
     override suspend fun makeAsyncRequest(request: RPCAsyncRequest): RPCResponse {
@@ -71,6 +72,8 @@ open class RPCHandler(
                 val requestNumber: Int = message.requestNumber()
                 Log.e(TAG, "Connection $requestNumber closed, cannot open stream.")
                 result.completeExceptionally(ConnectionClosedException())
+                streams.clear()
+                closed = false
             } else {
                 val message = RPCMessage(bodyBytes)
                 val requestNumber: Int = message.requestNumber()

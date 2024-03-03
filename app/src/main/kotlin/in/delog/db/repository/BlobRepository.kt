@@ -113,8 +113,8 @@ class BlobRepositoryImpl(
 
         val blobItem = ingestBlob(uri) ?: return null
         if (blobDao.get(blobItem!!.key) != null) {
-            Log.w(TAG, "blob already exists in db:${blobItem.key}")
-            return null
+            // blob already exists in db
+            return blobItem
         }
         val blob = Blob(
             oid = 0,

@@ -60,6 +60,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Should not be constructed directly, should be used via an ScuttlebuttClient instance.
  */
 class BlobService(
+    private val ssbService: SsbService,
     private val multiplexer: RPCHandler,
     private val blobRepository: BlobRepository
 )  {
@@ -103,7 +104,7 @@ class BlobService(
     fun createWantStream(author: String) {
         val rpcFunction = RPCFunction(listOf("blobs"), "createWants")
         val request = RPCStreamRequest(rpcFunction, listOf())
-
+        val streamEnded = AsyncResult.incomplete<Void>()
         multiplexer.openStream(
             request
         ) { _: Runnable ->
@@ -112,34 +113,51 @@ class BlobService(
                 override  fun onMessage(requestNumber: Int, message: RPCResponse) {
                         val str = message.body().toArrayUnsafe()
                         val map = mapper.readValue<HashMap<String, Long>>(str)
+                        onHasMessage(multiplexer, author, map)
 
-                        onHasMessage(author, map)
                 }
 
                 override fun onStreamEnd() {
-                    //stream ended successfully
+                    streamEnded.complete(null)
                 }
 
                 override fun onStreamError(ex: Exception) {
-                    ex.printStackTrace()
-                    MainApplication.toastify(ex.message ?: "error in createWantStream")
+                    streamEnded.completeExceptionally(ex)
                 }
             }
         }
     }
 
 
-    private fun onHasMessage(author: String, item: HashMap<String, Long>?) {
-        val has: HashMap<String, Long> = HashMap()
+    private fun onHasMessage(multippx: RPCHandler, author: String, item: HashMap<String, Long>?) {
+        val serverHas: HashMap<String, Long> = HashMap()
+        val serverWant: HashMap<String, Long> = HashMap()
         for (key in item!!.keys) {
-            val blobItem = runBlocking(Dispatchers.IO) {  blobRepository.getBlobItem(key) }
-            if (blobItem != null) {
-                has[key] = blobItem.size
+            val blobItem = runBlocking(Dispatchers.IO) { blobRepository.getBlobItem(key) }
+            if (item[key]!! > 0) {
+                if (blobItem != null) {
+                    serverHas[key] = blobItem.size
+                }
+            } else {
+                if (blobItem != null) {
+                    serverWant[key] = blobItem.size
+                }
             }
         }
-        for (key in has.keys) {
+        for (key in serverHas.keys) {
             createBlobGetStream(author, key)
         }
+
+        val responseString: String = JSONObject((serverWant as Map<String, Long>?)!!).toString()
+        val response = RPCCodec.encodeResponse(
+            Bytes.wrap(responseString.toByteArray()),
+            wantRequestNumber!!,
+            RPCFlag.BodyType.JSON,
+            RPCFlag.Stream.STREAM
+        )
+        multippx.sendBytes(response)
+        //multippx.close()
+        //streamEnded.complete(null)
     }
 
     /**
@@ -171,6 +189,7 @@ class BlobService(
 
                 override fun onStreamEnd() {
                     onRPCResponseForBlobGetWithEnd(author, hash)
+
                     //streamEnded.complete(null)
                 }
 
@@ -279,10 +298,11 @@ class BlobService(
      *  return file as stream of bytes if possible
      */
     private fun onRPCBlobsGet(rpcMessage: RPCMessage) {
+
         val rpcStreamRequest =
             rpcMessage.asJSON(SsbService.objectMapper, RPCBlobRequest::class.java)
         val key = rpcStreamRequest.key
-
+        Log.i(TAG,"got blob get $key")
         val blobItem = runBlocking(Dispatchers.IO){ blobRepository.getBlobItem(key) }
         if (blobItem != null) {
             val file = blobItem.uri.toFile()
@@ -301,6 +321,7 @@ class BlobService(
                         }
                         offset += sz
                         multiplexer.sendBlobSlice(rpcMessage.requestNumber(), Bytes.wrap(buff))
+                        Log.i(TAG,"sending ${offset * size / 100}")
                     }
                 }
             } catch (e: Exception) {

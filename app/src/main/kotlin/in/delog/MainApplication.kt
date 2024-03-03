@@ -90,7 +90,7 @@ class MainApplication : Application() {
 
 }
 
-class GetMediaActivityResultContract : ActivityResultContracts.GetContent() {
+class GetMediaActivityResultContract : ActivityResultContracts.GetMultipleContents() {
     @SuppressLint("MissingSuperCall")
     override fun createIntent(
             context: Context,
@@ -103,6 +103,7 @@ class GetMediaActivityResultContract : ActivityResultContracts.GetContent() {
             // Force only images and videos to be selectable
             type = input
             putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(input))
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         }
     }
 }

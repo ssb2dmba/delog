@@ -33,6 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.scuttlebutt.lib.model.FeedMessage
@@ -63,16 +64,12 @@ class FeedService(
     private val multiplexer: RPCHandler,
     private val blobRepository: BlobRepository,
     private val aboutRepository: AboutRepository,
-    private val messageRepository: MessageRepository) : LifecycleService() {
+    private val messageRepository: MessageRepository)  {
     companion object {
         private val objectMapper = ObjectMapper()
     }
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Default + job)
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-    }
+
+
 
     /**
      * Publishes a message to the instance's own scuttlebutt feed, assuming the client established the connection using
@@ -162,7 +159,7 @@ class FeedService(
 
     private fun storePostMessage(m: FeedMessage) {
         val message: Message = m.toMessage()
-        scope.launch {
+        runBlocking {
             messageRepository.maybeAddMessageAndBlobs(blobRepository ,message)
         }
     }

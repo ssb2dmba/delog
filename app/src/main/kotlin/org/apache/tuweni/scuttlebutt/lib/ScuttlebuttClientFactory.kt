@@ -22,6 +22,7 @@ import `in`.delog.db.model.toCanonicalForm
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.MessageRepository
+import `in`.delog.service.ssb.SsbService
 import io.vertx.core.Vertx
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
@@ -35,11 +36,12 @@ import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
 
 
 class SsbRequiredRepositories(
+    val ssbService: SsbService,
     val feedRepository: MessageRepository,
     val aboutRepository: AboutRepository,
     val blobRepository: BlobRepository
 ) {
-    lateinit var scope: CoroutineScope
+
 }
 
 /**
@@ -142,7 +144,7 @@ object ScuttlebuttClientFactory {
                 )
             } as RPCHandler
 
-            return@runBlocking ScuttlebuttClient(clientId, client, ssbRequiredRepositories)
+            return@runBlocking ScuttlebuttClient(clientId, client, ssbRequiredRepositories, secureScuttlebuttVertxClient)
         }
     }
 
@@ -184,7 +186,12 @@ object ScuttlebuttClientFactory {
                         { rpcMessage -> }
                     )
                 } as RPCHandler
-            return@runBlocking ScuttlebuttClient(clientId, multiplexer,ssbRequiredRepositories)
+            return@runBlocking ScuttlebuttClient(
+                clientId,
+                multiplexer,
+                ssbRequiredRepositories,
+                secureScuttlebuttVertxClient
+            )
         }
     }
 }

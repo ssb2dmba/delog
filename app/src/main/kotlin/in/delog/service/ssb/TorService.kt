@@ -36,15 +36,6 @@ class TorService {
         object : TorConfigProviderAndroid(context = MainApplication.applicationContext()) {
             override fun provide(): TorConfig {
                 return TorConfig.Builder {
-
-
-                    val http = Ports.HttpTunnel()
-                    put(http.set(AorDorPort.Value(PortProxy(9258))))
-
-                    val trans = Ports.Trans()
-                    put(trans.set(AorDorPort.Value(PortProxy(9262))))
-                    put(trans.set(AorDorPort.Value(PortProxy(9263))))
-
                     // Set SOCKS5 port
                     val socks = Ports.Socks()
                     put(socks.set(AorDorPort.Value(PortProxy(torProxyPort))))
@@ -57,7 +48,7 @@ class TorService {
                     put(ConnectionPaddingReduced().set(TorF.True))
                     // Tor default is 24h. Reducing to 1 min helps mitigate
                     // unnecessary mobile data usage.
-                    put(DormantClientTimeout().set(Time.Minutes(1)))
+                    put(DormantClientTimeout().set(Time.Minutes(10)))
                     // Tor defaults this setting to false which would mean if
                     // Tor goes dormant, the next time it is started it will still
                     // be in the dormant state and will not bootstrap until being

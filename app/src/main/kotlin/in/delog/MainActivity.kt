@@ -46,7 +46,10 @@ import `in`.delog.ui.component.AppScaffold
 import `in`.delog.ui.navigation.NavGraph
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.viewmodel.IdentListViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
 
@@ -62,6 +65,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        GlobalScope.launch(Dispatchers.IO) {
+            torService.start()
+        }
 
         setContent {
             MyTheme {

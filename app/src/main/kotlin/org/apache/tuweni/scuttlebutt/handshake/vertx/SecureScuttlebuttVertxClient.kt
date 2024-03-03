@@ -176,17 +176,17 @@ class SecureScuttlebuttVertxClient(
                 }
             } catch (e: HandshakeException) {
                 result.completeExceptionally(e)
-                Log.d(TAG, e.message, e)
+                e.message?.let { Log.d(TAG, it) }
                 socket.close()
             } catch (e: StreamException) {
                 result.completeExceptionally(e)
-                Log.d(TAG, e.message, e)
+                e.message?.let { Log.d(TAG, it) }
                 socket.close()
             } catch (t: Throwable) {
                 if (!result.isDone) {
                     result.completeExceptionally(t)
                 }
-                Log.e(TAG, t.message, t)
+                t.message?.let { Log.e(TAG, it) }
                 throw RuntimeException(t)
             }
         }
