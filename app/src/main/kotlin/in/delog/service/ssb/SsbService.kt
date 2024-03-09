@@ -18,10 +18,14 @@
 package `in`.delog.service.ssb
 
 import android.util.Log
+import androidx.compose.runtime.Immutable
+import androidx.paging.PagingData
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import `in`.delog.MainApplication
+import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.Ident
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.asKeyPair
 import `in`.delog.db.model.isOnion
 import `in`.delog.db.model.toCanonicalForm
@@ -31,7 +35,11 @@ import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.viewmodel.FeedMainUIState
 import io.vertx.core.Vertx
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.apache.tuweni.scuttlebutt.Invite
@@ -48,13 +56,22 @@ import org.apache.tuweni.scuttlebutt.rpc.RPCResponse
 import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
 
 
+@Immutable
+data class SsbUIState(
+    val identAndAbout: IdentAndAboutWithBlob? = null,
+    val loaded: Boolean = false,
+    val syncing: Boolean = false,
+    val error: Exception? = null,
+    val blobSize: HashMap<String,Long> = HashMap(),
+    val blobDown: HashMap<String,Long> = HashMap(),
+    val blobUp: HashMap<String,Long> = HashMap()
+)
+
 class SsbService(
     private val messageRepository: MessageRepository,
     private val aboutRepository: AboutRepository,
     private val contactRepository: ContactRepository,
-    private val blobRepository: BlobRepository,
-    val torService: TorService,
-    private var _uiState: MutableStateFlow<FeedMainUIState>?
+    private val blobRepository: BlobRepository
 ) {
 
 
@@ -65,6 +82,9 @@ class SsbService(
     lateinit var vertx: Vertx
     private var rpcHandler: RPCHandler? = null
     var secureScuttlebuttVertxClient: SecureScuttlebuttVertxClient? = null
+
+    val _uiState = MutableStateFlow(SsbUIState())
+    val uiState: StateFlow<SsbUIState> = _uiState.asStateFlow()
 
     init {
         Log.i(TAG, "init ssb service")
@@ -84,24 +104,23 @@ class SsbService(
         }
     }
 
-    suspend fun synchronize(pFeed: Ident, errorCb: ((Exception) -> Unit)?) {
+    suspend fun synchronize(pFeed: Ident) {
         try {
             reconnect(pFeed)
         } catch (e: Exception) {
+            _uiState.update { it.copy(error = e, syncing = false) }
             MainApplication.toastify("${e.message}")
-            if (errorCb != null) {
-                errorCb(e)
-            }
         }
     }
 
     private suspend fun reconnect(pFeed: Ident) {
         Log.i(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
-
+        _uiState.update { it.copy(syncing = true) }
         if (pFeed.isOnion()) {
-            torService.start() // will do nothing if started
+            MainApplication.getTorService().start() // will do nothing if started
+            //torService.start() // will do nothing if started
             for (i in 0..20) {
-                if (torService.status.value != 1) {
+                if (MainApplication.getTorService().status.value != 1) {
                     Thread.sleep(500)
                     Log.d(TAG, "waiting for Tor service to be started ...")
                     if (i>=20) return
@@ -140,7 +159,6 @@ class SsbService(
                     return null
                 }
                 rpcHandler = makeRPCHandler(pFeed)
-                if (_uiState==null) _uiState= MutableStateFlow(FeedMainUIState())
                 blobService= BlobService(rpcHandler!!, blobRepository, _uiState!!)
                 return rpcHandler
             } catch (e: Exception) {
@@ -182,6 +200,7 @@ class SsbService(
      *  application logic upon connection
      */
     private fun onConnected() {
+        _uiState.update { it.copy(syncing = false) }
         feedService = FeedService(rpcHandler!!, blobRepository, aboutRepository, messageRepository)
         blobService = BlobService(rpcHandler!!, blobRepository, _uiState!!)
         val feedCannonicalForm = connectedIdent!!.toCanonicalForm()

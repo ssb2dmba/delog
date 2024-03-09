@@ -123,9 +123,7 @@ class IdentAndAboutViewModel(
                 messageRepository,
                 aboutRepository,
                 contactRepository,
-                blobRepository,
-                torService,
-                null
+                blobRepository
             )
             ssbService.connectWithInvite(ident,
                 {

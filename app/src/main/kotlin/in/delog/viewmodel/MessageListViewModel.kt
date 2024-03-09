@@ -41,6 +41,7 @@ import `in`.delog.model.MessageViewData
 import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.format
+import `in`.delog.service.ssb.SsbUIState
 import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -58,16 +59,17 @@ import java.util.concurrent.ConcurrentHashMap
 data class FeedMainUIState(
     val messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null,
     val identAndAbout: IdentAndAboutWithBlob? = null,
-    val loaded: Boolean = false,
-    val syncing: Boolean = false,
-    val error: Exception? = null,
-    val blobSize: HashMap<String,Long> = HashMap(),
-    val blobDown: HashMap<String,Long> = HashMap(),
-    val blobUp: HashMap<String,Long> = HashMap()
+//    val loaded: Boolean = false,
+//    val syncing: Boolean = false,
+//    val error: Exception? = null,
+//    val blobSize: HashMap<String,Long> = HashMap(),
+//    val blobDown: HashMap<String,Long> = HashMap(),
+//    val blobUp: HashMap<String,Long> = HashMap()
 )
 
 class MessageListViewModel(
     private var key: String,
+    private val ssbService: SsbService,
     private val messageTreeRepository: MessageTreeRepository,
     private val identRepository: IdentRepository,
     private val messageRepository: MessageRepository,
@@ -77,40 +79,37 @@ class MessageListViewModel(
     ) : ViewModel() {
 
 
-    private var ssbService: SsbService? =null
+
     private lateinit var torStatus: LiveData<Int>
 
     private val _uiState = MutableStateFlow(FeedMainUIState())
     val uiState: StateFlow<FeedMainUIState> = _uiState.asStateFlow()
+    //lateinit var _ssbUIState:  MutableStateFlow<SsbUIState>
     var messagesPaged: Flow<PagingData<MessageViewData>>? = null
 
     fun clearError() {
-        viewModelScope.launch {
-            delay(1000)
-            _uiState.update { it.copy(error = null) }
-        }
+//        viewModelScope.launch {
+//            delay(1000)
+//            _uiState.update { it.copy(error = null) }
+//        }
     }
 
     private fun synchronize() {
         // we launch in global scope so process continue even if viewmodel is cleared
         GlobalScope.launch(Dispatchers.IO) {
             if (_uiState.value.identAndAbout==null) return@launch
-            _uiState.update { it.copy(error = null, syncing = true) }
-            if (ssbService!=null && ssbService!!.secureScuttlebuttVertxClient!=null) {
-                ssbService!!.secureScuttlebuttVertxClient!!.stop().join()
+            //_ssbUIState.update { it.copy(error = null, syncing = true) }
+            if (ssbService.secureScuttlebuttVertxClient!=null) {
+                ssbService.secureScuttlebuttVertxClient!!.stop().join()
             }
-            ssbService = SsbService(messageRepository, aboutRepository, contactRepository, blobRepository,MainApplication.getTorService(),   _uiState )
-            torStatus = ssbService!!.torService.status
-            ssbService!!.synchronize( _uiState.value.identAndAbout!!.ident) { it ->
-                Log.e("synchronize error", it.toString())
-                _uiState.update { it.copy(error = it.error, syncing = false) }
-            }
-            _uiState.update { it.copy(syncing = false) }
+            torStatus = MainApplication.getTorService().status
+            ssbService.synchronize( _uiState.value.identAndAbout!!.ident)
         }
     }
 
 
     init {
+        //_ssbUIState = ssbService._uiState
         viewModelScope.launch(Dispatchers.IO) {
             if (key.startsWith("%")) {
                 val m: Message? = messageRepository.getMessage(key)
@@ -144,7 +143,7 @@ class MessageListViewModel(
                         msgAndAbout.toMessageViewData(format, blobRepository)
                     }
                 }.cachedIn(viewModelScope)
-            _uiState.update { it.copy(loaded = true) }
+            //_ssbUIState.update { it.copy(loaded = true) }
         }
     }
 }

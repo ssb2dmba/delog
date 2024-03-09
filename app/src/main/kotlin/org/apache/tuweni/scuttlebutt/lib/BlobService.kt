@@ -27,6 +27,7 @@ import `in`.delog.MainApplication
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
+import `in`.delog.service.ssb.SsbUIState
 import `in`.delog.viewmodel.FeedMainUIState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,7 +65,7 @@ import java.util.concurrent.ConcurrentHashMap
 class BlobService(
     private val multiplexer: RPCHandler,
     private val blobRepository: BlobRepository,
-    private val _uiState: MutableStateFlow<FeedMainUIState>
+    private val _uiState: MutableStateFlow<SsbUIState>
 )  {
 
     companion object {
@@ -180,7 +181,7 @@ class BlobService(
     }
 
     /**
-     * Send blobs.createWants RPC to the server and setup receive stream
+     * Send blobs.get RPC to the server and setup receive stream
      */
     @Throws(JsonProcessingException::class, ConnectionClosedException::class)
     fun createBlobGetStream(author: String, hash: String, size: Long? = null, max: Long?=null) {

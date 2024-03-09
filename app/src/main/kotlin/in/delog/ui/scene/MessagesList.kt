@@ -56,6 +56,8 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.model.MessageViewData
+import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.SsbUIState
 import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.BottomBarMainButton
@@ -75,6 +77,7 @@ import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.koin.android.ext.android.get
+import org.koin.androidx.compose.get
 
 
 @Composable
@@ -83,7 +86,8 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
     val viewModel =
         koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
     val uiState by viewModel.uiState.observeAsState(FeedMainUIState())
-
+    val ssbService = get<SsbService>()
+    val ssbUiState by ssbService.uiState.observeAsState(SsbUIState())
 
     
     LaunchedEffect(feedToReadKey) {
@@ -96,7 +100,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
         }
     }
 
-    if (uiState.identAndAbout == null || !uiState.loaded) {
+    if (uiState.identAndAbout == null ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -115,21 +119,23 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
     val lazyMessageItems: LazyPagingItems<MessageViewData> =
         fpgMessages.collectAsLazyPagingItems()
     Column {
-        if (uiState.syncing) {
+        if (ssbUiState.syncing) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
-        for (r in uiState.blobUp.keys) {
-            if (uiState.blobUp[r]!!.toFloat() < uiState.blobSize[r]!!.toFloat()) {
+        for (r in ssbUiState.blobUp.keys) {
+            if (ssbUiState.blobSize[r]!=null
+                && ssbUiState.blobUp[r]!!.toFloat() < ssbUiState.blobSize[r]!!.toFloat()) {
                 LinearProgressIndicator(
-                    progress = uiState.blobUp[r]!!.toFloat() / uiState.blobSize[r]!!.toFloat(),
+                    progress = ssbUiState.blobUp[r]!!.toFloat() / ssbUiState.blobSize[r]!!.toFloat(),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
-        for (r in uiState.blobDown.keys) {
-            if (uiState.blobDown[r]!!.toFloat() < uiState.blobSize[r]!!.toFloat()) {
+        for (r in ssbUiState.blobDown.keys) {
+            if (ssbUiState.blobSize[r]!=null &&
+                ssbUiState.blobDown[r]!!.toFloat() < ssbUiState.blobSize[r]!!.toFloat()) {
                 LinearProgressIndicator(
-                    progress = uiState.blobDown[r]!!.toFloat() / uiState.blobSize[r]!!.toFloat(),
+                    progress = ssbUiState.blobDown[r]!!.toFloat() / ssbUiState.blobSize[r]!!.toFloat(),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -221,12 +227,12 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
 
     }
 
-    if (uiState.error != null && uiState.error?.message != null) {
+    if (ssbUiState.error != null && ssbUiState.error?.message != null) {
         val context = LocalContext.current
         Toast
             .makeText(
                 context,
-                String.format(uiState.error!!.message!!),
+                String.format(ssbUiState.error!!.message!!),
                 Toast.LENGTH_LONG
             )
             .show()
