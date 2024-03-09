@@ -27,10 +27,10 @@ import `in`.delog.model.SsbMessageContent
 
 
 interface MessageRepository {
-    suspend fun addMessage(feedOid: Message)
+    suspend fun addMessage(message: Message)
     suspend fun existsMessage(key: String): Boolean
     suspend fun findByDefaultFeed(): LiveData<List<Message>>
-    fun getPagedMessages(msgKey: String): PagingSource<Int, MessageAndAbout>
+    fun getPagedMessages(key: String): PagingSource<Int, MessageAndAbout>
     fun getMessagePage(author: String, seqStart: Long, limit: Int): List<Message>
     fun getLastMessage(author: String): Message?
     fun getLastSequence(author: String): Long
@@ -89,7 +89,7 @@ class MessageRepositoryImpl(
         }
     }
 
-    private fun addBlobs(blobRepository: BlobRepository,author: String, message: Message) {
+    private suspend fun addBlobs(blobRepository: BlobRepository,author: String, message: Message) {
         val ssbMessageContent = SsbMessageContent.serialize(message.contentAsText)
         val blobs = ssbMessageContent.mentions?.filter { it.link.startsWith("&") }
         if (blobs != null) {
@@ -109,8 +109,8 @@ class MessageRepositoryImpl(
     }
 
 
-    override fun getPagedMessages(author: String): PagingSource<Int, MessageAndAbout> {
-        return messageDao.getPagedMessages(author)
+    override fun getPagedMessages(key: String): PagingSource<Int, MessageAndAbout> {
+        return messageDao.getPagedMessages(key)
     }
 
     override fun getMessagePage(author: String, seqStart: Long, limit: Int): List<Message> {

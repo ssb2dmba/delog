@@ -38,8 +38,7 @@ import kotlinx.coroutines.launch
 
 
 class IdentListViewModel(
-    private val repository: IdentRepository,
-    private val ssbService: SsbService
+    private val repository: IdentRepository
 ) : ViewModel() {
 
 
@@ -64,6 +63,7 @@ class IdentListViewModel(
     }
     private fun redeemInvite(ident: Ident) {
         viewModelScope.launch {
+/*            val ssbService = SsbService(messageRepository, aboutRepository, contactRepository, identRepository, blobRepository, torService)
             ssbService.connectWithInvite(ident,
                 {
                     // everything is going according to the plan
@@ -72,12 +72,11 @@ class IdentListViewModel(
                 },
                 {
                     MainApplication.toastify(it.message.toString())
-                })
+                })*/
         }
     }
 
     fun setFeedAsDefaultFeed(ident: Ident) {
-        ssbService.disconnect()
         viewModelScope.launch(Dispatchers.IO) {
             repository.setFeedAsDefaultFeed(ident)
         }

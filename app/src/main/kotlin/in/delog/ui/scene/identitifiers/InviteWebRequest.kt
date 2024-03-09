@@ -73,27 +73,15 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
             }
         }
         val webError = remember { mutableStateOf("") }
-        //if (webError.value == "") {
+
             if (""".*\.onion(/.*)?$""".toRegex().matches(startUrl)) {
-                val torService: TorService = get()
 
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
                     val proxyConfig: ProxyConfig = ProxyConfig.Builder()
-                        .addProxyRule("socks5://127.0.0.1:" + torService.torProxyPort)
+                        .addProxyRule("socks5://127.0.0.1:9050")
                         .build()
                     ProxyController.getInstance()
                         .setProxyOverride(proxyConfig, { Runnable { } }, { })
-                    // rest of your code
-                }
-
-
-                LaunchedEffect(Unit) {
-                    torService.start()
-                }
-                val torConnected: Boolean by torService.connected.collectAsState()
-                if (!torConnected) {
-                    loading.value = true
-                    return
                 }
             }
             WebView(
@@ -127,7 +115,6 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
                             super.onReceivedError(view, request, error)
                             loading.value = false
                             Log.e("webview", error.toString())
-                            //loadURL = "file:///android_asset/404.html"
                             if (error != null) {
                                 webError.value = error.description as String
                             }

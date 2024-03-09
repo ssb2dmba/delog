@@ -52,9 +52,6 @@ class SecureScuttlebuttVertxClient(
     private val networkIdentifier: Bytes32
 ) {
 
-    private val TAG = "SecureScuttlebuttVertxClient"
-
-
     private inner class NetSocketClientHandler(
         private val socket: NetSocket,
         remotePublicKey: Signature.PublicKey?,
@@ -89,7 +86,7 @@ class SecureScuttlebuttVertxClient(
             }
             socket.exceptionHandler { e: Throwable ->
                 Log.e(
-                    TAG,
+                    Companion.TAG,
                     e.message,
                     e
                 )
@@ -159,7 +156,7 @@ class SecureScuttlebuttVertxClient(
                             val headerAndBodyLength = bodyLength + headerSize
                             val wholeMessage = messageBuffer.slice(0, headerAndBodyLength)
                             if (isGoodbye(wholeMessage)) {
-                                Log.d(TAG, "Goodbye received from remote peer")
+                                Log.d(Companion.TAG, "Goodbye received from remote peer")
                                 socket.close()
                             } else {
                                 handler!!.receivedMessage(wholeMessage)
@@ -176,17 +173,17 @@ class SecureScuttlebuttVertxClient(
                 }
             } catch (e: HandshakeException) {
                 result.completeExceptionally(e)
-                e.message?.let { Log.d(TAG, it) }
+                e.message?.let { Log.d(Companion.TAG, it) }
                 socket.close()
             } catch (e: StreamException) {
                 result.completeExceptionally(e)
-                e.message?.let { Log.d(TAG, it) }
+                e.message?.let { Log.d(Companion.TAG, it) }
                 socket.close()
             } catch (t: Throwable) {
                 if (!result.isDone) {
                     result.completeExceptionally(t)
                 }
-                t.message?.let { Log.e(TAG, it) }
+                t.message?.let { Log.e(Companion.TAG, it) }
                 throw RuntimeException(t)
             }
         }
@@ -220,8 +217,10 @@ class SecureScuttlebuttVertxClient(
         val netClientOptions = NetClientOptions().setTcpKeepAlive(true)
         if (host.endsWith(".onion")) {
             netClientOptions.setProxyOptions(
+                // TODO map proxy port to a config
                 ProxyOptions().setType(ProxyType.SOCKS5).setHost("127.0.0.1").setPort(9050)
             );
+            netClientOptions.setConnectTimeout(10000).setReadIdleTimeout(5).setIdleTimeout(5000)
         }
         client = vertx.createNetClient(netClientOptions)
         val socket = client!!.connect(port, host).await()
@@ -245,7 +244,8 @@ class SecureScuttlebuttVertxClient(
     }
 
     companion object {
-        val CONN_CLOSED_BEFORE_HANDSHAKE: String? = "CONN_CLOSED_BEFORE_HANDSHAKE"
+        const val CONN_CLOSED_BEFORE_HANDSHAKE: String = "CONN_CLOSED_BEFORE_HANDSHAKE"
+        private const val TAG = "SecureScuttlebuttVertxClient"
     }
 
 }

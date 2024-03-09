@@ -173,7 +173,7 @@ class FeedService(
         if (sequence < 1) {
             Log.w(TAG, String.format("pub is requesting complete history !", sequence))
         }
-        var remoteSequence = sequence.toLong()
+        var remoteSequence = 0L //sequence.toLong()
         val batchSize = 100.coerceAtMost(remoteLimit) // TODO put in config
         var hasMoreResults = true
         var ct = 0

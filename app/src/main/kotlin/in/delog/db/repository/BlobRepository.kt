@@ -43,7 +43,7 @@ interface BlobRepository {
     suspend fun getAsBlobItem(b64hash: String): BlobItem
     suspend fun getBlobItem(b64hash: String): BlobItem?
     suspend fun getWants(author: String): HashMap<String, Long>
-    fun createWant(author: String, blob: Mention)
+    suspend fun createWant(author: String, blob: Mention)
     suspend fun insertOwnBlob(author: String, uri: Uri): BlobItem?
     suspend fun update(author: String, uri: Uri): BlobItem?
     fun getTempFile(hash: String): File
@@ -73,13 +73,13 @@ class BlobRepositoryImpl(
         return tika.detect(inputStream)
     }
 
-    fun ingestBlob(uri:Uri): BlobItem? {
+    private fun ingestBlob(uri:Uri): BlobItem? {
         var mimeType = contentResolver.getType(uri)
         if (mimeType==null) {
             val inputStream = contentResolver.openInputStream(uri)
             if (inputStream!=null) {
-                mimeType = detectMime(inputStream!!)
-                inputStream?.close()
+                mimeType = detectMime(inputStream)
+                inputStream.close()
             }
         }
         val size = getSize(uri)
@@ -112,7 +112,7 @@ class BlobRepositoryImpl(
     override suspend fun insertOwnBlob(author: String, uri: Uri): BlobItem? {
 
         val blobItem = ingestBlob(uri) ?: return null
-        if (blobDao.get(blobItem!!.key) != null) {
+        if (blobDao.get(blobItem.key) != null) {
             // blob already exists in db
             return blobItem
         }
@@ -207,15 +207,18 @@ class BlobRepositoryImpl(
         val wants = HashMap<String, Long>()
         for (blob in blobs) {
             val blobItem = getAsBlobItem(blob.key)
-            wants[blobItem.key] = blobItem.size
+            wants[blobItem.key] = -1
         }
         return wants
 
     }
 
-    override fun createWant(author: String, blob: Mention) {
+    override suspend fun createWant(author: String, blob: Mention) {
         // TODO check if exists
-        val want: Blob = Blob(
+        blobDao.get(blob.link)?.let {
+            return
+        }
+        val want = Blob(
             oid = 0,
             author = author,
             key = blob.link,
@@ -231,14 +234,11 @@ class BlobRepositoryImpl(
 
     override fun getTempFile(hash: String): File {
         val hashAsBytes = Bytes.fromBase64String(hash.subSequence(1, hash.length - 7).toString())
-        val hash = SHA256Hash.Input.fromBytes(hashAsBytes);
-        val hexhash = hash.bytes().toHexString()
+        val hashed = SHA256Hash.Input.fromBytes(hashAsBytes)
+        val hexhash = hashed.bytes().toHexString()
         val tmpFile =  File(context.cacheDir, hexhash)
         if (!tmpFile.exists()) tmpFile.createNewFile()
         return tmpFile
-    }
-
-    companion object {
     }
 
 }

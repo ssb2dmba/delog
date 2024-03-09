@@ -17,7 +17,7 @@
  */
 package `in`.delog.ui.scene
 
-
+import org.koin.android.ext.android.get
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,10 +36,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -54,6 +56,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.model.MessageViewData
+import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.GoToTop
@@ -68,8 +71,11 @@ import `in`.delog.viewmodel.FeedMainUIState
 import `in`.delog.viewmodel.MessageListViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import org.koin.android.ext.android.get
+
 
 @Composable
 fun MessagesList(navController: NavController, feedToReadKey: String) {
@@ -79,9 +85,11 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
     val uiState by viewModel.uiState.observeAsState(FeedMainUIState())
 
 
+    
     LaunchedEffect(feedToReadKey) {
         bottomBarViewModel.setActions {
-            Spacer(modifier = Modifier.weight(1f)
+            Spacer(modifier = Modifier
+                .weight(1f)
                 .background(MaterialTheme.colorScheme.onSurfaceVariant)
             )
             NewDraftFab(navController)
@@ -106,15 +114,38 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
     val fpgMessages: Flow<PagingData<MessageViewData>> = viewModel.messagesPaged!!
     val lazyMessageItems: LazyPagingItems<MessageViewData> =
         fpgMessages.collectAsLazyPagingItems()
-    if (uiState.syncing) {
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    Column {
+        if (uiState.syncing) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
+        for (r in uiState.blobUp.keys) {
+            if (uiState.blobUp[r]!!.toFloat() < uiState.blobSize[r]!!.toFloat()) {
+                LinearProgressIndicator(
+                    progress = uiState.blobUp[r]!!.toFloat() / uiState.blobSize[r]!!.toFloat(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        for (r in uiState.blobDown.keys) {
+            if (uiState.blobDown[r]!!.toFloat() < uiState.blobSize[r]!!.toFloat()) {
+                LinearProgressIndicator(
+                    progress = uiState.blobDown[r]!!.toFloat() / uiState.blobSize[r]!!.toFloat(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
-    Box {
 
+
+
+
+    Box {
         var previousRoot: String? = null
         LazyColumn(
             state = scrollState,
-            modifier = Modifier.fillMaxSize().padding(8.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
         ) {
             items(
                 count = lazyMessageItems.itemCount,
@@ -128,7 +159,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                         colors = CardDefaults.cardColors(),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
-                            .padding(bottom=8.dp)
+                            .padding(bottom = 8.dp)
                             .wrapContentHeight()
                     ) {
                         IdentityBox(

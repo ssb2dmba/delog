@@ -21,8 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.concurrent.CompletableAsyncResult
@@ -36,7 +34,6 @@ import org.apache.tuweni.scuttlebutt.rpc.RPCCodec.encodeStreamEndRequest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import java.util.function.Function
-import kotlin.reflect.KSuspendFunction1
 
 /**
  * Handles RPC requests and responses from an active connection to a scuttlebutt node.
@@ -55,10 +52,9 @@ open class RPCHandler(
     Multiplexer, ClientHandler {
     private val awaitingAsyncResponse: MutableMap<Int, CompletableAsyncResult<RPCResponse>> =
         ConcurrentHashMap()
-    private var streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
+    private val streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
     private var closed = false
     init {
-        Log.i("RPCHandler", "RPCHandler init")
         streams.clear()
         closed  = false
     }
@@ -68,12 +64,7 @@ open class RPCHandler(
         val result = AsyncResult.incomplete<RPCResponse>()
         vertx.runOnContext {
             if (closed) {
-                val message = RPCMessage(bodyBytes)
-                val requestNumber: Int = message.requestNumber()
-                Log.e(TAG, "Connection $requestNumber closed, cannot open stream.")
                 result.completeExceptionally(ConnectionClosedException())
-                streams.clear()
-                closed = false
             } else {
                 val message = RPCMessage(bodyBytes)
                 val requestNumber: Int = message.requestNumber()
@@ -132,10 +123,7 @@ open class RPCHandler(
     }
 
     override fun close() {
-        vertx.runOnContext {
-            terminationFn.run()
-        }
-        streams.clear()
+        vertx.runOnContext { terminationFn.run() }
     }
 
     override fun receivedMessage(message: Bytes) {
@@ -156,7 +144,7 @@ open class RPCHandler(
     override fun streamClosed() {
         val synchronizedCloseStream = Handler { _: Void? ->
             closed = true
-            streams.forEach { (i: Int, streamHandler: ScuttlebuttStreamHandler) ->
+            streams.forEach { (_: Int, streamHandler: ScuttlebuttStreamHandler) ->
                 streamHandler.onStreamError(
                     ConnectionClosedException()
                 )
@@ -214,7 +202,6 @@ open class RPCHandler(
             val scuttlebuttStreamHandler = streams[requestNumber]
             if (scuttlebuttStreamHandler != null) {
                 if (response.isSuccessfulLastMessage) {
-                    scuttlebuttStreamHandler.onStreamEnd()
                     // Confirm our end of the stream close and inform the consumer of the stream that it is closed
                     endStream(requestNumber)
                 } else if (exception.isPresent) {
@@ -266,7 +253,7 @@ open class RPCHandler(
      *
      * @param requestNumber the request number of the stream to send a close message over RPC for
      */
-    fun endStream(requestNumber: Int) {
+    private fun endStream(requestNumber: Int) {
         try {
             val streamHandler = streams.remove(requestNumber)
             // Only send the message if the stream hasn't already been closed at our end
@@ -292,7 +279,7 @@ open class RPCHandler(
      * @param requestNumber the request number of the stream to send a close message over RPC for
      */
     fun sendEndBlob(requestNumber: Int) {
-        var streamBlobEnd = encodeBlobEnd(requestNumber)
+        val streamBlobEnd = encodeBlobEnd(requestNumber)
         sendBytes(streamBlobEnd)
     }
 
@@ -302,7 +289,7 @@ open class RPCHandler(
      * @param  buff the blob slice to send
      */
     fun sendBlobSlice(requestNumber: Int, buff: Bytes) {
-        var streamBlobSlice = encodeBlobSlice(requestNumber, buff)
+        val streamBlobSlice = encodeBlobSlice(requestNumber, buff)
         sendBytes(streamBlobSlice)
     }
 

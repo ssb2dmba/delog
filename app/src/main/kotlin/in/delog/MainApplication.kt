@@ -29,6 +29,7 @@ import `in`.delog.di.modules.dataBaseModule
 import `in`.delog.di.modules.mainViewModel
 import `in`.delog.di.modules.ssbModule
 import `in`.delog.libsodium.NaCl
+import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.component.preview.videos.VideoCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,10 +41,11 @@ import org.koin.core.logger.Level
 
 class MainApplication : Application() {
 
-    val applicationScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    lateinit var torService: TorService
     val context = this
     override fun onCreate() {
         super.onCreate()
+        torService = TorService(this)
         NaCl.sodium()
         startKoin {
             androidLogger(Level.ERROR)
@@ -68,8 +70,9 @@ class MainApplication : Application() {
             return instance!!.applicationContext
         }
 
-        fun getTorScope(): CoroutineScope {
-            return instance!!.applicationScope
+
+        fun getTorService(): TorService {
+            return instance!!.torService
         }
 
         fun toastify(message: String) {

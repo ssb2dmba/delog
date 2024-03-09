@@ -144,7 +144,7 @@ object ScuttlebuttClientFactory {
                 )
             } as RPCHandler
 
-            return@runBlocking ScuttlebuttClient(clientId, client, ssbRequiredRepositories, secureScuttlebuttVertxClient)
+            return@runBlocking ScuttlebuttClient(clientId, client,  secureScuttlebuttVertxClient)
         }
     }
 
@@ -164,7 +164,6 @@ object ScuttlebuttClientFactory {
         keyPair: Signature.KeyPair,
         invite: Invite,
         networkIdentifier: Bytes32,
-        ssbRequiredRepositories: SsbRequiredRepositories
     ): ScuttlebuttClient {
         val secureScuttlebuttVertxClient = SecureScuttlebuttVertxClient(
             vertx,
@@ -189,7 +188,6 @@ object ScuttlebuttClientFactory {
             return@runBlocking ScuttlebuttClient(
                 clientId,
                 multiplexer,
-                ssbRequiredRepositories,
                 secureScuttlebuttVertxClient
             )
         }

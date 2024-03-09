@@ -19,6 +19,7 @@ package `in`.delog
 
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -38,7 +39,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppBottomAppBar
@@ -47,26 +50,35 @@ import `in`.delog.ui.navigation.NavGraph
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.viewmodel.IdentListViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
 
-    private val torService: TorService = get()
 
-    override fun onPause() {
-        torService.stop()
-        super.onPause()
-    }
+    private val app: MainApplication get() = application as MainApplication
+
+
+//    override fun onPause() {
+//        MainApplication.getTorService().stop()
+//        MainApplication.getTorService().torsJob.cancel()
+//        super.onPause()
+//    }
+//
+//    override fun onResume() {
+//
+//        lifecycleScope.launch(Dispatchers.IO) {
+//            MainApplication.getTorService().start()
+//        }
+//        super.onResume()
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        GlobalScope.launch(Dispatchers.IO) {
-            torService.start()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            app.torService.torOperationManager.start()
         }
 
         setContent {

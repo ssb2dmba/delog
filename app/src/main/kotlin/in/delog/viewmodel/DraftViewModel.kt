@@ -64,7 +64,7 @@ class DraftViewModel(
     private var linkKey: String?,
     private val messageRepository: MessageRepository,
     private val draftRepository: DraftRepository,
-    private val  blobRepository: BlobRepository
+    private val blobRepository: BlobRepository
 ) : ViewModel() {
 
     private val _messageViewData = MutableStateFlow(MessageViewData.empty(feed.publicKey))
@@ -77,20 +77,18 @@ class DraftViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            if (draftId >=0) {
+            if (draftId > 0) {
                 val draft = draftRepository.getById(draftId)
-                if (draft != null) {
-                    _messageViewData.update { draft.toMessageViewData(format, blobRepository) }
-                    if (!draft.branch.isNullOrEmpty()) {
-                        // at first link key comes from navigation router
-                        // in case we reopen a saved message link key comes from draft
-                        linkKey = draft.branch
-                    }
+                _messageViewData.update { draft.toMessageViewData(format, blobRepository) }
+                if (!draft.branch.isNullOrEmpty()) {
+                    // at first link key comes from navigation router
+                    // in case we reopen a saved message link key comes from draft
+                    linkKey = draft.branch
                 }
             }
 
             if (!linkKey.isNullOrBlank()) {
-                val parentMsg  = messageRepository.getMessageAndAbout(linkKey!!)
+                val parentMsg = messageRepository.getMessageAndAbout(linkKey!!)
                 _link.update { parentMsg }
                 _messageViewData.update { it.copy(branch = parentMsg?.message?.key) }
                 if (!parentMsg!!.message.root.isNullOrBlank()) {
@@ -114,16 +112,15 @@ class DraftViewModel(
     fun updateDraftContentAsText(text: String) {
         val ssbMessageContent = SsbMessageContent.serialize(_messageViewData.value.contentAsText)
         ssbMessageContent.text = text
-        _messageViewData.update { it.copy(contentAsText =  ssbMessageContent.deserialize()) }
+        _messageViewData.update { it.copy(contentAsText = ssbMessageContent.deserialize()) }
     }
-
 
 
     fun save(messageViewData: MessageViewData) {
         val draft = messageViewData.toDraft()
         viewModelScope.launch(Dispatchers.IO) {
-            if (draft.oid<=0) {
-                messageViewData.oid = draftRepository.insert(draft)
+            if (draft.oid <= 0) {
+                _messageViewData.update { it.copy(oid = draftRepository.insert(draft)) }
             } else {
                 draftRepository.update(draft)
             }
@@ -207,17 +204,17 @@ class DraftViewModel(
 
     private fun blobsInContentAsText() {
         val ssbMessageContent = SsbMessageContent.serialize(_messageViewData.value.contentAsText)
-        var mentions =  arrayOf<Mention>()
+        var mentions = arrayOf<Mention>()
         for (blob in messageViewData.value.blobs) {
-            mentions = mentions.plus(Mention(blob.key, "", type=blob.type,size=blob.size))
+            mentions = mentions.plus(Mention(blob.key, "", type = blob.type, size = blob.size))
         }
         ssbMessageContent.mentions = mentions
-        _messageViewData.update { it.copy(contentAsText =  ssbMessageContent.deserialize()) }
+        _messageViewData.update { it.copy(contentAsText = ssbMessageContent.deserialize()) }
     }
 
     fun unSelect(key: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val blobs =  messageViewData.value.blobs.filter { it.key != key }.toTypedArray()
+            val blobs = messageViewData.value.blobs.filter { it.key != key }.toTypedArray()
             _messageViewData.update { it.copy(blobs = blobs) }
             blobRepository.deleteIfKeyUnused(key)
             blobsInContentAsText()
@@ -243,7 +240,7 @@ fun fromSsbSignedMessage(ssbSignedMessage: SsbSignedMessage): Message {
 }
 
 private fun SsbSignableMessage.Companion.fromDraft(draft: Draft): SsbSignableMessage {
-    val ssbMessageContent: SsbMessageContent = Json.decodeFromString<SsbMessageContent>(
+    val ssbMessageContent: SsbMessageContent = Json.decodeFromString(
         SsbMessageContent.serializer(),
         draft.contentAsText
     )

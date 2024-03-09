@@ -30,12 +30,14 @@ import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.model.SsbSignableMessage
 import `in`.delog.model.SsbSignedMessage
 import `in`.delog.repository.DidRepository
 import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,8 +65,9 @@ class IdentAndAboutViewModel(
     private val aboutRepository: AboutRepository,
     private val messageRepository: MessageRepository,
     private val didRepository: DidRepository,
-    private val ssbService: SsbService,
-    private val blobRepository: BlobRepository
+    private val blobRepository: BlobRepository,
+    private val contactRepository: ContactRepository,
+    private val torService: TorService
 ) : ViewModel() {
 
     private var _uiState: MutableStateFlow<AboutUIState?> = MutableStateFlow(null)
@@ -116,6 +119,14 @@ class IdentAndAboutViewModel(
 
     fun redeemInvite(ident: Ident) {
         GlobalScope.launch {
+            var ssbService = SsbService(
+                messageRepository,
+                aboutRepository,
+                contactRepository,
+                blobRepository,
+                torService,
+                null
+            )
             ssbService.connectWithInvite(ident,
                 {
                     // everything is going according to the plan
