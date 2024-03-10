@@ -16,6 +16,8 @@
  */
 package org.apache.tuweni.scuttlebutt.handshake
 
+import android.util.Log
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.bytes.Bytes32
 import org.apache.tuweni.crypto.sodium.Allocated
@@ -56,9 +58,14 @@ class SecureScuttlebuttHandshakeClient private constructor(
     private var detachedSignature: Allocated? = null
 
     init {
+
         ephemeralKeyPair = Box.KeyPair.random()
         this.networkIdentifier = HMACSHA512256.Key.fromBytes(networkIdentifier)
         this.serverLongTermPublicKey = serverLongTermPublicKey
+        this.sharedSecret = null
+        this.sharedSecret2 = null
+        this.sharedSecret3 = null
+        this.detachedSignature= null
     }
 
     /**
@@ -140,12 +147,12 @@ class SecureScuttlebuttHandshakeClient private constructor(
                         SHA256Hash
                             .hash(
                                 SHA256Hash.Input
-                                    .fromPointer(
+                                    .fromBytes(
                                         Concatenate()
                                             .add(networkIdentifier)
                                             .add(sharedSecret!!)
                                             .add(sharedSecret2!!)
-                                            .concatenate()
+                                            .concatenate().bytesArray()
                                     )
                             )
                     ),
@@ -168,13 +175,13 @@ class SecureScuttlebuttHandshakeClient private constructor(
                         SHA256Hash
                             .hash(
                                 SHA256Hash.Input
-                                    .fromPointer(
+                                    .fromBytes(
                                         Concatenate()
                                             .add(networkIdentifier)
                                             .add(sharedSecret!!)
                                             .add(sharedSecret2!!)
                                             .add(sharedSecret3!!)
-                                            .concatenate()
+                                            .concatenate().bytesArray()
                                     )
                             )
                     ),
@@ -206,7 +213,7 @@ class SecureScuttlebuttHandshakeClient private constructor(
         return SHA256Hash
             .hash(
                 SHA256Hash.Input
-                    .fromPointer(
+                    .fromBytes(
                         Concatenate()
                             .add(
                                 SHA256Hash
@@ -216,20 +223,20 @@ class SecureScuttlebuttHandshakeClient private constructor(
                                                 SHA256Hash
                                                     .hash(
                                                         SHA256Hash.Input
-                                                            .fromPointer(
+                                                            .fromBytes(
                                                                 Concatenate()
                                                                     .add(networkIdentifier)
                                                                     .add(sharedSecret!!)
                                                                     .add(sharedSecret2!!)
                                                                     .add(sharedSecret3!!)
-                                                                    .concatenate()
+                                                                    .concatenate().bytesArray()
                                                             )
                                                     )
                                             )
                                     )
                             )
                             .add(serverLongTermPublicKey!!)
-                            .concatenate()
+                            .concatenate().bytesArray()
                     )
             )
     }
@@ -255,7 +262,7 @@ class SecureScuttlebuttHandshakeClient private constructor(
         return SHA256Hash
             .hash(
                 SHA256Hash.Input
-                    .fromPointer(
+                    .fromBytes(
                         Concatenate()
                             .add(
                                 SHA256Hash
@@ -265,20 +272,20 @@ class SecureScuttlebuttHandshakeClient private constructor(
                                                 SHA256Hash
                                                     .hash(
                                                         SHA256Hash.Input
-                                                            .fromPointer(
+                                                            .fromBytes(
                                                                 Concatenate()
                                                                     .add(networkIdentifier)
                                                                     .add(sharedSecret!!)
                                                                     .add(sharedSecret2!!)
                                                                     .add(sharedSecret3!!)
-                                                                    .concatenate()
+                                                                    .concatenate().bytesArray()
                                                             )
                                                     )
                                             )
                                     )
                             )
                             .add(longTermKeyPair.publicKey())
-                            .concatenate()
+                            .concatenate().bytesArray()
                     )
             )
     }

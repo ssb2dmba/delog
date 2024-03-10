@@ -100,7 +100,7 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
             }
         }
         IconButton(
-            modifier = Modifier.size(48.dp).align(Alignment.TopEnd),
+            modifier = Modifier.size(32.dp).align(Alignment.TopEnd).padding(5.dp),
             onClick = { action(blobItem) },
         ) {
             cta()

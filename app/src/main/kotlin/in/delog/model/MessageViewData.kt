@@ -106,7 +106,7 @@ fun Message.toMessageViewData() = MessageViewData(
 
 suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository): MessageViewData {
     val mvd = MessageViewData(
-        oid = oid,
+        oid = oid ?: 0L,
         key = "",
         timestamp = timestamp,
         author = author,
@@ -121,14 +121,14 @@ suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository
     mvd.type = mc.type
     mvd.root = mc.root
     mvd.branch = mc.branch
-    mvd.links == mc.mentions?.filter { it.link.startsWith("%") }
+    mvd.links = mc.mentions?.filter { it.link.startsWith("%") }?.toTypedArray() ?: arrayOf()
     mvd.blobs = mc.mentions?.filter { it.link.startsWith("&") }
         ?.map { blobRepository.getAsBlobItem(it.link) }?.toTypedArray() ?: arrayOf()
     return mvd
 }
 
 suspend fun AppDatabaseView.MessageInTree.toMessageViewData(format: Json, blobRepository: BlobRepository): MessageViewData {
-    var mvd = MessageViewData(
+    val mvd = MessageViewData(
         key = key,
         timestamp = timestamp,
         author = author,

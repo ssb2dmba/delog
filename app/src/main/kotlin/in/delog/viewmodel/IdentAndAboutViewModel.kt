@@ -30,6 +30,7 @@ import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
+import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.model.SsbSignableMessage
@@ -63,8 +64,8 @@ class IdentAndAboutViewModel(
     private val aboutRepository: AboutRepository,
     private val messageRepository: MessageRepository,
     private val didRepository: DidRepository,
-    private val ssbService: SsbService,
-    private val blobRepository: BlobRepository
+    private val blobRepository: BlobRepository,
+    private val contactRepository: ContactRepository
 ) : ViewModel() {
 
     private var _uiState: MutableStateFlow<AboutUIState?> = MutableStateFlow(null)
@@ -115,7 +116,13 @@ class IdentAndAboutViewModel(
     }
 
     fun redeemInvite(ident: Ident) {
-        GlobalScope.launch {
+        viewModelScope.launch {
+            var ssbService = SsbService(
+                messageRepository,
+                aboutRepository,
+                contactRepository,
+                blobRepository
+            )
             ssbService.connectWithInvite(ident,
                 {
                     // everything is going according to the plan

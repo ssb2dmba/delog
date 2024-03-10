@@ -19,10 +19,7 @@ data class DidValid(
     val error: String?
 )
 
-class DidRepositoryImpl(
-    private val torService: TorService
-
-) : DidRepository {
+class DidRepositoryImpl() : DidRepository {
 
     override suspend fun checkIfValid(identAndAbout: IdentAndAbout?, name: String?): DidValid {
         if (identAndAbout == null) return DidValid(false, null)
@@ -33,7 +30,6 @@ class DidRepositoryImpl(
         val textResponse: String = withContext(Dispatchers.Default) {
             try {
                 if (identAndAbout.ident.isOnion()) {
-                    torService.start()
                     val conn = URL(url).openConnection(HttpClient.getTorProxy())
                     conn.getInputStream().buffered().reader().use { it.readText() }
                 } else {

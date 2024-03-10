@@ -18,7 +18,6 @@ package org.apache.tuweni.scuttlebutt.lib
 
 import android.content.ContentResolver
 import android.util.Log
-import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -28,7 +27,11 @@ import `in`.delog.MainApplication
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
+import `in`.delog.service.ssb.SsbUIState
+import `in`.delog.viewmodel.FeedMainUIState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
@@ -61,7 +64,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class BlobService(
     private val multiplexer: RPCHandler,
-    private val blobRepository: BlobRepository
+    private val blobRepository: BlobRepository,
+    private val _uiState: MutableStateFlow<SsbUIState>
 )  {
 
     companion object {
@@ -71,6 +75,7 @@ class BlobService(
             ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
         const val MAX_BLOB_SIZE = 25 * 1024 * 1024
+        const val BUFFER_SIZE = 4 * 1024
     }
 
     private val runningFileHandler: MutableMap<String, File> = ConcurrentHashMap()
@@ -80,6 +85,13 @@ class BlobService(
     val context = MainApplication.applicationContext()
 
     private val contentResolver: ContentResolver = this.context.contentResolver
+
+
+    private var blobSize = ConcurrentHashMap<String,Long>()
+    private var blobDownStatus = ConcurrentHashMap<String,Long>()
+    private var blobUpStatus = ConcurrentHashMap<String,Long>()
+
+    private val serverHas: HashMap<String, Long> = HashMap()
 
     /**
      * handle RPC messages for namespace 'blobs'
@@ -103,47 +115,73 @@ class BlobService(
     fun createWantStream(author: String) {
         val rpcFunction = RPCFunction(listOf("blobs"), "createWants")
         val request = RPCStreamRequest(rpcFunction, listOf())
-
+        val streamEnded = AsyncResult.incomplete<Void>()
         multiplexer.openStream(
             request
         ) { _: Runnable ->
             object : ScuttlebuttStreamHandler {
 
-                override  fun onMessage(requestNumber: Int, message: RPCResponse) {
+                override fun onMessage(requestNumber: Int, message: RPCResponse) {
                         val str = message.body().toArrayUnsafe()
                         val map = mapper.readValue<HashMap<String, Long>>(str)
-
-                        onHasMessage(author, map)
+                        onHasMessage(multiplexer,  author, map)
                 }
 
                 override fun onStreamEnd() {
-                    //stream ended successfully
+                    streamEnded.complete(null)
                 }
 
                 override fun onStreamError(ex: Exception) {
-                    ex.printStackTrace()
-                    MainApplication.toastify(ex.message ?: "error in createWantStream")
+                    streamEnded.completeExceptionally(ex)
                 }
             }
         }
     }
 
 
-    private fun onHasMessage(author: String, item: HashMap<String, Long>?) {
-        val has: HashMap<String, Long> = HashMap()
+    private fun onHasMessage(
+        multippx: RPCHandler,
+        author: String,
+        item: HashMap<String, Long>?
+    ) {
+
+        val serverWant: HashMap<String, Long> = HashMap()
         for (key in item!!.keys) {
-            val blobItem = runBlocking(Dispatchers.IO) {  blobRepository.getBlobItem(key) }
-            if (blobItem != null) {
-                has[key] = blobItem.size
+            val blobItem = runBlocking(Dispatchers.IO) { blobRepository.getBlobItem(key) }
+            if (item[key]!! > 0) {
+                    serverHas[key] = item[key]!!
+                    blobSize[key] = item[key]!!
+            } else {
+                if (blobItem != null) {
+                    serverWant[key] = blobItem.size
+                    blobSize[key] = blobItem.size
+                }
+            }
+            _uiState.update { it.copy(blobSize = HashMap(blobSize)) }
+        }
+
+
+        val responseString: String = JSONObject((serverWant as Map<String, Long>?)!!).toString()
+        val response = RPCCodec.encodeResponse(
+            Bytes.wrap(responseString.toByteArray()),
+             wantRequestNumber!!,
+            RPCFlag.BodyType.JSON,
+            RPCFlag.Stream.STREAM
+        )
+        multippx.sendBytes(response)
+
+        val wants = runBlocking { blobRepository.getWants(author) }
+        for (key in serverHas.keys) {
+            if (wants.containsKey(key)) {
+                createBlobGetStream(author, key, serverHas[key])
+                break // limit to one blob at a time
             }
         }
-        for (key in has.keys) {
-            createBlobGetStream(author, key)
-        }
+
     }
 
     /**
-     * Send blobs.createWants RPC to the server and setup receive stream
+     * Send blobs.get RPC to the server and setup receive stream
      */
     @Throws(JsonProcessingException::class, ConnectionClosedException::class)
     fun createBlobGetStream(author: String, hash: String, size: Long? = null, max: Long?=null) {
@@ -155,8 +193,17 @@ class BlobService(
         params["hash"] = hash
         if (size!=null) params["size"] = size
         if (max!=null) params["max"] = max
+        val tmpFile = blobRepository.getTempFile(hash)
 
-        val streamRequest = RPCStreamRequest(RPCFunction(listOf("blobs"),"get"), listOf(params))
+        var func = RPCFunction(listOf("blobs"),"get")
+//        if (tmpFile.length()>0 && size!=null && size > 0L) {
+//            // TODO copy our part into the tmp File
+//            func = RPCFunction(listOf("blobs"),"getSlice")
+//            params["start"]=tmpFile.length()
+//            params["end"]=size
+//        }
+        Log.d(TAG, "${func.asList()} $params")
+        val streamRequest = RPCStreamRequest(func, listOf(params))
 
         val streamEnded = AsyncResult.incomplete<Void>()
 
@@ -171,11 +218,11 @@ class BlobService(
 
                 override fun onStreamEnd() {
                     onRPCResponseForBlobGetWithEnd(author, hash)
-                    //streamEnded.complete(null)
+                    streamEnded.complete(null)
                 }
 
                 override fun onStreamError(ex: Exception) {
-                    onRPCResponseForBlobGetWithError(hash)
+                    onRPCResponseForBlobGetWithError(author, hash)
                     streamEnded.completeExceptionally(ex)
                 }
             }
@@ -188,9 +235,20 @@ class BlobService(
      * @param hash the hash of the blob
      */
     private  fun onRPCResponseForBlobGetWithEnd(author: String, hash: String) {
+
+        // TODO split in a separate DRY function
+        serverHas.remove(hash)
+        val wants = runBlocking { blobRepository.getWants(author) }
+        for (key in serverHas.keys) {
+            if (wants.containsKey(key)) {
+                createBlobGetStream(author, key, serverHas[key])
+                break // limit to one blob at a time
+            }
+        }
+
         if (runningFileHandler.containsKey(hash)) {
-            var tmpFile: File = runningFileHandler[hash]!!
-            val inputStream  = contentResolver.openInputStream(tmpFile.toUri()) //FileInputStream(f)
+            val tmpFile: File = runningFileHandler[hash]!!
+            val inputStream  = contentResolver.openInputStream(tmpFile.toUri())
             if (inputStream == null) {
                 Log.w(TAG, "stream blobs.get end tmp file not found: $hash")
                 return
@@ -217,6 +275,9 @@ class BlobService(
             // this can happen if we already have the file
             Log.d(TAG, "stream blobs.get end tmp file not found: $hash ${runningFileHandler.keys}")
         }
+
+
+
     }
 
     /**
@@ -224,13 +285,26 @@ class BlobService(
      * remove tmp file if error
      * @param hash the hash of the blob
      */
-    private fun onRPCResponseForBlobGetWithError(hash: String) {
+    private fun onRPCResponseForBlobGetWithError(author: String, hash: String) {
+        Log.e(TAG, "stream blobs.get error: $hash")
+        // TODO split in a separate DRY function
+        serverHas.remove(hash)
+        val wants = runBlocking { blobRepository.getWants(author) }
+        for (key in serverHas.keys) {
+            if (wants.containsKey(key)) {
+                createBlobGetStream(author, key, serverHas[key])
+                break // limit to one blob at a time
+            }
+        }
+
+
         if (runningFileHandler.containsKey(hash)) {
             val tmpFile: File = runningFileHandler[hash]!!
             tmpFile.delete()
             runningFileHandler.remove(hash)
             Log.e(TAG, "stream blobs.get error: $hash, tmp file removed")
         }
+
     }
 
 
@@ -252,10 +326,15 @@ class BlobService(
                 tmpFile.createNewFile()
             }
             runningFileHandler[hash] = tmpFile
+
         }
         contentResolver.openOutputStream(tmpFile.toUri(),"wa")?.use {
             it.write(message.body().toArrayUnsafe())
+
         }
+        blobDownStatus[hash] = tmpFile.length()
+        _uiState.update { it.copy(blobDown = HashMap(blobDownStatus)) }
+        Log.d(TAG, "< $hash: ${tmpFile.length()}")
     }
 
 
@@ -273,41 +352,43 @@ class BlobService(
             RPCFlag.Stream.STREAM
         )
         multiplexer.sendBytes(response)
+        createWantStream(clientId)
     }
 
     /**
      *  return file as stream of bytes if possible
      */
     private fun onRPCBlobsGet(rpcMessage: RPCMessage) {
+
         val rpcStreamRequest =
             rpcMessage.asJSON(SsbService.objectMapper, RPCBlobRequest::class.java)
         val key = rpcStreamRequest.key
-
         val blobItem = runBlocking(Dispatchers.IO){ blobRepository.getBlobItem(key) }
+
         if (blobItem != null) {
-            val file = blobItem.uri.toFile()
-            val size = file.length().toInt()
             var offset = 0
-            var oldRead = 0
-            var remaining = size
             try {
-                var buff = ByteArray(1230)
-                File(blobItem.uri.path).inputStream().buffered().use { input ->
+                var buff = ByteArray(BUFFER_SIZE)
+                File(blobItem.uri.path!!).inputStream().buffered().use { input ->
                     while (true) {
-                        val sz = input.read(buff)
-                        if (sz <= 0) break
-                        if (sz < 1230) {
-                            buff = buff.copyOfRange(0, sz)
+                        val sizeRead = input.read(buff)
+                        if (sizeRead <= 0) break
+                        if (sizeRead < BUFFER_SIZE) {
+                            buff = buff.copyOfRange(0, sizeRead)
                         }
-                        offset += sz
+                        offset += sizeRead
                         multiplexer.sendBlobSlice(rpcMessage.requestNumber(), Bytes.wrap(buff))
+                        blobUpStatus[key] = offset.toLong()
+                        _uiState.update { it.copy(blobUp = HashMap(blobUpStatus)) }
+                        Log.d(TAG, "> $key: $offset")
                     }
                 }
+                Log.d(TAG, "blob ended $key ${blobItem.size}")
+                multiplexer.sendEndBlob(rpcMessage.requestNumber())
             } catch (e: Exception) {
-                e.printStackTrace()
                 MainApplication.toastify(e.toString())
             } finally {
-                multiplexer.sendEndBlob(rpcMessage.requestNumber())
+
             }
         }
     }

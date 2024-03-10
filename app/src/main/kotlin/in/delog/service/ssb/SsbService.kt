@@ -18,10 +18,12 @@
 package `in`.delog.service.ssb
 
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import `in`.delog.MainApplication
 import `in`.delog.db.model.Ident
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.asKeyPair
 import `in`.delog.db.model.isOnion
 import `in`.delog.db.model.toCanonicalForm
@@ -30,39 +32,59 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.MessageRepository
 import io.vertx.core.Vertx
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.apache.tuweni.scuttlebutt.Invite
+import org.apache.tuweni.scuttlebutt.handshake.vertx.SecureScuttlebuttVertxClient
+import org.apache.tuweni.scuttlebutt.lib.BlobService
+import org.apache.tuweni.scuttlebutt.lib.FeedService
 import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClient
 import org.apache.tuweni.scuttlebutt.lib.ScuttlebuttClientFactory
-import org.apache.tuweni.scuttlebutt.lib.SsbRequiredRepositories
 import org.apache.tuweni.scuttlebutt.rpc.RPCAsyncRequest
 import org.apache.tuweni.scuttlebutt.rpc.RPCFunction
 import org.apache.tuweni.scuttlebutt.rpc.RPCMessage
 import org.apache.tuweni.scuttlebutt.rpc.RPCRequestBody
 import org.apache.tuweni.scuttlebutt.rpc.RPCResponse
+import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
 
+
+@Immutable
+data class SsbUIState(
+    val identAndAbout: IdentAndAboutWithBlob? = null,
+    val loaded: Boolean = false,
+    val syncing: Boolean = false,
+    val error: Exception? = null,
+    val blobSize: HashMap<String,Long> = HashMap(),
+    val blobDown: HashMap<String,Long> = HashMap(),
+    val blobUp: HashMap<String,Long> = HashMap()
+)
 
 class SsbService(
     private val messageRepository: MessageRepository,
-    aboutRepository: AboutRepository,
+    private val aboutRepository: AboutRepository,
     private val contactRepository: ContactRepository,
-    blobRepository: BlobRepository,
-    private val torService: TorService
+    private val blobRepository: BlobRepository
 ) {
 
-    val vertx: Vertx = Vertx.vertx()
-    private var feed: Ident? = null
-    private var ssbClient: ScuttlebuttClient? = null
 
-    private val ssbRequiredRepositories = SsbRequiredRepositories(
-        messageRepository,
-        aboutRepository,
-        blobRepository
-    )
+    private var blobService: BlobService? =null
+    private var feedService: FeedService? = null
+    private var connectedIdent: Ident? = null
+    lateinit var callBack: () -> Unit
+    lateinit var vertx: Vertx
+    private var rpcHandler: RPCHandler? = null
+    var secureScuttlebuttVertxClient: SecureScuttlebuttVertxClient? = null
+
+    private val _uiState = MutableStateFlow(SsbUIState())
+    val uiState: StateFlow<SsbUIState> = _uiState.asStateFlow()
+
 
     companion object {
+        const val MAX_RETRY = 5
         val objectMapper = jacksonObjectMapper()
         const val TAG: String = "dlog-ssb-service"
 
@@ -74,58 +96,130 @@ class SsbService(
         }
     }
 
-
-    suspend fun reconnect(scope: CoroutineScope, ident: Ident) {
-        feed = ident
-        if (ident.isOnion()) {
-            torService.start()
-        }
+    suspend fun synchronize(pFeed: Ident) {
         try {
-            ssbClient?.rpcHandler?.close()
-            ssbRequiredRepositories.scope = scope
-            ssbClient = ScuttlebuttClientFactory.fromFeedWithVertx(
-                vertx,
-                ident,
-                ssbRequiredRepositories,
-                ::onRPC
-            )
+            reconnect(pFeed)
         } catch (e: Exception) {
-            MainApplication.toastify(e.message ?: "error connecting to server")
-            return
+            _uiState.update { it.copy(error = e, syncing = false) }
+            MainApplication.toastify("${e.message}")
         }
-        onConnected()
     }
 
+    private suspend fun reconnect(pFeed: Ident) {
+        Log.i(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
+
+        if (connectedIdent != null && secureScuttlebuttVertxClient!=null) {
+            Log.d(TAG, "disconnecting from %s@%s".format(connectedIdent!!.server, connectedIdent!!.publicKey))
+            secureScuttlebuttVertxClient!!.stop().join()
+            connectedIdent = null
+            secureScuttlebuttVertxClient = null
+        }
+
+        _uiState.update { it.copy(syncing = true, error=null) }
+        if (pFeed.isOnion()) {
+            MainApplication.getTorService().start()
+            for (i in 0..20) {
+                if (MainApplication.getTorService().status.value != 1) {
+                    Thread.sleep(500)
+                    Log.d(TAG, "waiting for Tor service to be started ...")
+                    if (i>=20) return
+                } else {
+                    break
+                }
+            }
+        }
+
+        connect(pFeed, ::onConnected)
+    }
+
+
+    private suspend fun connect(
+        pFeed: Ident,
+        terminationFn: () -> Unit
+    ): RPCHandler? {
+        val keyPair = pFeed.asKeyPair()
+        if (keyPair == null || pFeed.server.isEmpty()) {
+            Log.w(TAG, "attempting to connect but no identity")
+            return null
+        }
+        callBack = terminationFn
+        vertx  = Vertx.vertx()
+        secureScuttlebuttVertxClient =
+            SecureScuttlebuttVertxClient(vertx, keyPair, ScuttlebuttClientFactory.DEFAULT_NETWORK)
+        for (i in 0..MAX_RETRY) {
+            try {
+                if (pFeed.invite == null) {
+                    Log.e("ssb", "attempting to connect but no invite !")
+                    return null
+                }
+                rpcHandler = makeRPCHandler(pFeed)
+                blobService= BlobService(rpcHandler!!, blobRepository, _uiState)
+                return rpcHandler
+            } catch (e: Exception) {
+                println(e)
+                Thread.sleep(1000 * i.toLong())
+                if (i >= MAX_RETRY) throw e
+            }
+        }
+
+        return null
+    }
+
+    @Throws(Exception::class)
+    private suspend fun makeRPCHandler(ident: Ident): RPCHandler {
+        val invite: Invite = Invite.fromCanonicalForm(ident.invite!!)
+        val remotePublicKey = invite.identity.ed25519PublicKey()
+        rpcHandler = secureScuttlebuttVertxClient
+            ?.connectTo(
+                ident.port,
+                ident.server,
+                remotePublicKey,
+                null
+            ) { sender, terminationFn ->
+                RPCHandler(
+                    vertx,
+                    sender,
+                    terminationFn,
+                    ::onRPC,
+                )
+            } as RPCHandler
+
+        connectedIdent = ident
+        callBack()
+        return rpcHandler as RPCHandler
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
 
     /**
      *  application logic upon connection
      */
     private fun onConnected() {
-        if (feed == null || ssbClient == null) {
-            Log.d("ssb", "onConnected: feed $feed or client $ssbClient is null")
-            return
-        }
-        val feedCannonicalForm = feed!!.toCanonicalForm()
+        _uiState.update { it.copy(syncing = false) }
+        feedService = FeedService(rpcHandler!!, blobRepository, aboutRepository, messageRepository)
+        blobService = BlobService(rpcHandler!!, blobRepository, _uiState)
+        val feedCannonicalForm = connectedIdent!!.toCanonicalForm()
         try {
             // let's check @self for a backup or moved device
             var ourSequence = messageRepository.getLastSequence(feedCannonicalForm)
             // createHistoryStream
-            ssbClient!!.feedService.createHistoryStream(
+            feedService!!.createHistoryStream(
                 feedCannonicalForm,
                 ourSequence
             )
             // createWantStream
-            ssbClient!!.blobService.createWantStream(ssbClient!!.clientId)
-
             // let's call all of our friends
-//            contactRepository.geContacts(feedCannonicalForm).forEach {
-//                ourSequence = messageRepository.getLastSequence(it.follow)
-//                ssbClient?.feedService?.createHistoryStream(
-//                    it.follow,
-//                    ourSequence
-//                )
-//            }
+            contactRepository.geContacts(feedCannonicalForm).forEach {
+                ourSequence = messageRepository.getLastSequence(it.follow)
+                feedService?.createHistoryStream(
+                    it.follow,
+                    ourSequence
+                )
+            }
         } catch (e: Exception) {
+            _uiState.update { it.copy(syncing = false, error=e) }
             e.printStackTrace()
         }
     }
@@ -133,15 +227,14 @@ class SsbService(
     /**
      * Handle incoming RPC messages and route them accordingly
      */
-    private  fun onRPC(rpcMessage: RPCMessage) {
-        if (ssbClient == null) return
+    private fun onRPC(rpcMessage: RPCMessage) {
         try {
             val rpcStreamRequest =
                 rpcMessage.asJSON(jacksonObjectMapper(), RPCRequestBody::class.java)
             when (rpcStreamRequest.name.first()) {
-                "createHistoryStream" -> ssbClient!!.feedService.onCreateHistoryStream(rpcMessage)
-                "blobs" -> ssbClient?.blobService?.onBlobsRPC(
-                    ssbClient!!.clientId,
+                "createHistoryStream" -> feedService?.onCreateHistoryStream(rpcMessage)
+                "blobs" -> blobService?.onBlobsRPC(
+                    connectedIdent!!.publicKey,
                     rpcStreamRequest,
                     rpcMessage
                 )
@@ -162,32 +255,31 @@ class SsbService(
         callBack: (RPCResponse) -> Unit,
         errorCb: ((Exception) -> Unit)?
     ) {
-        Log.d(TAG, "redeem invite %s %s".format(feed.server, feed.publicKey))
-        if (feed.isOnion()) {
-            torService.start()
-        }
+        _uiState.update { it.copy(error = null, syncing = true) }
         try {
             if (feed.invite == null) {
                 throw Exception("attempting to connect with invite but no invite !")
             }
             val inviteString = feed.invite!!
             val invite: Invite = Invite.fromCanonicalForm(inviteString)
-
-            val ssbClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
+            val vertx: Vertx = Vertx.vertx()
+            val ssbInviteClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
                 feed.toCanonicalForm(),
                 vertx,
                 feed.asKeyPair()!!,
                 invite,
-                ScuttlebuttClientFactory.DEFAULT_NETWORK,
-                ssbRequiredRepositories
+                ScuttlebuttClientFactory.DEFAULT_NETWORK
             )
 
             val params = HashMap<String, String>()
             params["feed"] = feed.publicKey
             val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
-            val rpcMessageAsyncResult = ssbClient.rawRequestService.makeAsyncRequest(asyncRequest)
+            val rpcMessageAsyncResult =
+                ssbInviteClient.rawRequestService.makeAsyncRequest(asyncRequest)
+            _uiState.update { it.copy(error = null, syncing = false) }
             callBack(rpcMessageAsyncResult)
         } catch (ex: Exception) {
+            _uiState.update { it.copy(error = ex, syncing = false) }
             if (errorCb != null) {
                 errorCb(ex)
             } else {

@@ -3,14 +3,13 @@ package `in`.delog.service.ssb
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import `in`.delog.MainApplication
 import io.matthewnelson.kmp.tor.controller.common.events.TorEvent
 import io.matthewnelson.kmp.tor.manager.common.event.TorManagerEvent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.net.InetSocketAddress
 
 class TorListener : TorManagerEvent.Listener() {
+    private val _status: MutableLiveData<Int> = MutableLiveData(0)
+    val status: LiveData<Int> = _status
     private val _eventLines: MutableLiveData<String> = MutableLiveData("")
     val eventLines: LiveData<String> = _eventLines
     private val events: MutableList<String> = ArrayList(50)
@@ -44,19 +43,20 @@ class TorListener : TorManagerEvent.Listener() {
 
         // these events are many many many lines and should be moved
         // off the main thread if ever needed to be dealt with.
-        MainApplication.getTorScope().launch(Dispatchers.IO) {
-            Log.d("TorListener", "-------------- multi-line event START: $event --------------")
+        //MainApplication.getTorScope().launch(Dispatchers.IO) {
+            //Log.d("TorListener", "-------------- multi-line event START: $event --------------")
             for (line in output) {
                 Log.d("TorListener", line)
             }
-            Log.d("TorListener", "--------------- multi-line event END: $event ---------------")
-        }
+            //Log.d("TorListener", "--------------- multi-line event END: $event ---------------")
+        //}
 
         super.onEvent(event, output)
     }
 
     override fun managerEventError(t: Throwable) {
         t.printStackTrace()
+        _status.value = -2
     }
 
     override fun managerEventAddressInfo(info: TorManagerEvent.AddressInfo) {
@@ -75,6 +75,7 @@ class TorListener : TorManagerEvent.Listener() {
     override fun managerEventStartUpCompleteForTorInstance() {
         // Do one-time things after we're bootstrapped
         Log.d("TorListener", "Event StartUp Complete For Tor Instance")
+        _status.value = 1
 
     }
 }

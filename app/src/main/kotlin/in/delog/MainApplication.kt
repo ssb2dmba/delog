@@ -29,10 +29,8 @@ import `in`.delog.di.modules.dataBaseModule
 import `in`.delog.di.modules.mainViewModel
 import `in`.delog.di.modules.ssbModule
 import `in`.delog.libsodium.NaCl
+import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.component.preview.videos.VideoCache
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -40,10 +38,11 @@ import org.koin.core.logger.Level
 
 class MainApplication : Application() {
 
-    val applicationScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    lateinit var torService: TorService
     val context = this
     override fun onCreate() {
         super.onCreate()
+        torService = TorService(this)
         NaCl.sodium()
         startKoin {
             androidLogger(Level.ERROR)
@@ -68,8 +67,9 @@ class MainApplication : Application() {
             return instance!!.applicationContext
         }
 
-        fun getTorScope(): CoroutineScope {
-            return instance!!.applicationScope
+
+        fun getTorService(): TorService {
+            return instance!!.torService
         }
 
         fun toastify(message: String) {
@@ -90,7 +90,7 @@ class MainApplication : Application() {
 
 }
 
-class GetMediaActivityResultContract : ActivityResultContracts.GetContent() {
+class GetMediaActivityResultContract : ActivityResultContracts.GetMultipleContents() {
     @SuppressLint("MissingSuperCall")
     override fun createIntent(
             context: Context,
@@ -103,6 +103,7 @@ class GetMediaActivityResultContract : ActivityResultContracts.GetContent() {
             // Force only images and videos to be selectable
             type = input
             putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(input))
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         }
     }
 }

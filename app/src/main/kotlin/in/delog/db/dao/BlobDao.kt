@@ -28,16 +28,16 @@ import `in`.delog.db.model.Blob
 interface BlobDao {
 
     @Delete
-    fun delete(blob: Blob)
+    suspend fun delete(blob: Blob)
 
     @Insert
-    fun insert(blob: Blob)
+    suspend fun insert(blob: Blob)
 
     @Update
-    fun update(blob: Blob)
+    suspend fun update(blob: Blob)
 
 
-    @Query("SELECT * FROM blob WHERE `key` = :key")
+    @Query("SELECT * FROM blob WHERE `key` = :key limit 1")
     suspend fun get(key: String): Blob?
 
     @Query("SELECT * FROM blob WHERE `author` = :author and `has` = 0")

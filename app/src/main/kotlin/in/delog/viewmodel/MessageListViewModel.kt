@@ -17,8 +17,8 @@
  */
 package `in`.delog.viewmodel
 
-
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -26,6 +26,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import `in`.delog.MainApplication
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
@@ -38,7 +39,7 @@ import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,38 +51,38 @@ import kotlinx.coroutines.launch
 @Immutable
 data class FeedMainUIState(
     val messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null,
-    val identAndAbout: IdentAndAboutWithBlob? = null,
-    val loaded: Boolean = false,
-    val syncing: Boolean = false,
-    val error: Exception? = null
+    val identAndAbout: IdentAndAboutWithBlob? = null
 )
 
 class MessageListViewModel(
     private var key: String,
+    private val ssbService: SsbService,
     private val messageTreeRepository: MessageTreeRepository,
     private val identRepository: IdentRepository,
     private val messageRepository: MessageRepository,
-    private val ssbService: SsbService,
     private val blobRepository: BlobRepository
-) : ViewModel() {
+    ) : ViewModel() {
+
+
+
+    private lateinit var torStatus: LiveData<Int>
 
     private val _uiState = MutableStateFlow(FeedMainUIState())
     val uiState: StateFlow<FeedMainUIState> = _uiState.asStateFlow()
-
     var messagesPaged: Flow<PagingData<MessageViewData>>? = null
 
-    fun clearError() {
-        viewModelScope.launch {
-            delay(1000)
-            _uiState.update { it.copy(error = null) }
+
+    private fun synchronize() {
+        // we launch in global scope so the service still working if the viewmodel is destroyed
+        GlobalScope.launch(Dispatchers.IO) {
+            if (_uiState.value.identAndAbout==null) return@launch
+            torStatus = MainApplication.getTorService().status
+            ssbService.synchronize( _uiState.value.identAndAbout!!.ident)
         }
     }
 
-    private fun synchronize() {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (_uiState.value.identAndAbout==null) return@launch
-            ssbService.reconnect(this, _uiState.value.identAndAbout!!.ident)
-        }
+    fun clearError() {
+        ssbService.clearError()
     }
 
 
@@ -119,7 +120,7 @@ class MessageListViewModel(
                         msgAndAbout.toMessageViewData(format, blobRepository)
                     }
                 }.cachedIn(viewModelScope)
-            _uiState.update { it.copy(loaded = true) }
+            //_ssbUIState.update { it.copy(loaded = true) }
         }
     }
 }

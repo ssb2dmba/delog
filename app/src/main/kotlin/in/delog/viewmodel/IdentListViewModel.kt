@@ -21,6 +21,7 @@ package `in`.delog.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
@@ -62,7 +63,7 @@ class IdentListViewModel(
         }
     }
     private fun redeemInvite(ident: Ident) {
-        GlobalScope.launch {
+        viewModelScope.launch {
             ssbService.connectWithInvite(ident,
                 {
                     // everything is going according to the plan
@@ -76,7 +77,7 @@ class IdentListViewModel(
     }
 
     fun setFeedAsDefaultFeed(ident: Ident) {
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.setFeedAsDefaultFeed(ident)
         }
     }

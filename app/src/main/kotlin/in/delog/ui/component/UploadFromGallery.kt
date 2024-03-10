@@ -100,8 +100,10 @@ fun GallerySelect(onImageUri: (Uri?) -> Unit = {}, mimeFilter: String = "*/*") {
     val launcher =
             rememberLauncherForActivityResult(
                     contract = GetMediaActivityResultContract(),
-                    onResult = { uri: Uri? ->
-                        onImageUri(uri)
+                    onResult = { uris: List<@JvmSuppressWildcards Uri> ->
+                        for (uri in uris) {
+                            onImageUri(uri)
+                        }
                         hasLaunched.set(false)
                     },
             )

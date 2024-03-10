@@ -70,8 +70,8 @@ val mainViewModel = module {
     single { AboutRepositoryImpl(get()) }
     factory<AboutRepository> { (AboutRepositoryImpl(get())) }
 
-    single { DidRepositoryImpl(get()) }
-    factory<DidRepository> { (DidRepositoryImpl(get())) }
+    single { DidRepositoryImpl() }
+    factory<DidRepository> { (DidRepositoryImpl()) }
 
     viewModel { params -> DraftViewModel(params[0], params[1], params[2], params[3], get(), get(), get()) }
     single { BottomBarViewModel() }

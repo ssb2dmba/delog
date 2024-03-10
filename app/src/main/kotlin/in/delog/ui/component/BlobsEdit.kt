@@ -99,7 +99,7 @@ fun BlobsEdit(blobs: Array<BlobItem>, action: (key: BlobItem) -> Unit, actionIco
                 IconButton(
                     modifier = Modifier
                         .size(30.dp)
-                        .padding(end = 5.dp),
+                        .padding(5.dp),
                     onClick = {
                         coroutineScope.launch {
                             listState.animateScrollToItem(blobs.size - 1)

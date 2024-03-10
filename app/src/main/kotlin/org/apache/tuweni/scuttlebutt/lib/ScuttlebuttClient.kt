@@ -16,6 +16,7 @@
  */
 package org.apache.tuweni.scuttlebutt.lib
 
+import org.apache.tuweni.scuttlebutt.handshake.vertx.SecureScuttlebuttVertxClient
 import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
 
 /**
@@ -29,30 +30,8 @@ import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
 class ScuttlebuttClient(
     val clientId: String,
     multiplexer: RPCHandler,
-    ssbRequiredRepositories: SsbRequiredRepositories
+    secureScuttlebuttVertxClient: SecureScuttlebuttVertxClient
 ) {
-
-    private val aboutRepository = ssbRequiredRepositories.aboutRepository
-
-    private val feedRepository = ssbRequiredRepositories.feedRepository
-
-    private val blobRepository = ssbRequiredRepositories.blobRepository
-
-    val rpcHandler = multiplexer
-
-    /**
-     * Provides a service for operations that concern scuttlebutt feeds.
-     *
-     * @return a service for operations that concern scuttlebutt feeds
-     */
-    val feedService = FeedService(multiplexer, blobRepository, aboutRepository, feedRepository)
-
-    /**
-     * Provides a service for operations that connect nodes together.
-     *
-     * @return a service for operations that connect nodes together
-     */
-    val blobService = BlobService(multiplexer, blobRepository)
 
     /**
      * Provides a service for making lower level requests that are not supported by higher level services.

@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ListSpacer() {
-    Row(modifier=Modifier.padding(horizontal = 50.dp)) {
+    Row(modifier=Modifier.padding(horizontal = 0.dp)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
