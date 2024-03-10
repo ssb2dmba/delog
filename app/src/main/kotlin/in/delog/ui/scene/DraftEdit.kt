@@ -17,6 +17,7 @@
  */
 package `in`.delog.ui.scene
 
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.border
@@ -111,6 +112,15 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
     if (messageViewData == null) {
         return
     }
+//    val toImport by  draftViewModel.sharedContentState.observeAsState(arrayListOf<Uri>())
+//
+//        for (toImportUri in toImport) {
+//            draftViewModel.selectImage(toImportUri)
+//        }
+
+
+
+
     val isKeyboardOpen by keyboardAsState() // true or false
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     var dirtyStatus by remember { mutableStateOf(true) }

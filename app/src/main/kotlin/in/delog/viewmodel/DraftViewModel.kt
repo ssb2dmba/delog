@@ -17,12 +17,17 @@
  */
 package `in`.delog.viewmodel
 
+import android.content.Intent
 import android.net.Uri
+import android.os.Parcelable
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import `in`.delog.MainApplication
 import `in`.delog.db.model.About
 import `in`.delog.db.model.Draft
@@ -43,8 +48,11 @@ import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -64,7 +72,8 @@ class DraftViewModel(
     private var linkKey: String?,
     private val messageRepository: MessageRepository,
     private val draftRepository: DraftRepository,
-    private val blobRepository: BlobRepository
+    private val blobRepository: BlobRepository,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _messageViewData = MutableStateFlow(MessageViewData.empty(feed.publicKey))
@@ -74,6 +83,15 @@ class DraftViewModel(
     val link: StateFlow<MessageAndAbout?> = _link.asStateFlow()
 
     var isLoadingImage by mutableStateOf(false)
+
+
+    val b = savedStateHandle.getLiveData<Intent>(NavController.KEY_DEEP_LINK_INTENT).observeForever {
+        Log.i("deeplink", "init deep link" + it)
+        val a = it.parseSharedContent()
+        a.forEach { uri ->
+            selectImage(uri)
+        }
+    }
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -98,6 +116,9 @@ class DraftViewModel(
                 }
                 putParentInContentAsText()
             }
+
+
+
         }
     }
 
@@ -277,4 +298,24 @@ fun SsbSignableMessage.Companion.fromAbout(about: About): SsbSignableMessage {
         timestamp = System.currentTimeMillis(),
         hash = ""
     )
+}
+
+
+fun Intent.parseSharedContent(): ArrayList<Uri> {
+    if (action == Intent.ACTION_SEND) {
+            return arrayListOf<Uri>(getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as Uri)
+    } else if (action == Intent.ACTION_SEND_MULTIPLE) {
+        // Handle multiple images being sent
+        getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)?.let {
+            return it.filterIsInstance<Uri>() as ArrayList<Uri>
+        }
+    }
+    return arrayListOf()
+}
+
+
+data class SharedContent(val content: String?, val type: String?) {
+    companion object {
+        val EMPTY = SharedContent(null, null)
+    }
 }

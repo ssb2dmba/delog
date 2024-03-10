@@ -17,12 +17,15 @@
  */
 package `in`.delog.ui.navigation
 
+import android.content.Intent
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.scene.AboutEdit
 import `in`.delog.ui.scene.ContactList
@@ -44,7 +47,24 @@ fun NavGraph(navController: NavHostController) {
         startDestination = Scenes.MainFeed.route
     )
     {
+        composable(
+            route = "share_target_route",
+            deepLinks = listOf(
+                navDeepLink {
+                    action = Intent.ACTION_SEND
+                    mimeType = "image/*"
+                },
+                navDeepLink {
+                    action = Intent.ACTION_SEND_MULTIPLE
+                    mimeType = "image/*"
+                },
 
+
+                )
+        ) {
+            Log.i("NavGraph", "share_target_route")
+            DraftEdit(navController = navController, draftMode ="post",  draftId = 0L, link= "")
+        }
         composable(
             route = Scenes.MainFeed.route + "/{" + LINK + "}",
             arguments = listOf(navArgument(LINK) { type = NavType.StringType })
@@ -52,6 +72,10 @@ fun NavGraph(navController: NavHostController) {
             backStackEntry.arguments?.getString(LINK)
                 ?.let { MessagesList(navController, it) }
         }
+
+
+
+
         composable(route = Scenes.MainFeed.route) {
             LocalActiveFeed.current?.ident?.publicKey?.let { it1 ->
                 MessagesList(
