@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.scene
 
-import org.koin.android.ext.android.get
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,12 +35,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -58,7 +55,6 @@ import `in`.delog.R
 import `in`.delog.model.MessageViewData
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbUIState
-import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.GoToTop
@@ -73,11 +69,9 @@ import `in`.delog.viewmodel.FeedMainUIState
 import `in`.delog.viewmodel.MessageListViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.get
+import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import org.koin.android.ext.android.get
-import org.koin.androidx.compose.get
 
 
 @Composable

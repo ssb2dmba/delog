@@ -19,11 +19,9 @@ package `in`.delog.service.ssb
 
 import android.util.Log
 import androidx.compose.runtime.Immutable
-import androidx.paging.PagingData
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import `in`.delog.MainApplication
-import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.asKeyPair
@@ -33,9 +31,7 @@ import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.MessageRepository
-import `in`.delog.viewmodel.FeedMainUIState
 import io.vertx.core.Vertx
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -83,13 +79,9 @@ class SsbService(
     private var rpcHandler: RPCHandler? = null
     var secureScuttlebuttVertxClient: SecureScuttlebuttVertxClient? = null
 
-    val _uiState = MutableStateFlow(SsbUIState())
+    private val _uiState = MutableStateFlow(SsbUIState())
     val uiState: StateFlow<SsbUIState> = _uiState.asStateFlow()
 
-    init {
-        Log.i(TAG, "init ssb service")
-
-    }
 
     companion object {
         const val MAX_RETRY = 5
@@ -115,10 +107,17 @@ class SsbService(
 
     private suspend fun reconnect(pFeed: Ident) {
         Log.i(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
-        _uiState.update { it.copy(syncing = true) }
+
+        if (connectedIdent != null && secureScuttlebuttVertxClient!=null) {
+            Log.d(TAG, "disconnecting from %s@%s".format(connectedIdent!!.server, connectedIdent!!.publicKey))
+            secureScuttlebuttVertxClient!!.stop().join()
+            connectedIdent = null
+            secureScuttlebuttVertxClient = null
+        }
+
+        _uiState.update { it.copy(syncing = true, error=null) }
         if (pFeed.isOnion()) {
-            MainApplication.getTorService().start() // will do nothing if started
-            //torService.start() // will do nothing if started
+            MainApplication.getTorService().start()
             for (i in 0..20) {
                 if (MainApplication.getTorService().status.value != 1) {
                     Thread.sleep(500)
@@ -129,12 +128,7 @@ class SsbService(
                 }
             }
         }
-        if (connectedIdent != null && secureScuttlebuttVertxClient!=null) {
-            Log.d(TAG, "disconnecting from %s@%s".format(connectedIdent!!.server, connectedIdent!!.publicKey))
-            secureScuttlebuttVertxClient!!.stop().join()
-            connectedIdent = null
-            secureScuttlebuttVertxClient = null
-        }
+
         connect(pFeed, ::onConnected)
     }
 
@@ -159,7 +153,7 @@ class SsbService(
                     return null
                 }
                 rpcHandler = makeRPCHandler(pFeed)
-                blobService= BlobService(rpcHandler!!, blobRepository, _uiState!!)
+                blobService= BlobService(rpcHandler!!, blobRepository, _uiState)
                 return rpcHandler
             } catch (e: Exception) {
                 println(e)
@@ -195,6 +189,9 @@ class SsbService(
         return rpcHandler as RPCHandler
     }
 
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
 
     /**
      *  application logic upon connection
@@ -202,7 +199,7 @@ class SsbService(
     private fun onConnected() {
         _uiState.update { it.copy(syncing = false) }
         feedService = FeedService(rpcHandler!!, blobRepository, aboutRepository, messageRepository)
-        blobService = BlobService(rpcHandler!!, blobRepository, _uiState!!)
+        blobService = BlobService(rpcHandler!!, blobRepository, _uiState)
         val feedCannonicalForm = connectedIdent!!.toCanonicalForm()
         try {
             // let's check @self for a backup or moved device
@@ -222,6 +219,7 @@ class SsbService(
                 )
             }
         } catch (e: Exception) {
+            _uiState.update { it.copy(syncing = false, error=e) }
             e.printStackTrace()
         }
     }
@@ -257,6 +255,7 @@ class SsbService(
         callBack: (RPCResponse) -> Unit,
         errorCb: ((Exception) -> Unit)?
     ) {
+        _uiState.update { it.copy(error = null, syncing = true) }
         try {
             if (feed.invite == null) {
                 throw Exception("attempting to connect with invite but no invite !")
@@ -277,8 +276,10 @@ class SsbService(
             val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
             val rpcMessageAsyncResult =
                 ssbInviteClient.rawRequestService.makeAsyncRequest(asyncRequest)
+            _uiState.update { it.copy(error = null, syncing = false) }
             callBack(rpcMessageAsyncResult)
         } catch (ex: Exception) {
+            _uiState.update { it.copy(error = ex, syncing = false) }
             if (errorCb != null) {
                 errorCb(ex)
             } else {

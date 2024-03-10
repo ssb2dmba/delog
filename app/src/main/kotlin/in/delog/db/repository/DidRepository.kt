@@ -30,7 +30,6 @@ class DidRepositoryImpl() : DidRepository {
         val textResponse: String = withContext(Dispatchers.Default) {
             try {
                 if (identAndAbout.ident.isOnion()) {
-                    //torService.start()
                     val conn = URL(url).openConnection(HttpClient.getTorProxy())
                     conn.getInputStream().buffered().reader().use { it.readText() }
                 } else {

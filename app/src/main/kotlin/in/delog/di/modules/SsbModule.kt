@@ -24,5 +24,5 @@ import org.koin.dsl.module
 val ssbModule = module {
 
     single { SsbService(get(), get(), get(), get()) }
-    //single { TorService() }
+
 }

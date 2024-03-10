@@ -37,7 +37,6 @@ import `in`.delog.model.SsbSignableMessage
 import `in`.delog.model.SsbSignedMessage
 import `in`.delog.repository.DidRepository
 import `in`.delog.service.ssb.SsbService
-import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,8 +65,7 @@ class IdentAndAboutViewModel(
     private val messageRepository: MessageRepository,
     private val didRepository: DidRepository,
     private val blobRepository: BlobRepository,
-    private val contactRepository: ContactRepository,
-    private val torService: TorService
+    private val contactRepository: ContactRepository
 ) : ViewModel() {
 
     private var _uiState: MutableStateFlow<AboutUIState?> = MutableStateFlow(null)
@@ -118,7 +116,7 @@ class IdentAndAboutViewModel(
     }
 
     fun redeemInvite(ident: Ident) {
-        GlobalScope.launch {
+        viewModelScope.launch {
             var ssbService = SsbService(
                 messageRepository,
                 aboutRepository,

@@ -1,6 +1,7 @@
 package `in`.delog.ui.component
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,6 +17,7 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import `in`.delog.db.model.IdentAndAboutWithBlob
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 
 
 @Composable
@@ -31,8 +33,9 @@ fun ProfileImage(identAndAboutWithBlob: IdentAndAboutWithBlob?, authorImage: Str
             .data(authorImage)
             .build()
     } else {
-        model = "https://robohash.org/${identAndAboutWithBlob?.about}.png"
+        model = "https://robohash.org/${identAndAboutWithBlob?.ident?.publicKey}.png"
     }
+
 
     AsyncImage(
         model = model,

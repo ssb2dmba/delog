@@ -3,11 +3,8 @@ package `in`.delog.service.ssb
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import `in`.delog.MainApplication
 import io.matthewnelson.kmp.tor.controller.common.events.TorEvent
 import io.matthewnelson.kmp.tor.manager.common.event.TorManagerEvent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.net.InetSocketAddress
 
 class TorListener : TorManagerEvent.Listener() {
@@ -23,7 +20,7 @@ class TorListener : TorManagerEvent.Listener() {
                 events.removeAt(0)
             }
             events.add(line)
-            //Log.d("TorListener", line)
+            Log.d("TorListener", line)
             _eventLines.value = events.joinToString("\n")
         }
     }
@@ -49,7 +46,7 @@ class TorListener : TorManagerEvent.Listener() {
         //MainApplication.getTorScope().launch(Dispatchers.IO) {
             //Log.d("TorListener", "-------------- multi-line event START: $event --------------")
             for (line in output) {
-                //Log.d("TorListener", line)
+                Log.d("TorListener", line)
             }
             //Log.d("TorListener", "--------------- multi-line event END: $event ---------------")
         //}

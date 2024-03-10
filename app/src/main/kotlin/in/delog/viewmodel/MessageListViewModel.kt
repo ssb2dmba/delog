@@ -17,7 +17,6 @@
  */
 package `in`.delog.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
@@ -31,9 +30,7 @@ import `in`.delog.MainApplication
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
-import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
-import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.db.repository.MessageTreeRepository
@@ -41,11 +38,8 @@ import `in`.delog.model.MessageViewData
 import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.format
-import `in`.delog.service.ssb.SsbUIState
-import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,18 +47,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
 
 @Immutable
 data class FeedMainUIState(
     val messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null,
-    val identAndAbout: IdentAndAboutWithBlob? = null,
-//    val loaded: Boolean = false,
-//    val syncing: Boolean = false,
-//    val error: Exception? = null,
-//    val blobSize: HashMap<String,Long> = HashMap(),
-//    val blobDown: HashMap<String,Long> = HashMap(),
-//    val blobUp: HashMap<String,Long> = HashMap()
+    val identAndAbout: IdentAndAboutWithBlob? = null
 )
 
 class MessageListViewModel(
@@ -73,9 +60,7 @@ class MessageListViewModel(
     private val messageTreeRepository: MessageTreeRepository,
     private val identRepository: IdentRepository,
     private val messageRepository: MessageRepository,
-    private val blobRepository: BlobRepository,
-    private val aboutRepository: AboutRepository,
-    private val contactRepository: ContactRepository
+    private val blobRepository: BlobRepository
     ) : ViewModel() {
 
 
@@ -84,32 +69,24 @@ class MessageListViewModel(
 
     private val _uiState = MutableStateFlow(FeedMainUIState())
     val uiState: StateFlow<FeedMainUIState> = _uiState.asStateFlow()
-    //lateinit var _ssbUIState:  MutableStateFlow<SsbUIState>
     var messagesPaged: Flow<PagingData<MessageViewData>>? = null
 
-    fun clearError() {
-//        viewModelScope.launch {
-//            delay(1000)
-//            _uiState.update { it.copy(error = null) }
-//        }
-    }
 
     private fun synchronize() {
-        // we launch in global scope so process continue even if viewmodel is cleared
+        // we launch in global scope so the service still working if the viewmodel is destroyed
         GlobalScope.launch(Dispatchers.IO) {
             if (_uiState.value.identAndAbout==null) return@launch
-            //_ssbUIState.update { it.copy(error = null, syncing = true) }
-            if (ssbService.secureScuttlebuttVertxClient!=null) {
-                ssbService.secureScuttlebuttVertxClient!!.stop().join()
-            }
             torStatus = MainApplication.getTorService().status
             ssbService.synchronize( _uiState.value.identAndAbout!!.ident)
         }
     }
 
+    fun clearError() {
+        ssbService.clearError()
+    }
+
 
     init {
-        //_ssbUIState = ssbService._uiState
         viewModelScope.launch(Dispatchers.IO) {
             if (key.startsWith("%")) {
                 val m: Message? = messageRepository.getMessage(key)

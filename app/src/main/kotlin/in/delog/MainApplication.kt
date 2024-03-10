@@ -31,9 +31,6 @@ import `in`.delog.di.modules.ssbModule
 import `in`.delog.libsodium.NaCl
 import `in`.delog.service.ssb.TorService
 import `in`.delog.ui.component.preview.videos.VideoCache
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -106,7 +103,7 @@ class GetMediaActivityResultContract : ActivityResultContracts.GetMultipleConten
             // Force only images and videos to be selectable
             type = input
             putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(input))
-            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         }
     }
 }
