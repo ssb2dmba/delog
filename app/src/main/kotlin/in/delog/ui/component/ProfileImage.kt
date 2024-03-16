@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,17 +22,19 @@ import `in`.delog.service.ssb.SsbService.Companion.TAG
 
 
 @Composable
-fun ProfileImage(identAndAboutWithBlob: IdentAndAboutWithBlob?, authorImage: String?=null) {
+fun ProfileImage(identAndAboutWithBlob: IdentAndAboutWithBlob?, authorImage: String?=null, pk: String? = null) {
     var model: Any
 
     if (identAndAboutWithBlob?.profileImage != null && identAndAboutWithBlob?.profileImage != Uri.EMPTY) {
         model = ImageRequest.Builder(LocalContext.current)
             .data(identAndAboutWithBlob.profileImage)
             .build()
-    } else if (authorImage != null) {
+    } else if (!authorImage.isNullOrEmpty()) {
         model = ImageRequest.Builder(LocalContext.current)
             .data(authorImage)
             .build()
+    } else if (pk!=null) {
+        model = "https://robohash.org/${pk}.png"
     } else {
         model = "https://robohash.org/${identAndAboutWithBlob?.ident?.publicKey}.png"
     }

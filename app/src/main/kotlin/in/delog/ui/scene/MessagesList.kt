@@ -113,7 +113,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
     val lazyMessageItems: LazyPagingItems<MessageViewData> =
         fpgMessages.collectAsLazyPagingItems()
     Column {
-        if (ssbUiState.syncing) {
+        if (ssbUiState.connecting) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
         for (r in ssbUiState.blobUp.keys) {
@@ -141,6 +141,25 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
 
     Box {
         var previousRoot: String? = null
+
+        if (lazyMessageItems.itemCount == 0) {
+            // TODO DRY it with Identity Box with Card
+            Card(
+                colors = CardDefaults.cardColors(),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .wrapContentHeight()
+            ) {
+                IdentityBox(
+                    identAndAboutWithBlob = uiState.identAndAbout!!,
+                    short = true,
+                )
+            }
+            AppEmptyList()
+            return
+        }
+
         LazyColumn(
             state = scrollState,
             modifier = Modifier
@@ -150,9 +169,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
             items(
                 count = lazyMessageItems.itemCount,
             ) { index ->
-                if (lazyMessageItems.itemCount == 0) {
-                    AppEmptyList()
-                }
+
 
                 if (index == 0) {
                     Card(
@@ -239,7 +256,11 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
 fun NewDraftFab(navController: NavController) {
     BottomBarMainButton(
         onClick = {
-            navController.navigate(Scenes.DraftNew.route + "/post")
+            navController.navigate(Scenes.DraftNew.route + "/post") {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
         },
         text = stringResource(id = R.string.compose)
     )

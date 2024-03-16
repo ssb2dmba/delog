@@ -65,7 +65,8 @@ class IdentAndAboutViewModel(
     private val messageRepository: MessageRepository,
     private val didRepository: DidRepository,
     private val blobRepository: BlobRepository,
-    private val contactRepository: ContactRepository
+    private val contactRepository: ContactRepository,
+    private val ssbService: SsbService
 ) : ViewModel() {
 
     private var _uiState: MutableStateFlow<AboutUIState?> = MutableStateFlow(null)
@@ -117,12 +118,7 @@ class IdentAndAboutViewModel(
 
     fun redeemInvite(ident: Ident) {
         viewModelScope.launch {
-            var ssbService = SsbService(
-                messageRepository,
-                aboutRepository,
-                contactRepository,
-                blobRepository
-            )
+
             ssbService.connectWithInvite(ident,
                 {
                     // everything is going according to the plan

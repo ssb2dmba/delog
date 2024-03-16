@@ -28,7 +28,6 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbUIState
-import `in`.delog.viewmodel.FeedMainUIState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -80,7 +79,7 @@ class BlobService(
 
     private val runningFileHandler: MutableMap<String, File> = ConcurrentHashMap()
 
-    private var wantRequestNumber: Int? = null
+    private var serverWantRequestNumber: Int? = null
 
     val context = MainApplication.applicationContext()
 
@@ -122,6 +121,7 @@ class BlobService(
             object : ScuttlebuttStreamHandler {
 
                 override fun onMessage(requestNumber: Int, message: RPCResponse) {
+
                         val str = message.body().toArrayUnsafe()
                         val map = mapper.readValue<HashMap<String, Long>>(str)
                         onHasMessage(multiplexer,  author, map)
@@ -164,7 +164,7 @@ class BlobService(
         val responseString: String = JSONObject((serverWant as Map<String, Long>?)!!).toString()
         val response = RPCCodec.encodeResponse(
             Bytes.wrap(responseString.toByteArray()),
-             wantRequestNumber!!,
+             serverWantRequestNumber!!,
             RPCFlag.BodyType.JSON,
             RPCFlag.Stream.STREAM
         )
@@ -342,17 +342,18 @@ class BlobService(
      *  server asked us blob.createWants and we reply all blobs we need to get
      */
     private  fun onRPCBlobsCreateWants(clientId: String, rpcMessage: RPCMessage) {
-        wantRequestNumber = rpcMessage.requestNumber()
+        serverWantRequestNumber = rpcMessage.requestNumber()
         val wants = runBlocking(Dispatchers.IO) {  blobRepository.getWants(clientId) }
         val responseString: String = JSONObject((wants as Map<String, Long>?)!!).toString()
         val response = RPCCodec.encodeResponse(
             Bytes.wrap(responseString.toByteArray()),
-            wantRequestNumber!!,
+            serverWantRequestNumber!!,
             RPCFlag.BodyType.JSON,
             RPCFlag.Stream.STREAM
         )
         multiplexer.sendBytes(response)
         createWantStream(clientId)
+        multiplexer.endStream(serverWantRequestNumber!!)
     }
 
     /**

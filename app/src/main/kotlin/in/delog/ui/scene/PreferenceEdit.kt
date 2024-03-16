@@ -100,7 +100,14 @@ fun PreferencesEdit(navController: NavHostController) {
         )
         Spacer(modifier = Modifier.weight(1f))
         BottomBarMainButton(
-            onClick = { navController.navigate(Scenes.MainFeed.route) },
+            onClick = {
+                navController.navigate(Scenes.MainFeed.route){
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
+                }
+
+                      },
             text = "quit"
         )
     }

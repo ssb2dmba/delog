@@ -234,7 +234,11 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     if (redirect != null) {
         LaunchedEffect(key1 = Unit) {
             redirect.let {
-                navHostController.navigate(Scenes.FeedList.route)
+                navHostController.navigate(Scenes.FeedList.route) {
+                    popUpTo(navHostController.graph.startDestinationId) {
+                        inclusive = true
+                    }
+                }
             }
         }
         return
@@ -384,7 +388,11 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                 TextButton(
                     onClick = {
                         vm.cleanInvite(identAndAbout.ident)
-                        navHostController.navigate("${Scenes.FeedDetail.route}/${identAndAbout.ident.oid}")
+                        navHostController.navigate("${Scenes.FeedDetail.route}/${identAndAbout.ident.oid}") {
+                            popUpTo(navHostController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                        }
                     }
                 ) {
                     Text(text = "delete invite")

@@ -175,7 +175,7 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-tooling'
     implementation 'androidx.activity:activity-compose'
     //Koin
-    ext.koin_version = '3.3.0'
+    ext.koin_version = '3.4.0'
     implementation "io.insert-koin:koin-android:$koin_version"
     implementation "io.insert-koin:koin-androidx-compose:$koin_version"
     // live data + view model

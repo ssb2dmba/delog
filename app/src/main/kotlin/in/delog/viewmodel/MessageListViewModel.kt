@@ -76,7 +76,6 @@ class MessageListViewModel(
         // we launch in global scope so the service still working if the viewmodel is destroyed
         GlobalScope.launch(Dispatchers.IO) {
             if (_uiState.value.identAndAbout==null) return@launch
-            torStatus = MainApplication.getTorService().status
             ssbService.synchronize( _uiState.value.identAndAbout!!.ident)
         }
     }

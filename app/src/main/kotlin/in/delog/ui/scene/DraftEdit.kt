@@ -17,6 +17,7 @@
  */
 package `in`.delog.ui.scene
 
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.border
@@ -111,6 +112,15 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
     if (messageViewData == null) {
         return
     }
+//    val toImport by  draftViewModel.sharedContentState.observeAsState(arrayListOf<Uri>())
+//
+//        for (toImportUri in toImport) {
+//            draftViewModel.selectImage(toImportUri)
+//        }
+
+
+
+
     val isKeyboardOpen by keyboardAsState() // true or false
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     var dirtyStatus by remember { mutableStateOf(true) }
@@ -409,7 +419,11 @@ fun DraftPublishDialog(navHostController: NavHostController, viewModel: DraftVie
                                 viewModel.feed
                             )
                         }
-                        navHostController.navigate(Scenes.MainFeed.route)
+                        navHostController.navigate(Scenes.MainFeed.route) {
+                            popUpTo(navHostController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                        }
                     }
             )
         }
@@ -456,7 +470,7 @@ fun DraftConfirmDeleteDialog(navHostController: NavHostController, viewModel: Dr
                         viewModel.onDeleteDialogDismiss()
                         viewModel.messageViewData.let { viewModel.delete(it.value) }
                         navHostController.navigate(Scenes.DraftList.route) {
-                            popUpTo(Scenes.FeedDetail.route) {
+                            popUpTo(navHostController.graph.startDestinationId) {
                                 inclusive = true
                             }
                         }

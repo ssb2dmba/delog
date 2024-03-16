@@ -54,7 +54,7 @@ val mainViewModel = module {
     single { FeedRepositoryImpl(get(), get(), get()) }
     factory<IdentRepository> { (FeedRepositoryImpl(get(), get(), get())) }
     single { IdentListViewModel(get(), get()) }
-    viewModel { IdentAndAboutViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { IdentAndAboutViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     single { MessageRepositoryImpl(get()) }
     factory<MessageRepository> { (MessageRepositoryImpl(get())) }
     factory<MessageTreeRepository> { (MessageTreeRepositoryImpl(get())) }
@@ -73,7 +73,7 @@ val mainViewModel = module {
     single { DidRepositoryImpl() }
     factory<DidRepository> { (DidRepositoryImpl()) }
 
-    viewModel { params -> DraftViewModel(params[0], params[1], params[2], params[3], get(), get(), get()) }
+    viewModel { params -> DraftViewModel(params[0], params[1], params[2], params[3], get(), get(), get(), get()) }
     single { BottomBarViewModel() }
 
     single { BlobRepositoryImpl(get(), get()) }

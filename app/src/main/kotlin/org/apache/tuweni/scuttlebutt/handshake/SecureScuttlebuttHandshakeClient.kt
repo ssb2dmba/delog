@@ -58,7 +58,7 @@ class SecureScuttlebuttHandshakeClient private constructor(
     private var detachedSignature: Allocated? = null
 
     init {
-
+        Log.i(TAG, "init handshake client")
         ephemeralKeyPair = Box.KeyPair.random()
         this.networkIdentifier = HMACSHA512256.Key.fromBytes(networkIdentifier)
         this.serverLongTermPublicKey = serverLongTermPublicKey
@@ -187,7 +187,7 @@ class SecureScuttlebuttHandshakeClient private constructor(
                     ),
                 SecretBox.Nonce.fromBytes(ByteArray(24))
             )
-            ?: throw HandshakeException("Could not decrypt accept message with our shared secrets")
+            ?: throw HandshakeException("1 - Could not decrypt accept message with our shared secrets")
         val verified = serverLongTermPublicKey!!
             .verify(
                 Concatenate()

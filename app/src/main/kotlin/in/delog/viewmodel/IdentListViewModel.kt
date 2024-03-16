@@ -18,6 +18,7 @@
 package `in`.delog.viewmodel
 
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
@@ -29,6 +30,7 @@ import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,6 +79,7 @@ class IdentListViewModel(
     }
 
     fun setFeedAsDefaultFeed(ident: Ident) {
+        Log.d(TAG, "long click on ident: $ident")
         viewModelScope.launch(Dispatchers.IO) {
             repository.setFeedAsDefaultFeed(ident)
         }
