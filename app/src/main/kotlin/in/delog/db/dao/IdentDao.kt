@@ -17,6 +17,7 @@
  */
 package `in`.delog.db.dao
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
@@ -26,6 +27,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -83,6 +85,7 @@ interface IdentDao {
     fun setFeedAsDefaultFeed(oid: Long) {
         unsetDefault()
         setDefault(oid)
+        Log.d(TAG, "set as default feed: $oid")
     }
 
 

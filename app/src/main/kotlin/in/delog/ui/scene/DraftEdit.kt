@@ -419,7 +419,11 @@ fun DraftPublishDialog(navHostController: NavHostController, viewModel: DraftVie
                                 viewModel.feed
                             )
                         }
-                        navHostController.navigate(Scenes.MainFeed.route)
+                        navHostController.navigate(Scenes.MainFeed.route) {
+                            popUpTo(navHostController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                        }
                     }
             )
         }
@@ -466,7 +470,7 @@ fun DraftConfirmDeleteDialog(navHostController: NavHostController, viewModel: Dr
                         viewModel.onDeleteDialogDismiss()
                         viewModel.messageViewData.let { viewModel.delete(it.value) }
                         navHostController.navigate(Scenes.DraftList.route) {
-                            popUpTo(Scenes.FeedDetail.route) {
+                            popUpTo(navHostController.graph.startDestinationId) {
                                 inclusive = true
                             }
                         }

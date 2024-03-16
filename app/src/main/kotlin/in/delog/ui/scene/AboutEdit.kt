@@ -433,7 +433,9 @@ fun AboutEditPublishDialog(
                     .padding(15.dp)
                     .clickable {
                         viewModel.onDoPublishClicked(about)
-                        navHostController.navigate(Scenes.FeedList.route)
+                        navHostController.navigate(Scenes.FeedList.route) {
+                            popUpTo(navHostController.graph.startDestinationId)
+                        }
                     }
             )
         }

@@ -21,6 +21,8 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.concurrent.CompletableAsyncResult
@@ -52,12 +54,15 @@ open class RPCHandler(
     Multiplexer, ClientHandler {
     private val awaitingAsyncResponse: MutableMap<Int, CompletableAsyncResult<RPCResponse>> =
         ConcurrentHashMap()
-    private val streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
+    val streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
     private var closed = false
     init {
         streams.clear()
         closed  = false
     }
+
+
+
     @Throws(JsonProcessingException::class)
     override suspend fun makeAsyncRequest(request: RPCAsyncRequest): RPCResponse {
         val bodyBytes = request.toEncodedRpcMessage(objectMapper)
@@ -253,7 +258,7 @@ open class RPCHandler(
      *
      * @param requestNumber the request number of the stream to send a close message over RPC for
      */
-    private fun endStream(requestNumber: Int) {
+     fun endStream(requestNumber: Int) {
         try {
             val streamHandler = streams.remove(requestNumber)
             // Only send the message if the stream hasn't already been closed at our end

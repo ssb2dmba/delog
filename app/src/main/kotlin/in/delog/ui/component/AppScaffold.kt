@@ -71,7 +71,9 @@ fun AppScaffold(
                             drawerState.close()
                         }
                         if (itemRoute != null) {
-                            navController.navigate(itemRoute)
+                            navController.navigate(itemRoute) {
+                                popUpTo(navController.graph.startDestinationId)
+                            }
                         }
                     }
                 }

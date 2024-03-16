@@ -38,11 +38,9 @@ import org.koin.core.logger.Level
 
 class MainApplication : Application() {
 
-    lateinit var torService: TorService
     val context = this
     override fun onCreate() {
         super.onCreate()
-        torService = TorService(this)
         NaCl.sodium()
         startKoin {
             androidLogger(Level.ERROR)
@@ -68,9 +66,6 @@ class MainApplication : Application() {
         }
 
 
-        fun getTorService(): TorService {
-            return instance!!.torService
-        }
 
         fun toastify(message: String) {
 

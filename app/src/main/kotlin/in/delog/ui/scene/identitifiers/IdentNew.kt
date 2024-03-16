@@ -101,10 +101,18 @@ fun IdentNew(navController: NavHostController) {
         val exists = identListViewModel.idents.value!!.any { it.ident.publicKey == ident.publicKey }
         if (exists) {
             val argUri = makeArgUri(ident.publicKey)
-            navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+            navController.navigate("${Scenes.MainFeed.route}/${argUri}") {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
         } else {
             identListViewModel.insert(ident = ident)
-            navController.navigate(Scenes.FeedList.route)
+            navController.navigate(Scenes.FeedList.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
         }
     }
 

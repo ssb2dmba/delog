@@ -18,6 +18,7 @@
 package `in`.delog.db.repository
 
 import androidx.lifecycle.LiveData
+import androidx.room.Transaction
 import `in`.delog.db.dao.AboutDao
 import `in`.delog.db.dao.IdentDao
 import `in`.delog.db.model.About
@@ -72,6 +73,7 @@ class FeedRepositoryImpl(
     }
 
     override val count = identDao.liveCount()
+
 
     override fun setFeedAsDefaultFeed(it: Ident) {
         identDao.setFeedAsDefaultFeed(it.oid)

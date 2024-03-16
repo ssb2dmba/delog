@@ -58,11 +58,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            app.torService.torOperationManager.start()
-        }
-
+        
         setContent {
             MyTheme {
                 MyApp()

@@ -178,7 +178,11 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     if (newIdent != null) {
         LaunchedEffect(key1 = Unit) {
             newIdent!!.invite?.let {
-                navController.navigate(Scenes.FeedList.route)
+                navController.navigate(Scenes.FeedList.route) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
+                }
             }
         }
         return

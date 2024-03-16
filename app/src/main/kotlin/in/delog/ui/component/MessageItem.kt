@@ -239,10 +239,18 @@ fun MessageItem(
                     .fillMaxHeight()
                     .width(64.dp)
             ) {
-                ProfileImage(
-                    identAndAboutWithBlob = null,
-                    authorImage = messageViewData.authorImage
-                )
+                if( messageViewData.authorImage.isNullOrEmpty()) {
+                    ProfileImage(
+                        identAndAboutWithBlob = null,
+                        authorImage = null,
+                        pk=messageViewData.author
+                    )
+                } else {
+                    ProfileImage(
+                        identAndAboutWithBlob = null,
+                        authorImage = messageViewData.authorImage
+                    )
+                }
             }
             // spacer
             Column(modifier = Modifier.width(8.dp)) {}
