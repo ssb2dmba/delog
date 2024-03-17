@@ -66,38 +66,7 @@ public final class Files {
         return true;
     }
 
-    /**
-     * Delete a directory and all files contained within it.
-     *
-     * @param directory The directory to delete.
-     * @throws IOException If an I/O error occurs.
-     */
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public static void deleteRecursively(Path directory) throws IOException {
-        checkNotNull(directory);
 
-        walkFileTree(directory, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                try {
-                    delete(file);
-                } catch (IOException ioe) {
-                    file.toFile().deleteOnExit();
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                try {
-                    delete(dir);
-                } catch (IOException ioe) {
-                    dir.toFile().deleteOnExit();
-                }
-                return FileVisitResult.CONTINUE;
-            }
-        });
-    }
 
     /**
      * Copies the content of a resource to a file.
