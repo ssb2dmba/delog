@@ -21,7 +21,6 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import `in`.delog.MainApplication
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.asKeyPair
@@ -30,13 +29,19 @@ import `in`.delog.db.model.toCanonicalForm
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.ContactRepository
+import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import io.vertx.core.Vertx
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -54,6 +59,7 @@ import org.apache.tuweni.scuttlebutt.rpc.RPCMessage
 import org.apache.tuweni.scuttlebutt.rpc.RPCRequestBody
 import org.apache.tuweni.scuttlebutt.rpc.RPCResponse
 import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
+import java.util.concurrent.CompletableFuture
 
 
 @Immutable
@@ -68,13 +74,13 @@ data class SsbUIState(
 )
 
 class SsbService(
+    private val identRepository: IdentRepository,
     private val messageRepository: MessageRepository,
     private val aboutRepository: AboutRepository,
     private val contactRepository: ContactRepository,
     private val blobRepository: BlobRepository,
     private val torService: TorService
 ) {
-
 
     private var blobService: BlobService? =null
     private var feedService: FeedService? = null
@@ -89,7 +95,7 @@ class SsbService(
 
 
     companion object {
-        const val MAX_RETRY = 5
+        const val MAX_RETRY = 10
         val objectMapper = jacksonObjectMapper()
         const val TAG: String = "dlog-ssb-service"
 
@@ -101,8 +107,22 @@ class SsbService(
         }
     }
 
-    suspend fun synchronize(pFeed: Ident) {
+    private lateinit var promise: CompletableFuture<Boolean>
+    suspend fun synchronize2():CompletableFuture<Boolean> {
+        promise= CompletableFuture<Boolean>()
+        identRepository.default.take(1).collect {
+            if (it != null) {
+                Log.i(TAG, "start job ! ")
+                synchronize(it.ident)
 
+            }
+        }
+        return promise
+
+    }
+
+
+    private fun synchronize(pFeed: Ident) {
         try {
             val keyPair = pFeed.asKeyPair()
             if (keyPair == null || pFeed.server.isEmpty()) {
@@ -113,14 +133,18 @@ class SsbService(
                 Log.e("ssb", "attempting to connect but no invite !")
                 throw Exception("no invite")
             }
-            reconnect(pFeed)
+            runBlocking {   reconnect(pFeed) }
         } catch (e: Exception) {
             _uiState.update { it.copy(error = e, connecting = false) }
-            MainApplication.toastify("${e.message}")
+            e.message?.let { Log.e(TAG, it) }
         }
     }
 
     private suspend fun reconnect(pFeed: Ident) {
+        if (_uiState.value.connecting) {
+            Log.d(TAG,"skipping: already connecting ...")
+            return
+        }
         Log.i(TAG, "reconnecting to %s %s".format(pFeed.server, pFeed.publicKey))
         _uiState.update { it.copy(connecting = true, error=null) }
         maybeWaitForTor(pFeed)
@@ -128,23 +152,29 @@ class SsbService(
         _uiState.update { it.copy(connecting = false) }
     }
 
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.Default + job)
+
     private fun monitorStreamForCallBack() {
-        GlobalScope.launch {
+        scope.launch(Dispatchers.IO) {
             var ct = 0
             var gotStream = false
             while (true) {
-                if (!rpcHandler!!.streams.isEmpty()) gotStream = true
+                if (rpcHandler!!.streams.isNotEmpty()) gotStream = true
+                Log.d(TAG, "monitor [$ct] [${rpcHandler!!.streams.size}] [$gotStream]")
                 runBlocking { delay(500) }
                 if (rpcHandler!= null && gotStream && rpcHandler!!.streams.isEmpty()) {
                     ct += 1
-                    if (ct > 3)
-                        try {
-                            Log.i(TAG, "this is this end")
-                            disconnect()
-                            return@launch
-                        } catch (e: Exception) {
-                            e.message?.let { Log.e(TAG, it) }
-                        }
+                    if (ct > 6) {
+                        Log.d(TAG, "monitor trigger")
+                        disconnect()
+                        //torService.torOperationManager.stop()
+                        promise.complete(true)
+                        break
+                    }
+                } else {
+                    //gotStream = true
+                    ct=0;
                 }
 
             }
@@ -163,6 +193,7 @@ class SsbService(
                     break
                 }
             }
+            //runBlocking { delay(1000) }
         }
 
     }
@@ -177,19 +208,23 @@ class SsbService(
         callBack = terminationFn
 
         for (i in 0..MAX_RETRY) {
-            disconnect()
+            //disconnect()
             vertx  = Vertx.vertx()
+            //runBlocking { delay(1000) }
             secureScuttlebuttVertxClient =
                 SecureScuttlebuttVertxClient(vertx, keyPair!!, ScuttlebuttClientFactory.DEFAULT_NETWORK)
-            runBlocking { delay(1000) }
+            //runBlocking { delay(1000) }
             try {
                 rpcHandler = makeRPCHandler(pFeed)
                 blobService= BlobService(rpcHandler!!, blobRepository, _uiState)
                 monitorStreamForCallBack()
+
+
                 return rpcHandler
             } catch (e: Exception) {
                 println(e)
-                runBlocking { delay(1000L * i) }
+                //torService.torOperationManager.restart()
+                runBlocking { delay(500L * i) }
                 if (i >= MAX_RETRY) throw e
             }
         }
@@ -202,7 +237,7 @@ class SsbService(
             secureScuttlebuttVertxClient!!.stop().join()
             connectedIdent = null
             secureScuttlebuttVertxClient = null
-            runBlocking { delay(1000) }
+            runBlocking { delay(500) }
         }
     }
 
@@ -328,6 +363,7 @@ class SsbService(
             }
         }
     }
+
 
 }
 

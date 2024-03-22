@@ -181,6 +181,7 @@ dependencies {
     ext.koin_version = '3.5.0'
     implementation "io.insert-koin:koin-android:$koin_version"
     implementation "io.insert-koin:koin-androidx-compose:$koin_version"
+    implementation "io.insert-koin:koin-androidx-workmanager:$koin_version"
     // live data + view model
     implementation "androidx.compose.runtime:runtime-livedata"
     kapt 'androidx.lifecycle:lifecycle-compiler:2.7.0'

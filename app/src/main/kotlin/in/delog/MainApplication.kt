@@ -29,12 +29,13 @@ import `in`.delog.di.modules.dataBaseModule
 import `in`.delog.di.modules.mainViewModel
 import `in`.delog.di.modules.ssbModule
 import `in`.delog.libsodium.NaCl
-import `in`.delog.service.ssb.TorService
+import `in`.delog.service.ssb.Sync
 import `in`.delog.ui.component.preview.videos.VideoCache
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
-import org.koin.core.logger.Level
+import java.io.File
 
 class MainApplication : Application() {
 
@@ -43,15 +44,18 @@ class MainApplication : Application() {
         super.onCreate()
         NaCl.sodium()
         startKoin {
-            androidLogger(Level.ERROR)
+            androidLogger()
             androidContext(this@MainApplication)
+            workManagerFactory()
             modules(
                 dataBaseModule,
                 ssbModule,
-                mainViewModel
+                mainViewModel,
             )
         }
+        Sync.initialize(context = this)
     }
+
 
 
     init {

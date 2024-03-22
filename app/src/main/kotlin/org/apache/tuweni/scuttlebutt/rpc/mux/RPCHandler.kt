@@ -258,7 +258,7 @@ open class RPCHandler(
      *
      * @param requestNumber the request number of the stream to send a close message over RPC for
      */
-     fun endStream(requestNumber: Int) {
+     private fun endStream(requestNumber: Int) {
         try {
             val streamHandler = streams.remove(requestNumber)
             // Only send the message if the stream hasn't already been closed at our end

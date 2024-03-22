@@ -26,20 +26,20 @@ class TorListener : TorManagerEvent.Listener() {
     }
 
     override fun onEvent(event: TorManagerEvent) {
-        addLine(event.toString())
+        //addLine(event.toString())
 
         super.onEvent(event)
     }
 
     override fun onEvent(event: TorEvent.Type.SingleLineEvent, output: String) {
-        addLine("$event - $output")
+        //addLine("$event - $output")
 
         super.onEvent(event, output)
     }
 
 
     override fun onEvent(event: TorEvent.Type.MultiLineEvent, output: List<String>) {
-        addLine("multi-line event: $event. See Logs.")
+        //addLine("multi-line event: $event. See Logs.")
 
         // these events are many many many lines and should be moved
         // off the main thread if ever needed to be dealt with.

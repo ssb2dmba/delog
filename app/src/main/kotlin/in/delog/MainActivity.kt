@@ -38,18 +38,16 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppBottomAppBar
 import `in`.delog.ui.component.AppScaffold
 import `in`.delog.ui.navigation.NavGraph
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.viewmodel.IdentListViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import java.io.File
 
 class MainActivity : ComponentActivity() {
 
@@ -66,6 +64,30 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (!isChangingConfigurations) {
+            externalCacheDir?.let { deleteTempFiles(it) }
+        }
+    }
+
+    private fun deleteTempFiles(file: File): Boolean {
+        if (file.isDirectory) {
+            val files: Array<File> = file.listFiles()
+            if (files != null) {
+                for (f in files) {
+                    if (f.isDirectory) {
+                        deleteTempFiles(f)
+                    } else {
+                        f.delete()
+                    }
+                }
+            }
+        }
+        return file.delete()
     }
 
 }

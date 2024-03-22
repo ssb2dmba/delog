@@ -40,6 +40,9 @@ interface BlobDao {
     @Query("SELECT * FROM blob WHERE `key` = :key limit 1")
     suspend fun get(key: String): Blob?
 
+    @Query("SELECT * FROM blob WHERE `key` = :key")
+    suspend fun getAll(key: String): List<Blob>
+
     @Query("SELECT * FROM blob WHERE `author` = :author and `has` = 0")
     suspend fun getWants(author: String): List<Blob>
 

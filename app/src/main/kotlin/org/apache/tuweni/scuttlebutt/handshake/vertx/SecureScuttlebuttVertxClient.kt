@@ -239,7 +239,7 @@ class SecureScuttlebuttVertxClient(
      * @return a handle to the completion of the operation
      */
     fun stop(): AsyncCompletion {
-        client!!.close()
+        client?.close()
         return AsyncCompletion.completed()
     }
 

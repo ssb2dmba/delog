@@ -41,6 +41,7 @@ import `in`.delog.viewmodel.DraftViewModel
 import `in`.delog.viewmodel.IdentAndAboutViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import `in`.delog.viewmodel.MessageListViewModel
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -58,7 +59,7 @@ val mainViewModel = module {
     single { MessageRepositoryImpl(get()) }
     factory<MessageRepository> { (MessageRepositoryImpl(get())) }
     factory<MessageTreeRepository> { (MessageTreeRepositoryImpl(get())) }
-    viewModel { MessageListViewModel(get(), get(), get(), get(),get(), get()) }
+    viewModel { MessageListViewModel(androidContext(), get(), get(), get(), get(),get(), get()) }
 
     factory<DraftRepository> { (DraftRepositoryImpl(get())) }
     viewModel { DraftListViewModel(get(), get(), get()) }
