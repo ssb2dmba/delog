@@ -17,7 +17,6 @@
 package org.apache.tuweni.scuttlebutt.lib
 
 import android.util.Log
-import androidx.lifecycle.LifecycleService
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -29,10 +28,7 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
@@ -64,12 +60,12 @@ class FeedService(
     private val multiplexer: RPCHandler,
     private val blobRepository: BlobRepository,
     private val aboutRepository: AboutRepository,
-    private val messageRepository: MessageRepository)  {
+    private val messageRepository: MessageRepository,
+    private val blobService: BlobService
+)  {
     companion object {
         private val objectMapper = ObjectMapper()
     }
-
-
 
     /**
      * Publishes a message to the instance's own scuttlebutt feed, assuming the client established the connection using
@@ -98,7 +94,7 @@ class FeedService(
 
         val params = HashMap<String, Any>()
         params["id"] = pk
-        params["seq"] = sequence
+        params["seq"] = sequence -10 // TODO handle sequence overlap
         params["limit"] = 100
         params["keys"] = true
         params["live"] = true
@@ -116,6 +112,7 @@ class FeedService(
 
                 override fun onStreamEnd() {
                     streamEnded.complete(null)
+                    blobService.createWantStream(pk)
                 }
 
                 override fun onStreamError(ex: Exception) {
@@ -167,36 +164,25 @@ class FeedService(
     fun onCreateHistoryStream(rpcMessage: RPCMessage) {
         val rpcStreamRequest = rpcMessage.asJSON(SsbService.objectMapper, RPCStreamRequest2::class.java)
         val id = rpcStreamRequest.id
-        val sequence = rpcStreamRequest.seq
+        // TODO -10 below is a hack amid we implement last push stored cursor
+        val sequence = rpcStreamRequest.seq - 10
         val remoteLimit = rpcStreamRequest.limit
-
         if (sequence < 1) {
             Log.w(TAG, String.format("pub is requesting complete history !", sequence))
         }
-        var remoteSequence = 0L //sequence.toLong()
+        val remoteSequence = sequence.toLong()
         val batchSize = 100.coerceAtMost(remoteLimit) // TODO put in config
-        var hasMoreResults = true
-        var ct = 0
-        while (hasMoreResults) {
-            val messages = messageRepository.getMessagePage(id, remoteSequence, batchSize)
-            if (messages.isEmpty()) {
-                hasMoreResults = false
-            }
-            for (m: Message in messages) {
-                Log.d(TAG, "> [${rpcMessage.requestNumber()}] :" + m)
-                val response = RPCCodec.encodeResponse(
-                    Bytes.wrap(m.toJsonResponse(SsbService.format)),
-                    rpcMessage.requestNumber(),
-                    RPCFlag.Stream.STREAM,
-                    RPCFlag.BodyType.JSON
-                )
-                multiplexer.sendBytes(response)
-                // increment for next query
-                remoteSequence = m.sequence
-                // increment for remote limit & protection
-                ct++
-                updateLastPush(m)
-            }
+        val messages = messageRepository.getMessagePage(id, remoteSequence, batchSize)
+        for (m: Message in messages) {
+            Log.d(TAG, "> [${rpcMessage.requestNumber()}] :" + m)
+            val response = RPCCodec.encodeResponse(
+                Bytes.wrap(m.toJsonResponse(SsbService.format)),
+                rpcMessage.requestNumber(),
+                RPCFlag.Stream.STREAM,
+                RPCFlag.BodyType.JSON
+            )
+            multiplexer.sendBytes(response)
+            updateLastPush(m)
         }
     }
 

@@ -45,9 +45,9 @@ class TorService(app: Application) {
                     put(ConnectionPadding().set(AorTorF.False))
 
                     put(ConnectionPaddingReduced().set(TorF.True))
-                    // Tor default is 24h. Reducing to 1 min helps mitigate
+                    // Tor default is 24h. Reducing to 2 min helps mitigate
                     // unnecessary mobile data usage.
-                    put(DormantClientTimeout().set(Time.Minutes(10)))
+                    put(DormantClientTimeout().set(Time.Minutes(2)))
                     // Tor defaults this setting to false which would mean if
                     // Tor goes dormant, the next time it is started it will still
                     // be in the dormant state and will not bootstrap until being
@@ -81,9 +81,9 @@ class TorService(app: Application) {
     init {
         manager.debug(true)
         manager.addListener(listener)
-        listener.addLine(
-            TorServiceConfig.getMetaData(app.applicationContext).toString()
-        )
+//        listener.addLine(
+//            TorServiceConfig.getMetaData(app.applicationContext).toString()
+//        )
     }
 
     fun start() {
@@ -92,11 +92,6 @@ class TorService(app: Application) {
         }
         torOperationManager.startQuietly()
         _connected.value = true
-    }
-
-    fun stop() {
-        torOperationManager.stopQuietly()
-        _connected.value = false
     }
 
 }

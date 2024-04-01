@@ -17,6 +17,7 @@
  */
 package `in`.delog.ui.scene
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -54,6 +59,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.model.MessageViewData
 import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbUIState
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.BottomBarMainButton
@@ -69,18 +75,19 @@ import `in`.delog.viewmodel.FeedMainUIState
 import `in`.delog.viewmodel.MessageListViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import org.koin.java.KoinJavaComponent.inject
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MessagesList(navController: NavController, feedToReadKey: String) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     val viewModel =
         koinViewModel<MessageListViewModel>(parameters = { parametersOf(feedToReadKey) })
     val uiState by viewModel.uiState.observeAsState(FeedMainUIState())
-    val ssbService = get<SsbService>()
+    val ssbService :SsbService by inject(SsbService::class.java)
     val ssbUiState by ssbService.uiState.observeAsState(SsbUIState())
 
     
@@ -120,8 +127,8 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
             if (ssbUiState.blobSize[r]!=null
                 && ssbUiState.blobUp[r]!!.toFloat() < ssbUiState.blobSize[r]!!.toFloat()) {
                 LinearProgressIndicator(
-                    progress = ssbUiState.blobUp[r]!!.toFloat() / ssbUiState.blobSize[r]!!.toFloat(),
-                    modifier = Modifier.fillMaxWidth()
+                    progress = { ssbUiState.blobUp[r]!!.toFloat() / ssbUiState.blobSize[r]!!.toFloat() },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
@@ -129,17 +136,21 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
             if (ssbUiState.blobSize[r]!=null &&
                 ssbUiState.blobDown[r]!!.toFloat() < ssbUiState.blobSize[r]!!.toFloat()) {
                 LinearProgressIndicator(
-                    progress = ssbUiState.blobDown[r]!!.toFloat() / ssbUiState.blobSize[r]!!.toFloat(),
-                    modifier = Modifier.fillMaxWidth()
+                    progress = { ssbUiState.blobDown[r]!!.toFloat() / ssbUiState.blobSize[r]!!.toFloat() },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
     }
 
+    val refreshing by remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullRefreshState(refreshing, {
+        Log.i(TAG, "pull refresh")
+        viewModel.synchronize()
+    })
 
 
-
-    Box {
+    Box(Modifier.pullRefresh(pullRefreshState)) {
         var previousRoot: String? = null
 
         if (lazyMessageItems.itemCount == 0) {
@@ -248,7 +259,6 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
             )
             .show()
         viewModel.clearError()
-
     }
 }
 

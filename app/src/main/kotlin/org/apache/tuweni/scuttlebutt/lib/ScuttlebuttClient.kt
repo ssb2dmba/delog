@@ -17,7 +17,7 @@
 package org.apache.tuweni.scuttlebutt.lib
 
 import org.apache.tuweni.scuttlebutt.handshake.vertx.SecureScuttlebuttVertxClient
-import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
+import org.apache.tuweni.scuttlebutt.rpc.mux.Multiplexer
 
 /**
  * A client for making requests to a scuttlebutt instance with. This is the entry point for accessing service classes
@@ -29,7 +29,7 @@ import org.apache.tuweni.scuttlebutt.rpc.mux.RPCHandler
  */
 class ScuttlebuttClient(
     val clientId: String,
-    multiplexer: RPCHandler,
+    multiplexer: Multiplexer,
     secureScuttlebuttVertxClient: SecureScuttlebuttVertxClient
 ) {
 

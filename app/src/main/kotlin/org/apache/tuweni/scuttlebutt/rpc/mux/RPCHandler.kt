@@ -20,9 +20,8 @@ import android.util.Log
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.vertx.core.Handler
+import io.vertx.core.Promise
 import io.vertx.core.Vertx
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
 import org.apache.tuweni.concurrent.CompletableAsyncResult
@@ -56,12 +55,6 @@ open class RPCHandler(
         ConcurrentHashMap()
     val streams: MutableMap<Int, ScuttlebuttStreamHandler> = ConcurrentHashMap()
     private var closed = false
-    init {
-        streams.clear()
-        closed  = false
-    }
-
-
 
     @Throws(JsonProcessingException::class)
     override suspend fun makeAsyncRequest(request: RPCAsyncRequest): RPCResponse {
@@ -106,7 +99,7 @@ open class RPCHandler(
                 streamFactory.apply(closeStreamHandler)
 
             if (closed) {
-                Log.e(TAG, "Connection $requestNumber closed, cannot open stream.")
+                Log.w(TAG, "Connection $requestNumber closed, cannot open stream.")
                 scuttlebuttStreamHandler.onStreamError(ConnectionClosedException())
             } else {
                 streams[requestNumber] = scuttlebuttStreamHandler
@@ -119,12 +112,7 @@ open class RPCHandler(
 
     private fun logOutgoingRequest(rpcMessage: RPCMessage) {
         val requestString = rpcMessage.asString()
-        val logMessage = String.format(
-            "> [%d]: %s",
-            rpcMessage.requestNumber(),
-            requestString
-        )
-        Log.d(TAG, logMessage)
+        Log.d(TAG, "> [${rpcMessage.requestNumber()}]: $requestString")
     }
 
     override fun close() {
@@ -138,7 +126,6 @@ open class RPCHandler(
             // should service
             if (rpcMessage.requestNumber() < 0) {
                     handleResponse(rpcMessage)
-
             } else {
                 handleRequest(rpcMessage)
             }
@@ -190,18 +177,11 @@ open class RPCHandler(
 
     private fun handleResponse(response: RPCMessage) {
         val requestNumber = response.requestNumber() * -1
-        if (response.bodyType() == RPCFlag.BodyType.BINARY) {
-            //Log.d(TAG, "[%d] incoming response: binary data".format(requestNumber))
-        } else {
-            val logMessage =
-                String.format("[%d] incoming response: %s", requestNumber, response.asString())
-            Log.d(TAG, logMessage)
+        if (response.bodyType() != RPCFlag.BodyType.BINARY) {
+            Log.d(TAG, "[$requestNumber incoming response: ${response.asString()}")
         }
-
-
         val rpcFlags = response.rpcFlags()
         val isStream = RPCFlag.Stream.STREAM.isApplied(rpcFlags)
-
         val exception = response.getException(objectMapper)
         if (isStream) {
             val scuttlebuttStreamHandler = streams[requestNumber]
@@ -216,13 +196,7 @@ open class RPCHandler(
                     scuttlebuttStreamHandler.onMessage(response.requestNumber(), successfulResponse)
                 }
             } else {
-                Log.w(
-                    TAG,
-                    "Couldn't find stream handler for RPC response with request number " +
-                            requestNumber +
-                            " " +
-                            response.asString()
-                )
+                Log.w(TAG,"Couldn't find stream handler for RPC response with request number $requestNumber ${response.asString()}")
             }
         } else {
             val rpcMessageFuture = awaitingAsyncResponse.remove(requestNumber)
@@ -234,13 +208,7 @@ open class RPCHandler(
                     rpcMessageFuture.complete(successfulResponse)
                 }
             } else {
-                Log.w(
-                    TAG,
-                    "Couldn't find async handler for RPC response with request number " +
-                            requestNumber +
-                            " " +
-                            response.asString()
-                )
+                Log.w(TAG,"Couldn't find async handler for RPC response with request number $requestNumber ${response.asString()} ")
             }
         }
     }
@@ -258,15 +226,13 @@ open class RPCHandler(
      *
      * @param requestNumber the request number of the stream to send a close message over RPC for
      */
-     fun endStream(requestNumber: Int) {
+    fun endStream(requestNumber: Int) {
         try {
             val streamHandler = streams.remove(requestNumber)
             // Only send the message if the stream hasn't already been closed at our end
             if (streamHandler != null) {
                 val streamEnd = encodeStreamEndRequest(requestNumber)
                 streamHandler.onStreamEnd()
-                val logMessage = String.format("[%d] Sending close stream message.", requestNumber)
-                Log.d(TAG, logMessage)
                 sendBytes(streamEnd)
             } else {
                 Log.d("RCPHandler","stream $requestNumber have been closed at other end")
@@ -274,7 +240,7 @@ open class RPCHandler(
         } catch (e: JsonProcessingException) {
             Log.e(
                 TAG,
-                "Unexpectedly could not encode stream end message to JSON. %s".format(e.message)
+                "Unexpectedly could not encode stream end message to JSON: ${e.message}"
             )
         }
     }
