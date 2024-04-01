@@ -31,11 +31,10 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
+import io.netty.channel.ConnectTimeoutException
 import io.vertx.core.Vertx
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,7 +44,6 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.handshake.vertx.SecureScuttlebuttVertxClient
@@ -67,6 +65,7 @@ data class SsbUIState(
     val identAndAbout: IdentAndAboutWithBlob? = null,
     val loaded: Boolean = false,
     val connecting: Boolean = false,
+    val connected: Boolean = false,
     val error: Exception? = null,
     val blobSize: HashMap<String,Long> = HashMap(),
     val blobDown: HashMap<String,Long> = HashMap(),
@@ -85,21 +84,20 @@ class SsbService(
     private var blobService: BlobService? =null
     private var feedService: FeedService? = null
     private var connectedIdent: Ident? = null
-    lateinit var callBack: () -> Unit
-    lateinit var vertx: Vertx
+
     private var rpcHandler: RPCHandler? = null
     private var secureScuttlebuttVertxClient: SecureScuttlebuttVertxClient? = null
-
     private val _uiState = MutableStateFlow(SsbUIState())
     val uiState: StateFlow<SsbUIState> = _uiState.asStateFlow()
-
+    private lateinit var promise: CompletableFuture<Boolean>
+    lateinit var callBack: () -> Unit
+    lateinit var vertx: Vertx
 
     companion object {
         const val MAX_RETRY = 10
         val objectMapper = jacksonObjectMapper()
         const val TAG: String = "dlog-ssb-service"
 
-        @OptIn(ExperimentalSerializationApi::class)
         val format = Json {
             prettyPrint = true
             prettyPrintIndent = "  " // two spaces
@@ -107,35 +105,36 @@ class SsbService(
         }
     }
 
-    private lateinit var promise: CompletableFuture<Boolean>
-    suspend fun synchronize2():CompletableFuture<Boolean> {
+
+    suspend fun replicateSync():CompletableFuture<Boolean> {
         promise= CompletableFuture<Boolean>()
         identRepository.default.take(1).collect {
             if (it != null) {
-                Log.i(TAG, "start job ! ")
-                synchronize(it.ident)
-
+                replicate(it.ident)
             }
         }
         return promise
-
     }
 
 
-    private fun synchronize(pFeed: Ident) {
+    private fun replicate(pFeed: Ident) {
         try {
             val keyPair = pFeed.asKeyPair()
             if (keyPair == null || pFeed.server.isEmpty()) {
-                Log.w(TAG, "attempting to connect but no identity")
+                Log.e(TAG, "attempting to connect but no identity")
                 throw Exception("no identity")
             }
             if (pFeed.invite == null) {
                 Log.e("ssb", "attempting to connect but no invite !")
                 throw Exception("no invite")
             }
+            if (_uiState.value.connecting || _uiState.value.connected) {
+                Log.e("ssb", "already connected")
+                throw Exception("already connected")
+            }
             runBlocking {   reconnect(pFeed) }
         } catch (e: Exception) {
-            _uiState.update { it.copy(error = e, connecting = false) }
+            _uiState.update { it.copy(error = e, connecting = false, connected=false) }
             e.message?.let { Log.e(TAG, it) }
         }
     }
@@ -160,23 +159,23 @@ class SsbService(
             var ct = 0
             var gotStream = false
             while (true) {
-                if (rpcHandler!!.streams.isNotEmpty()) gotStream = true
-                Log.d(TAG, "monitor [$ct] [${rpcHandler!!.streams.size}] [$gotStream]")
-                runBlocking { delay(500) }
+                if (rpcHandler!!.streams.isNotEmpty()){
+                    //Log.d(TAG, "got streams ${rpcHandler!!.streams}")
+                    gotStream = true
+                }
+                runBlocking { delay(1000) }
                 if (rpcHandler!= null && gotStream && rpcHandler!!.streams.isEmpty()) {
                     ct += 1
-                    if (ct > 6) {
-                        Log.d(TAG, "monitor trigger")
+                    if (ct > 10) {
+                        Log.d(TAG, "no streams, replication complete")
                         disconnect()
                         //torService.torOperationManager.stop()
                         promise.complete(true)
                         break
                     }
                 } else {
-                    //gotStream = true
                     ct=0;
                 }
-
             }
         }
     }
@@ -187,17 +186,13 @@ class SsbService(
             for (i in 0..20) {
                 if (torService.status.value != 1) {
                     runBlocking { delay(500) }
-                    Log.d(TAG, "waiting for Tor service to be started ...")
                     if (i>=20) break
                 } else {
                     break
                 }
             }
-            //runBlocking { delay(1000) }
         }
-
     }
-
 
     private suspend fun connect(
         pFeed: Ident,
@@ -213,14 +208,13 @@ class SsbService(
             //runBlocking { delay(1000) }
             secureScuttlebuttVertxClient =
                 SecureScuttlebuttVertxClient(vertx, keyPair!!, ScuttlebuttClientFactory.DEFAULT_NETWORK)
-            //runBlocking { delay(1000) }
             try {
                 rpcHandler = makeRPCHandler(pFeed)
-                blobService= BlobService(rpcHandler!!, blobRepository, _uiState)
                 monitorStreamForCallBack()
-
-
                 return rpcHandler
+            } catch (e: ConnectTimeoutException) {
+                e.message?.let { Log.e(TAG, it) }
+                if (i >= 2) throw e
             } catch (e: Exception) {
                 println(e)
                 //torService.torOperationManager.restart()
@@ -232,12 +226,11 @@ class SsbService(
     }
 
     private fun disconnect() {
+        _uiState.update { it.copy(connected = false, connecting = false) }
         if (secureScuttlebuttVertxClient!=null) {
-            //Log.d(TAG, "disconnecting from %s@%s".format(connectedIdent!!.server, connectedIdent!!.publicKey))
             secureScuttlebuttVertxClient!!.stop().join()
             connectedIdent = null
             secureScuttlebuttVertxClient = null
-            runBlocking { delay(500) }
         }
     }
 
@@ -273,9 +266,12 @@ class SsbService(
      *  application logic upon connection
      */
     private fun onConnected() {
-
-        feedService = FeedService(rpcHandler!!, blobRepository, aboutRepository, messageRepository)
+        _uiState.update { it.copy(connected = true) }
         blobService = BlobService(rpcHandler!!, blobRepository, _uiState)
+        feedService = FeedService(rpcHandler!!, blobRepository, aboutRepository, messageRepository,
+            blobService!!
+        )
+
         val feedCannonicalForm = connectedIdent!!.toCanonicalForm()
         try {
             // let's check @self for a backup or moved device
@@ -285,7 +281,7 @@ class SsbService(
                 feedCannonicalForm,
                 ourSequence
             )
-            // createWantStream
+
             // let's call all of our friends
             contactRepository.geContacts(feedCannonicalForm).forEach {
                 ourSequence = messageRepository.getLastSequence(it.follow)
@@ -364,6 +360,4 @@ class SsbService(
         }
     }
 
-
 }
-

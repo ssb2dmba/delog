@@ -9,7 +9,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkerParameters
-import `in`.delog.db.repository.IdentRepository
 import `in`.delog.service.ssb.SsbService.Companion.TAG
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -31,7 +30,7 @@ class SyncWorker (
 
     override suspend fun doWork(): Result = withContext(ioDispatcher) {
         Log.i(TAG, "do work!")
-        val promise = ssbService.synchronize2()
+        val promise = ssbService.replicateSync()
         var returnValue = false
         promise.thenAccept { result ->
             println("Async operation completed with result: $result")

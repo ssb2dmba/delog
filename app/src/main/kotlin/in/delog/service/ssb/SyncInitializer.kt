@@ -21,9 +21,9 @@ object Sync {
 }
 
 // This name should not be changed otherwise the app may have concurrent sync requests running
-internal const val SyncWorkName = "SyncWorkName"
+internal const val SyncWorkName = "UniqueSyncWork"
 
-internal const val PeriodicSyncWorkName = "PeriodicSyncWorkName"
+internal const val PeriodicSyncWorkName = "PeriodicSyncWork"
 
 /**
  * Registers work to sync the data layer periodically on app startup.
@@ -34,13 +34,13 @@ class SyncInitializer : Initializer<Sync> {
             // Run sync on app startup and ensure only one sync worker runs at any time
             enqueueUniqueWork(
                 SyncWorkName,
-                ExistingWorkPolicy.REPLACE,
+                ExistingWorkPolicy.KEEP,
                 SyncWorker.startUpSyncWork()
             )
             // Run sync periodically and ensure only one sync worker is scheduled at any time
             enqueueUniquePeriodicWork(
                 PeriodicSyncWorkName,
-                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 SyncWorker.periodicSyncWork()
             )
         }

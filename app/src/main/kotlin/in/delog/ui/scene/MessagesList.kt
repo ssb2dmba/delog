@@ -259,7 +259,6 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
             )
             .show()
         viewModel.clearError()
-
     }
 }
 

@@ -17,6 +17,7 @@
 package org.apache.tuweni.scuttlebutt.handshake.vertx
 
 import android.util.Log
+import `in`.delog.MainApplication
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetClient
@@ -118,7 +119,7 @@ class SecureScuttlebuttVertxClient(
                     client = handshakeClient.createStream()
                     handler = handlerFactory(
                         { bytes: Bytes? ->
-                            synchronized(this@NetSocketClientHandler) {
+                            synchronized(MainApplication.instance!!){
                                 socket.write(
                                     Buffer.buffer(
                                         client!!.sendToServer(bytes!!).toArrayUnsafe()
@@ -127,7 +128,7 @@ class SecureScuttlebuttVertxClient(
                             }
                         }
                     ) {
-                        synchronized(this@NetSocketClientHandler) {
+                        synchronized(MainApplication.instance!!){
                             socket.write(
                                 Buffer.buffer(
                                     client!!.sendGoodbyeToServer().toArrayUnsafe()
@@ -220,7 +221,7 @@ class SecureScuttlebuttVertxClient(
                 // TODO map proxy port to a config
                 ProxyOptions().setType(ProxyType.SOCKS5).setHost("127.0.0.1").setPort(9050)
             );
-            netClientOptions.setConnectTimeout(10000).setReadIdleTimeout(5).setIdleTimeout(5000)
+            //netClientOptions.setConnectTimeout(5000)
         }
         client = vertx.createNetClient(netClientOptions)
         val socket = client!!.connect(port, host).await()

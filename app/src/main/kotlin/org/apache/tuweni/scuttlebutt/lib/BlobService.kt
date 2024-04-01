@@ -28,9 +28,13 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbUIState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
@@ -74,26 +78,22 @@ class BlobService(
             ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
         const val MAX_BLOB_SIZE = 25 * 1024 * 1024
-        const val BUFFER_SIZE = 4 * 1024
+        const val BUFFER_SIZE = 1024
     }
 
     val context = MainApplication.applicationContext()
     private val contentResolver: ContentResolver = this.context.contentResolver
-
-    private val runningFileHandler: MutableMap<String, File>
-    private var serverWantRequestNumber: Int?
-    private val blobSize: MutableMap<String, Long>
-    private val blobDownStatus: MutableMap<String, Long>
-    private val blobUpStatus: MutableMap<String, Long>
-    private val serverHas: MutableMap<String, Long>
-    init {
-        runningFileHandler= ConcurrentHashMap()
-        serverHas = ConcurrentHashMap()
-        serverWantRequestNumber = null
-        blobSize = ConcurrentHashMap<String,Long>()
-        blobDownStatus = ConcurrentHashMap<String,Long>()
-        blobUpStatus = ConcurrentHashMap<String,Long>()
-    }
+    private val runningFileHandler: MutableMap<String, File> = ConcurrentHashMap()
+    private var serverWantRequestNumber: Int? = null
+    private var serverHasRequestNumber: Int? = null
+    private val blobSize: MutableMap<String, Long> = ConcurrentHashMap<String,Long>()
+    private val blobDownStatus: MutableMap<String, Long> = ConcurrentHashMap<String,Long>()
+    private val blobUpStatus: MutableMap<String, Long> = ConcurrentHashMap<String,Long>()
+    private val serverHas: MutableMap<String, Long> = ConcurrentHashMap()
+    private val serverWant = ConcurrentHashMap<String, Long>()
+    private var hasResponseCount: Int = 0
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
 
     /**
      * handle RPC messages for namespace 'blobs'
@@ -124,7 +124,7 @@ class BlobService(
             object : ScuttlebuttStreamHandler {
 
                 override fun onMessage(requestNumber: Int, message: RPCResponse) {
-
+                        serverHasRequestNumber = requestNumber
                         val str = message.body().toArrayUnsafe()
                         val map = mapper.readValue<HashMap<String, Long>>(str)
                         onHasMessage(multiplexer,  author, map)
@@ -141,14 +141,12 @@ class BlobService(
         }
     }
 
-
     private fun onHasMessage(
         multippx: RPCHandler,
         author: String,
         item: HashMap<String, Long>?
     ) {
 
-        val serverWant: HashMap<String, Long> = HashMap()
         for (key in item!!.keys) {
             val blobItem = runBlocking(Dispatchers.IO) { blobRepository.getBlobItem(key) }
             if (item[key]!! > 0) {
@@ -163,7 +161,6 @@ class BlobService(
             _uiState.update { it.copy(blobSize = HashMap(blobSize)) }
         }
 
-
         val responseString: String = JSONObject((serverWant as Map<String, Long>?)!!).toString()
         val response = RPCCodec.encodeResponse(
             Bytes.wrap(responseString.toByteArray()),
@@ -172,7 +169,30 @@ class BlobService(
             RPCFlag.Stream.STREAM
         )
         multippx.sendBytes(response)
+        buildOneBlobGetStream(author)
+        monitorHasStreamForEnd()
+        hasResponseCount += 1
+    }
 
+    private fun monitorHasStreamForEnd() {
+        if (hasResponseCount==0) {
+            scope.launch {
+                if (serverWant.size == 0) {
+                    for (i in 0..10) {
+                        runBlocking { delay(500) }
+                        if (hasResponseCount == 1 && i >= 10) {
+                            multiplexer.endStream(serverHasRequestNumber!! * -1)
+                        }
+                    }
+                }
+            }
+        }
+        if (serverHas.size>=serverWant.size && hasResponseCount>0) {
+            multiplexer.endStream(serverHasRequestNumber!!*-1)
+        }
+    }
+
+    private fun buildOneBlobGetStream(author: String) {
         val wants = runBlocking { blobRepository.getWants(author) }
         for (key in serverHas.keys) {
             if (wants.containsKey(key)) {
@@ -180,7 +200,22 @@ class BlobService(
                 break // limit to one blob at a time
             }
         }
+    }
 
+    /**
+     *  server asked us blob.createWants and we reply all blobs we need to get
+     */
+    private  fun onRPCBlobsCreateWants(clientId: String, rpcMessage: RPCMessage) {
+        serverWantRequestNumber = rpcMessage.requestNumber()
+        val wants = runBlocking(Dispatchers.IO) {  blobRepository.getWants(clientId) }
+        val responseString: String = JSONObject((wants as Map<String, Long>?)!!).toString()
+        val response = RPCCodec.encodeResponse(
+            Bytes.wrap(responseString.toByteArray()),
+            serverWantRequestNumber!!,
+            RPCFlag.BodyType.JSON,
+            RPCFlag.Stream.STREAM
+        )
+        multiplexer.sendBytes(response)
     }
 
     /**
@@ -190,8 +225,7 @@ class BlobService(
     fun createBlobGetStream(author: String, hash: String, size: Long? = null, max: Long?=null) {
 
         if (runBlocking {blobRepository.doWeAlreadyHave(author, hash) }) {
-            Log.d(TAG, "createBlobGetStream: already have $hash");
-            serverHas.remove(hash)
+            Log.d(TAG, "createBlobGetStream: already have $hash")
             return
         }
 
@@ -239,18 +273,8 @@ class BlobService(
      * @param hash the hash of the blob
      */
     private  fun onRPCResponseForBlobGetWithEnd(author: String, hash: String) {
-
-        // TODO split in a separate DRY function
-        val wants = runBlocking { blobRepository.getWants(author) }
         serverHas.remove(hash)
-        wants.remove(hash)
-        for (key in serverHas.keys) {
-            if (wants.containsKey(key)) {
-                createBlobGetStream(author, key, serverHas[key])
-                break // limit to one blob at a time
-            }
-        }
-
+        buildOneBlobGetStream(author)
         if (runningFileHandler.containsKey(hash)) {
             val tmpFile: File = runningFileHandler[hash]!!
             val inputStream  = contentResolver.openInputStream(tmpFile.toUri())
@@ -280,6 +304,7 @@ class BlobService(
             // this can happen if we already have the file
             Log.d(TAG, "stream blobs.get end tmp file not found: $hash ${runningFileHandler.keys}")
         }
+
     }
 
     /**
@@ -289,25 +314,14 @@ class BlobService(
      */
     private fun onRPCResponseForBlobGetWithError(author: String, hash: String) {
         Log.e(TAG, "stream blobs.get error: $hash")
-        // TODO split in a separate DRY function
         serverHas.remove(hash)
-        val wants = runBlocking { blobRepository.getWants(author) }
-        wants.remove(hash)
-        for (key in serverHas.keys) {
-            if (wants.containsKey(key)) {
-                createBlobGetStream(author, key, serverHas[key])
-                break // limit to one blob at a time
-            }
-        }
-
-
+        buildOneBlobGetStream(author)
         if (runningFileHandler.containsKey(hash)) {
             val tmpFile: File = runningFileHandler[hash]!!
             tmpFile.delete()
             runningFileHandler.remove(hash)
             Log.e(TAG, "stream blobs.get error: $hash, tmp file removed")
         }
-
     }
 
 
@@ -341,23 +355,6 @@ class BlobService(
     }
 
 
-    /**
-     *  server asked us blob.createWants and we reply all blobs we need to get
-     */
-    private  fun onRPCBlobsCreateWants(clientId: String, rpcMessage: RPCMessage) {
-        serverWantRequestNumber = rpcMessage.requestNumber()
-        val wants = runBlocking(Dispatchers.IO) {  blobRepository.getWants(clientId) }
-        val responseString: String = JSONObject((wants as Map<String, Long>?)!!).toString()
-        val response = RPCCodec.encodeResponse(
-            Bytes.wrap(responseString.toByteArray()),
-            serverWantRequestNumber!!,
-            RPCFlag.BodyType.JSON,
-            RPCFlag.Stream.STREAM
-        )
-        multiplexer.sendBytes(response)
-        createWantStream(clientId)
-        //multiplexer.endStream(serverWantRequestNumber!!)
-    }
 
     /**
      *  return file as stream of bytes if possible
@@ -374,7 +371,6 @@ class BlobService(
             try {
                 var buff = ByteArray(BUFFER_SIZE)
                 File(blobItem.uri.path!!).inputStream().buffered(BUFFER_SIZE).use { input ->
-                    Log.i(TAG, "blob started $key ${blobItem.size}")
                     while (true) {
                         val sizeRead = input.read(buff)
                         if (sizeRead <= 0) {
@@ -382,17 +378,17 @@ class BlobService(
                             multiplexer.sendEndBlob(rpcMessage.requestNumber())
                             break
                         }
-//                        if (sizeRead < BUFFER_SIZE) {
-//                            buff = buff.copyOfRange(0, sizeRead)
-//                        }
+                        if (sizeRead < BUFFER_SIZE) {
+                            buff = buff.copyOfRange(0, sizeRead)
+                        }
                         offset += sizeRead
                         multiplexer.sendBlobSlice(rpcMessage.requestNumber(), Bytes.wrap(buff))
                         blobUpStatus[key] = offset.toLong()
-                        _uiState.update { it.copy(blobUp = HashMap(blobUpStatus)) }
-                        Log.d(TAG, "> ${blobItem.key}: $sizeRead $offset")
-                        print(".")
-                    }
 
+                        _uiState.update { it.copy(blobUp = HashMap(blobUpStatus)) }
+                        Log.d(TAG, ">  ${blobUpStatus[key]} ${blobSize[key]} ${blobItem.key}")
+                    }
+                    multiplexer.sendEndBlob(rpcMessage.requestNumber())
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
