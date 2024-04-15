@@ -23,35 +23,24 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Cache gradle
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: AVD cache
-        uses: actions/cache@v4
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-${{ runner.os }}
-
       - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
+          target: default
+          arch: x86_64
+          profile: Nexus 6
           ndk: 25.1.8937393
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew connectedCheck -PcucumberUseAndroidJUnitRunner=false --no-daemon
+          script: ./gradlew connectedCheck -PrunInGithubCi=true -PcucumberUseAndroidJUnitRunner=false --no-daemon
 
-      - name: run cucumber tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          ndk: 25.1.8937393
-          emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew connectedCheck -PcucumberUseAndroidJUnitRunner=true --no-daemon
+#      - name: run cucumber tests
+#        uses: reactivecircus/android-emulator-runner@v2
+#        with:
+#          api-level: 29
+#          target: default
+#          arch: x86_64
+#          profile: Nexus 6
+#          ndk: 25.1.8937393
+#          emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+#          script: ./gradlew connectedCheck -PrunInGithubCi=true -PcucumberUseAndroidJUnitRunner=true --no-daemon

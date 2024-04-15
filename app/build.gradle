@@ -27,7 +27,7 @@ plugins {
 android {
     namespace 'in.delog'
     compileSdk 34
-    ndkVersion "21.3.6528147"
+    ndkVersion "25.1.8937393"
     sourceSets {
         main {
             jniLibs.srcDirs = ['src/main/jniLibs']
@@ -69,7 +69,12 @@ android {
             ]
         }
 
-        ndk.abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        if (runInGithubCi.toBoolean()) {
+            ndk.abiFilters 'x86_64'
+        } else {
+            ndk.abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
+
 
         javaCompileOptions {
             annotationProcessorOptions {
