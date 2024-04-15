@@ -27,12 +27,19 @@ data class RelayServer(
     @PrimaryKey(autoGenerate = true)
     val oid: Int,
 
-    @ColumnInfo(name = "public_key")
-    val publicKey: String,
+    @ColumnInfo(name = "url")
+    var url: String,
 
-    @ColumnInfo(name = "server")
-    var server: String,
+    @ColumnInfo(name = "port", defaultValue = "8008")
+    var port: Int = 8008,
 
-    @ColumnInfo(name = "port")
-    var port: Int,
+    @ColumnInfo(name = "invite")
+    val invite: String? = null,
+
+    @ColumnInfo(name = "last",defaultValue = "0")
+    val last: Int=0,
+
+    @ColumnInfo(name = "fail_count",defaultValue = "0")
+    val failCount: Int = 0,
+
 )

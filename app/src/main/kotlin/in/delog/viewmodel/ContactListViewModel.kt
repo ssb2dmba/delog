@@ -18,21 +18,24 @@
 package `in`.delog.viewmodel
 
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import `in`.delog.db.model.Contact
+import `in`.delog.db.model.RelayServer
 import `in`.delog.db.repository.ContactRepository
+import `in`.delog.db.repository.RelayRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 
 class ContactListViewModel(
     private val author: String,
-    private val repository: ContactRepository
+    private val contactRepository: ContactRepository,
+    private val relayRepository: RelayRepository,
 ) : ViewModel() {
 
     var contactsPaged = Pager(
@@ -42,21 +45,32 @@ class ContactListViewModel(
             enablePlaceholders = false,
         )
     ) {
-        repository.getPagedContacts(author)
+        contactRepository.getPagedContacts(author)
     }.flow.cachedIn(viewModelScope)
 
-    fun insert(contact: Contact) {
-        GlobalScope.launch(Dispatchers.IO) {
-            val exist = repository.getByAuthorAndFollow(contact.author, contact.follow)
-            if (exist == null) {
-                repository.insert(contact)
+    fun insert(author: String, strContact: String) {
+        viewModelScope.launch(Dispatchers.IO){
+            val publicKey=strContact.split("@")[1]
+            val serverUrl=strContact.split("@").last()
+            val exist = contactRepository.getByAuthorAndFollow(author, publicKey)
+            if (exist!=null) {
+                Log.d("ContactListViewModel", "Contact already exists")
+                return@launch
             }
+            var relay = relayRepository.getByUrl(serverUrl)
+            if (relay==null) {
+                relay = RelayServer(0, serverUrl)
+                relayRepository.insert(relay)
+                relay = relayRepository.getByUrl(serverUrl)
+            }
+            val contact = Contact(0, author, publicKey, true, relay!!.oid)
+            contactRepository.insert(contact)
         }
     }
 
     fun remove(contact: Contact) {
-        GlobalScope.launch(Dispatchers.IO) {
-            repository.deleteContact(contact)
+        viewModelScope.launch(Dispatchers.IO){
+            contactRepository.deleteContact(contact)
         }
     }
 

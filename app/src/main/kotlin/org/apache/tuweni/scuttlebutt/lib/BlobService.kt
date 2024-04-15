@@ -78,7 +78,7 @@ class BlobService(
             ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
         const val MAX_BLOB_SIZE = 25 * 1024 * 1024
-        const val BUFFER_SIZE = 1024
+        const val BUFFER_SIZE = 4 * 1024
     }
 
     val context = MainApplication.applicationContext()

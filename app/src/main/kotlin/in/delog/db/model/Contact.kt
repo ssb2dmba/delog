@@ -18,8 +18,10 @@
 package `in`.delog.db.model
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 
 @Entity
 data class Contact(
@@ -35,4 +37,17 @@ data class Contact(
 
     @ColumnInfo(name = "value")
     val value: Boolean?, // true follow, false: block, null: unfollow
+
+    @ColumnInfo(name = "server_id", defaultValue = "-1")
+    val serverId: Int
+)
+
+
+data class ContactAndServer(
+    @Embedded val contact: Contact,
+    @Relation(
+        parentColumn = "server_id",
+        entityColumn = "oid"
+    )
+    val about: About?
 )

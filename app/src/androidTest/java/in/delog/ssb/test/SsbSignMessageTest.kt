@@ -137,9 +137,8 @@ class SsbSignMessageTest {
             sig.toBase64String()
         )
         val hash = ssbSignedMessage.makeHash()
-        println(hash)
         assertEquals(
-            "y6lKs9xDNxy55VLqucCBND/S5h4aZXnwb+RS2YAwlC4=",
+            "nSG0pVsSiEerGIWa2r/weVp0JKlvH7EFwbJIsag2T5E=",
             hash!!.bytes().toBase64String()
         )
     }

@@ -93,4 +93,6 @@ val DefaultAnimationColors = listOf(
     Color(0xFF5851D8)
 ).toImmutableList()
 
+val torOk = Color(0xFF7D4698)
+
 

@@ -23,22 +23,32 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Sync
+
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -48,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -70,6 +81,7 @@ import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
+import `in`.delog.ui.theme.torOk
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.FeedMainUIState
 import `in`.delog.viewmodel.MessageListViewModel
@@ -80,7 +92,7 @@ import org.koin.core.parameter.parametersOf
 import org.koin.java.KoinJavaComponent.inject
 
 
-@OptIn(ExperimentalMaterialApi::class)
+
 @Composable
 fun MessagesList(navController: NavController, feedToReadKey: String) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
@@ -89,29 +101,19 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
     val uiState by viewModel.uiState.observeAsState(FeedMainUIState())
     val ssbService :SsbService by inject(SsbService::class.java)
     val ssbUiState by ssbService.uiState.observeAsState(SsbUIState())
-
-    
-    LaunchedEffect(feedToReadKey) {
+    LaunchedEffect(key1 = Unit) {
         bottomBarViewModel.setActions {
-            Spacer(modifier = Modifier
-                .weight(1f)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(MaterialTheme.colorScheme.onSurfaceVariant)
             )
             NewDraftFab(navController)
         }
     }
-
     if (uiState.identAndAbout == null ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator()
-        }
         return
     }
-
     val jumpToBottomThreshold = 56.dp
     val scrollState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -120,6 +122,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
     val lazyMessageItems: LazyPagingItems<MessageViewData> =
         fpgMessages.collectAsLazyPagingItems()
     Column {
+
         if (ssbUiState.connecting) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
@@ -143,33 +146,8 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
         }
     }
 
-    val refreshing by remember { mutableStateOf(false) }
-    val pullRefreshState = rememberPullRefreshState(refreshing, {
-        Log.i(TAG, "pull refresh")
-        viewModel.synchronize()
-    })
-
-
-    Box(Modifier.pullRefresh(pullRefreshState)) {
+    Box {
         var previousRoot: String? = null
-
-        if (lazyMessageItems.itemCount == 0) {
-            // TODO DRY it with Identity Box with Card
-            Card(
-                colors = CardDefaults.cardColors(),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .wrapContentHeight()
-            ) {
-                IdentityBox(
-                    identAndAboutWithBlob = uiState.identAndAbout!!,
-                    short = true,
-                )
-            }
-            AppEmptyList()
-            return
-        }
 
         LazyColumn(
             state = scrollState,
@@ -177,26 +155,46 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .wrapContentHeight()
+                ) {
+                    Row() {
+                        Column(modifier = Modifier.weight(1f)) {
+
+                            IdentityBox(
+                                identAndAboutWithBlob = uiState.identAndAbout!!,
+                                short = true,
+                            )
+                        }
+                        Column(modifier=Modifier.width(64.dp).fillMaxHeight(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally) {
+                            IconButton(
+                                onClick = {
+                                    viewModel.synchronize()
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Filled.Sync,
+                                    contentDescription = "sync",
+                                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                                )
+                            }
+                        }
+                    }
+                }
+                if (lazyMessageItems.itemCount == 0) {
+                    AppEmptyList()
+                }
+            }
             items(
                 count = lazyMessageItems.itemCount,
             ) { index ->
-
-
-                if (index == 0) {
-                    Card(
-                        colors = CardDefaults.cardColors(),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .padding(bottom = 8.dp)
-                            .wrapContentHeight()
-                    ) {
-                        IdentityBox(
-                            identAndAboutWithBlob = uiState.identAndAbout!!,
-                            short = true,
-                        )
-                    }
-                }
-
                 lazyMessageItems[index]?.let {
                     if ((it.root != previousRoot)) { // // it.root == null || (it.replies == 0L) ||
                         ListSpacer()

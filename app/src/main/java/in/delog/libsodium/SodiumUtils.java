@@ -25,24 +25,15 @@ import org.apache.tuweni.crypto.sodium.SodiumException;
 
 import java.util.function.BiFunction;
 
+import kotlin.jvm.Synchronized;
+
 public class SodiumUtils {
 
     public static byte[] dup(byte[] pointer, int length) {
         return pointer.clone();
     }
 
-    public static byte[] reify(SWIGTYPE_p_void ptr, int length) {
-        byte[] bytes = new byte[length];
-        //ptr.get(0, bytes, 0, bytes.length);
-        return bytes;
 
-    }
-
-    static byte[] dup(byte[] bytes) {
-        return bytes.clone();
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public static <T> T dup(byte[] bytes, BiFunction<byte[], Integer, T> ctr) {
         byte[] ptr = bytes.clone();
         try {
@@ -82,6 +73,7 @@ public class SodiumUtils {
             throw e;
         }
     }
+
 
 
     static byte[] dupAndIncrement(byte[] src, int length) {

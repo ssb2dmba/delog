@@ -63,7 +63,7 @@ fun MessageViewData.Companion.empty(author: String): MessageViewData {
         key = "",
         timestamp = System.currentTimeMillis(),
         author = author,
-        contentAsText = "",
+        contentAsText = "{ \"type\": \"post\", \"text\": \"\"}",
         authorName = "",
         authorImage = "",
         pName = "",
@@ -83,7 +83,6 @@ fun MessageViewData.serializeMessageContent(format: Json): MessageContent {
         )
     } catch (e: SerializationException) {
         Log.e("MessageViewData.toMessageContent", this.contentAsText  )
-        e.printStackTrace()
         MessageContent(
             "error with: '${this.contentAsText}'",
             "post",
@@ -104,7 +103,7 @@ fun Message.toMessageViewData() = MessageViewData(
 )
 
 
-suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository): MessageViewData {
+suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository? =null): MessageViewData {
     val mvd = MessageViewData(
         oid = oid ?: 0L,
         key = "",
@@ -122,8 +121,10 @@ suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository
     mvd.root = mc.root
     mvd.branch = mc.branch
     mvd.links = mc.mentions?.filter { it.link.startsWith("%") }?.toTypedArray() ?: arrayOf()
-    mvd.blobs = mc.mentions?.filter { it.link.startsWith("&") }
-        ?.map { blobRepository.getAsBlobItem(it.link) }?.toTypedArray() ?: arrayOf()
+    if (blobRepository!=null) {
+        mvd.blobs = mc.mentions?.filter { it.link.startsWith("&") }
+            ?.map { blobRepository.getAsBlobItem(it.link) }?.toTypedArray() ?: arrayOf()
+    }
     return mvd
 }
 

@@ -73,11 +73,11 @@ data class Ident(
             return "${httpScheme}${server}/invite/"
         }
 
-        fun empty(s: String): Ident {
+        fun empty(publicKey: String, server: String = ""): Ident {
             return Ident(
                 0,
-                s,
-                "",
+                publicKey,
+                server,
                 0,
                 null,
                 false,

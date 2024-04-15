@@ -36,6 +36,9 @@ interface RelayDao {
     @Query("SELECT * FROM relayserver WHERE oid = :oid")
     fun getByOid(oid: Long): RelayServer?
 
+    @Query("SELECT * FROM relayserver WHERE url = :url")
+    fun getByUrl(url: String): RelayServer?
+
     @Update
     fun update(relaySrv: RelayServer)
 

@@ -29,6 +29,7 @@ import `in`.delog.db.dao.DraftDao
 import `in`.delog.db.dao.IdentDao
 import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.dao.MessageTreeDao
+import `in`.delog.db.dao.RelayDao
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 
@@ -40,9 +41,6 @@ val dataBaseModule = module(createdAtStart = true) {
     fun provideDataBase(application: Application): AppDatabase {
         appDatabase = Room.databaseBuilder(application, AppDatabase::class.java, "dlog")
             .addCallback(object : RoomDatabase.Callback() {
-                override fun onCreate(db: SupportSQLiteDatabase) {
-                    super.onCreate(db)
-                }
             })
             .fallbackToDestructiveMigration()
             .build()
@@ -77,6 +75,10 @@ val dataBaseModule = module(createdAtStart = true) {
         return dataBase.wantDao()
     }
 
+    fun provideRelayDao(dataBase: AppDatabase): RelayDao {
+        return dataBase.relayDao()
+    }
+
     single { provideDataBase(androidApplication()) }
     single { provideFeedDao(get()) }
     single { provideMessageDao(get()) }
@@ -85,4 +87,5 @@ val dataBaseModule = module(createdAtStart = true) {
     single { provideContactDao(get()) }
     single { provideAuthorInfoDao(get()) }
     single { provideWantDao(get()) }
+    single { provideRelayDao(get()) }
 }

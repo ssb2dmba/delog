@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import `in`.delog.ui.LocalActiveFeed
 import kotlinx.coroutines.launch
 
 
@@ -66,7 +67,9 @@ fun AppScaffold(
             ModalDrawerSheet(
                 modifier = Modifier.clickable { scope.launch { drawerState.close() } },
                 content = {
-                    AppDrawer { itemRoute ->
+                    val feed = LocalActiveFeed.current
+                    AppDrawer(feed) {
+                        itemRoute ->
                         scope.launch {
                             drawerState.close()
                         }

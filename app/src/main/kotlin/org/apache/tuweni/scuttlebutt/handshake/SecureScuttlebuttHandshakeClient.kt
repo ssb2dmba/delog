@@ -96,6 +96,7 @@ class SecureScuttlebuttHandshakeClient private constructor(
         if (!HMACSHA512256.verify(hmac, key, networkIdentifier)) {
             throw HandshakeException("MAC does not match our network identifier")
         }
+        
         serverEphemeralPublicKey = Box.PublicKey.fromBytes(key)
         sharedSecret = DiffieHelman.Secret
             .forKeys(

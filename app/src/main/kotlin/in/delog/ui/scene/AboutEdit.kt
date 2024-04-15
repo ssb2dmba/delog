@@ -134,6 +134,11 @@ fun AboutEdit(
             ExtendedFloatingActionButton(
                 onClick = {
                     viewModel.onSavingAbout(about)
+                    navHostController.navigate(Scenes.MainFeed.route) {
+                        popUpTo(navHostController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                    }
                 },
                 icon = {
                     Icon(

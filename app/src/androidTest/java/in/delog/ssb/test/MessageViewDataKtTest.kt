@@ -6,7 +6,7 @@ import `in`.delog.db.model.Message
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.serializeMessageContent
 import `in`.delog.model.toMessageViewData
-import `in`.delog.service.ssb.BaseSsbService.Companion.format
+import `in`.delog.service.ssb.SsbService.Companion.format
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,9 +16,9 @@ class MessageViewDataKtTest {
 
 
     @Test
-    fun draftToMessageViewData() {
+    suspend fun draftToMessageViewData() {
         var draft = Draft(1, "me", 1, "post", "content", "qwerty", "12345")
-        val mvd = draft.toMessageViewData()
+        val mvd = draft.toMessageViewData(format)
         assertEquals(draft.author, mvd.author)
         assertEquals(draft.contentAsText, mvd.contentAsText)
         assertEquals(draft.timestamp, mvd.timestamp)
@@ -45,7 +45,7 @@ class MessageViewDataKtTest {
     @Test
     fun contentMin() {
         val contentAsText = "{\"text\": \"lores ipsum ...\",\"type\": \"post\" }"
-        val mvd = MessageViewData("%deadbeef", 1, "@deadbeef", contentAsText)
+        val mvd = MessageViewData(1,"%deadbeef", 1, "@deadbeef", contentAsText)
         val c = mvd.serializeMessageContent(format)
         assertEquals("lores ipsum ...", c.text)
         assertEquals("post", c.type)
@@ -55,7 +55,7 @@ class MessageViewDataKtTest {
     fun contentMax() {
         var contentAsText =
             "{\"text\": \"lores ipsum ...\",\"type\": \"post\", \"branch\": \"#deadbeef\" , \"root\": \"#beefdead\" }"
-        var mvd = MessageViewData("%deadbeef", 1, "@deadbeef", contentAsText)
+        var mvd = MessageViewData(1, "%deadbeef", 1, "@deadbeef", contentAsText)
         var c = mvd.serializeMessageContent(format)
         assertEquals("lores ipsum ...", c.text)
         assertEquals("post", c.type)

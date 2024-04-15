@@ -48,11 +48,8 @@ import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -195,13 +192,15 @@ class DraftViewModel(
             // add sig & hash info
             val ssbSignedMessage = SsbSignedMessage(ssbSignableMessage, sig)
             val hash = ssbSignedMessage.makeHash()
-            ssbSignedMessage.key = "%" + hash!!.bytes().toBase64String() + ".sha256"
+            ssbSignedMessage.hash = "%" + hash!!.bytes().toBase64String() + ".sha256"
             // translate to db model
             val message = fromSsbSignedMessage(ssbSignedMessage)
             // save message & delete draft
             messageRepository.addMessage(message)
             draftRepository.deleteDraft(draft)
+            _messageViewData.value = MessageViewData.empty(feed.publicKey)
         }
+
     }
 
     fun selectImage(uri: Uri) {
@@ -250,7 +249,7 @@ fun fromSsbSignedMessage(ssbSignedMessage: SsbSignedMessage): Message {
         author = ssbSignedMessage.author,
         timestamp = ssbSignedMessage.timestamp,
         sequence = ssbSignedMessage.sequence,
-        key = ssbSignedMessage.key,
+        key = ssbSignedMessage.hash,
         contentAsText = Json.encodeToString(ssbSignedMessage.content),
         type = ssbSignedMessage.content.type,
         previous = ssbSignedMessage.previous.toString(),

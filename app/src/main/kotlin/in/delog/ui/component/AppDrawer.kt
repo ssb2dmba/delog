@@ -17,6 +17,7 @@
  */
 package `in`.delog.ui.component
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Drafts
@@ -41,17 +43,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.delog.R
-import `in`.delog.ui.LocalActiveFeed
+import `in`.delog.db.model.About
+import `in`.delog.db.model.Ident
+import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.ui.navigation.Scenes
+import `in`.delog.ui.scene.rememberQrBitmapPainter
 
 @Composable
 fun AppDrawer(
+    feed: IdentAndAboutWithBlob? = null,
     itemClick: (String?) -> Unit
 ) {
 
@@ -65,12 +73,12 @@ fun AppDrawer(
                 itemClick(null)
             },
         horizontalAlignment = Alignment.CenterHorizontally,
-        contentPadding = PaddingValues(vertical = 36.dp),
+        contentPadding = PaddingValues(vertical = 16.dp),
 
         ) {
 
         item {
-            val feed = LocalActiveFeed.current
+
             if (feed != null) {
                 // user's image
                 ProfileImage(identAndAboutWithBlob = feed)
@@ -83,6 +91,14 @@ fun AppDrawer(
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.outline
+                )
+                Image(
+                    modifier = Modifier.width(280.dp),
+                    painter = rememberQrBitmapPainter(
+                        content = feed.getContactString()
+                    ),
+                    contentDescription = "QR Code",
+                    contentScale = ContentScale.FillWidth
                 )
             }
         }
@@ -187,3 +203,21 @@ data class NavigationDrawerItem(
     val label: String,
     val route: String
 )
+
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewAppDrawer() {
+    val ident = Ident.empty(
+        server="duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion",
+        publicKey="@9//gUUApY1xyX9yC+6N5EBk1xRjpWeS8YfxBDeLt2O0=.ed25519"
+    )
+    val iAa = IdentAndAboutWithBlob(
+        ident = ident,
+        about = About.empty(key="@9//gUUApY1xyX9yC+6N5EBk1xRjpWeS8YfxBDeLt2O0=.ed25519",
+            name ="Alice"),
+        profileImage = null
+    );
+    AppDrawer(feed=iAa, itemClick = {})
+}

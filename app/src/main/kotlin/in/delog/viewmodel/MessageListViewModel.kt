@@ -34,10 +34,14 @@ import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.model.MessageViewData
+import `in`.delog.model.SsbMessageContent
+import `in`.delog.model.SsbSignableMessage
+import `in`.delog.model.SsbSignedMessage
 import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbService.Companion.format
+import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +54,8 @@ import kotlinx.coroutines.launch
 @Immutable
 data class FeedMainUIState(
     val messagesPaged: Flow<PagingData<AppDatabaseView.MessageInTree>>? = null,
-    val identAndAbout: IdentAndAboutWithBlob? = null
+    val identAndAbout: IdentAndAboutWithBlob? = null,
+    val torStatus: Int? = -1
 )
 
 class MessageListViewModel(
@@ -59,7 +64,8 @@ class MessageListViewModel(
     private val messageTreeRepository: MessageTreeRepository,
     private val identRepository: IdentRepository,
     private val messageRepository: MessageRepository,
-    private val blobRepository: BlobRepository
+    private val blobRepository: BlobRepository,
+    private val torService: TorService
     ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FeedMainUIState())
@@ -67,7 +73,6 @@ class MessageListViewModel(
     var messagesPaged: Flow<PagingData<MessageViewData>>? = null
 
     fun synchronize() {
-            Log.i(TAG,"enqueue work")
             viewModelScope.launch (Dispatchers.IO){
                 ssbService.replicateSync()
             }
@@ -79,6 +84,9 @@ class MessageListViewModel(
 
 
     init {
+        torService.status.observeForever {
+            _uiState.update { it.copy(torStatus = torService.status.value) }
+        }
         viewModelScope.launch(Dispatchers.IO) {
             if (key.startsWith("%")) {
                 val m: Message? = messageRepository.getMessage(key)
@@ -90,7 +98,7 @@ class MessageListViewModel(
             if (_uiState.value.identAndAbout == null) { // fallback to our
                 _uiState.update { it.copy(identAndAbout = identRepository.getFeed(key)) }
             }
-            //synchronize()
+            synchronize()
         }
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -112,7 +120,6 @@ class MessageListViewModel(
                         msgAndAbout.toMessageViewData(format, blobRepository)
                     }
                 }.cachedIn(viewModelScope)
-            //_ssbUIState.update { it.copy(loaded = true) }
         }
     }
 }

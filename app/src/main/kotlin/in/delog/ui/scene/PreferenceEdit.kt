@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -90,26 +91,28 @@ fun PreferencesEdit(navController: NavHostController) {
 
     // bottom bar setup
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
-    bottomBarViewModel.setActions {
-        BottomBarButton(
-            imageVector = Icons.Default.HomeRepairService,
-            onClick = {
-                openDialog.value = true
-            },
-            contentDescription = "reset"
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        BottomBarMainButton(
-            onClick = {
-                navController.navigate(Scenes.MainFeed.route){
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
+    LaunchedEffect(key1 = Unit) {
+        bottomBarViewModel.setActions {
+            BottomBarButton(
+                imageVector = Icons.Default.HomeRepairService,
+                onClick = {
+                    openDialog.value = true
+                },
+                contentDescription = "reset"
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            BottomBarMainButton(
+                onClick = {
+                    navController.navigate(Scenes.MainFeed.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
                     }
-                }
 
-                      },
-            text = "quit"
-        )
+                },
+                text = "quit"
+            )
+        }
     }
 
     // confirm dialog setup

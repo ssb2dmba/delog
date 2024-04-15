@@ -33,7 +33,7 @@
     <string name="network">network</string>
     <string name="description">bio/description</string>
     <string name="publish_about">publish about</string>
-    <string name="follow">follow</string>
+    <string name="follow">add contact</string>
     <string name="unfollow">unfollow</string>
     <string name="compose">compose</string>
     <string name="reply">reply</string>

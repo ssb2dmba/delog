@@ -28,6 +28,7 @@ import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
+import `in`.delog.db.model.isOnion
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.ContactRepository
@@ -37,8 +38,8 @@ import `in`.delog.model.SsbSignableMessage
 import `in`.delog.model.SsbSignedMessage
 import `in`.delog.repository.DidRepository
 import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,8 +66,8 @@ class IdentAndAboutViewModel(
     private val messageRepository: MessageRepository,
     private val didRepository: DidRepository,
     private val blobRepository: BlobRepository,
-    private val contactRepository: ContactRepository,
-    private val ssbService: SsbService
+    private val ssbService: SsbService,
+    private val torService: TorService
 ) : ViewModel() {
 
     private var _uiState: MutableStateFlow<AboutUIState?> = MutableStateFlow(null)
@@ -77,6 +78,9 @@ class IdentAndAboutViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = AboutUIState(identAndAboutWithBlob = identRepository.findById(pubKey))
+            if (_uiState.value?.identAndAboutWithBlob?.ident?.isOnion() == true) {
+                torService.start()
+            }
         }
     }
 
@@ -119,16 +123,17 @@ class IdentAndAboutViewModel(
     fun redeemInvite(ident: Ident) {
         viewModelScope.launch {
 
-            ssbService.connectWithInvite(ident,
-                {
-                    // everything is going according to the plan
-                    MainApplication.toastify("Identity has been successfully validated on the relay.")
-                    _redirect.value = ident
-                },
-                {
-                    MainApplication.toastify(it.message.toString())
-                    _redirect.value = ident
-                })
+                ssbService.connectWithInvite(ident,
+                    {
+                        // everything is going according to the plan
+                        MainApplication.toastify("Identity has been successfully validated on the relay.")
+                        _redirect.value = ident
+
+                    },
+                    {
+                        MainApplication.toastify(it.message.toString())
+                        _redirect.value = ident
+                    })
         }
     }
 
@@ -174,7 +179,7 @@ class IdentAndAboutViewModel(
             // add sig & hash info
             val ssbSignedMessage = SsbSignedMessage(ssbSignableMessage, sig)
             val hash = ssbSignedMessage.makeHash()
-            ssbSignedMessage.key = "%" + hash!!.bytes().toBase64String() + ".sha256"
+            ssbSignedMessage.hash = "%" + hash!!.bytes().toBase64String() + ".sha256"
             // translate to db model
             val message = fromSsbSignedMessage(ssbSignedMessage)
             // save message & delete draft
