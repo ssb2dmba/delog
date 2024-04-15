@@ -29,6 +29,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ runner.os }}
 
       - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
