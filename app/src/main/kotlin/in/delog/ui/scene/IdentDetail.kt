@@ -65,6 +65,7 @@ import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.getInviteURl
+import `in`.delog.db.model.isOnion
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
@@ -271,6 +272,11 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                 ident.server = server
                 ident.defaultIdent = defaultIdent
                 vm.onSavingIdent(ident)
+                navHostController.navigate(Scenes.MainFeed.route) {
+                    popUpTo(navHostController.graph.startDestinationId) {
+                        inclusive = true
+                    }
+                }
             },
             text = { Text(text = stringResource(id = R.string.save)) },
             icon = {
@@ -293,6 +299,7 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
     }
 
     if (showInviteRequest) {
+
         val inviteUrl = ident.getInviteURl()
         InviteWebRequest(inviteUrl, ::setUpInvite)
         return

@@ -32,6 +32,8 @@ import `in`.delog.db.repository.MessageRepository
 import `in`.delog.db.repository.MessageRepositoryImpl
 import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.db.repository.MessageTreeRepositoryImpl
+import `in`.delog.db.repository.RelayRepository
+import `in`.delog.db.repository.RelayRepositoryImpl
 import `in`.delog.repository.DidRepository
 import `in`.delog.repository.DidRepositoryImpl
 import `in`.delog.viewmodel.BottomBarViewModel
@@ -59,11 +61,11 @@ val mainViewModel = module {
     single { MessageRepositoryImpl(get()) }
     factory<MessageRepository> { (MessageRepositoryImpl(get())) }
     factory<MessageTreeRepository> { (MessageTreeRepositoryImpl(get())) }
-    viewModel { MessageListViewModel( get(), get(), get(), get(),get(), get()) }
+    viewModel { MessageListViewModel( get(), get(), get(), get(),get(), get(), get()) }
 
     factory<DraftRepository> { (DraftRepositoryImpl(get())) }
     viewModel { DraftListViewModel(get(), get(), get()) }
-    viewModel { ContactListViewModel(get(), get()) }
+    viewModel { ContactListViewModel(get(), get(), get()) }
 
     single { ContactRepositoryImpl(get()) }
     factory<ContactRepository> { (ContactRepositoryImpl(get())) }
@@ -80,4 +82,6 @@ val mainViewModel = module {
     single { BlobRepositoryImpl(get(), get()) }
     factory<BlobRepository> { (BlobRepositoryImpl(get(), get())) }
 
+    single { RelayRepositoryImpl(get()) }
+    factory<RelayRepository> { (RelayRepositoryImpl(get())) }
 }

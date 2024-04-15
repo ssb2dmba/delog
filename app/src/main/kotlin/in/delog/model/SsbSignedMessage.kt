@@ -29,7 +29,7 @@ data class SsbSignedMessage(
     var sequence: Long,
     var author: String,
     var timestamp: Long,
-    var key: String,
+    var hash: String,
     var content: SsbMessageContent,
     var signature: String,
 ) {
@@ -38,7 +38,7 @@ data class SsbSignedMessage(
         sequence = signable.sequence,
         author = signable.author,
         timestamp = signable.timestamp,
-        key = signable.hash,
+        hash = signable.hash,
         content = signable.content,
         signature = sequence.toBase64String() + ".sig.ed25519"
     )
@@ -48,7 +48,7 @@ data class SsbSignedMessage(
             serializer(),
             this
         )
-        return SHA256Hash.hash(SHA256Hash.Input.fromBytes(Bytes.wrap(message.toByteArray())))
+        return SHA256Hash.hash(SHA256Hash.Input.fromBytes(Bytes.wrap(message.toByteArray(Charsets.UTF_8))))
     }
 }
 

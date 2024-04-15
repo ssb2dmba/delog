@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
@@ -78,7 +79,7 @@ fun IdentityBox(
     }
 
 
-    Row(modifier = Modifier.padding(16.dp)) {
+    Row(modifier = Modifier.padding(16.dp).wrapContentWidth()) {
         // column image
         Column(modifier = Modifier.width(56.dp)) {
             ProfileImage(identAndAboutWithBlob= identAndAboutWithBlob)
@@ -88,9 +89,7 @@ fun IdentityBox(
         // column text
         Column {
             // private Key
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Row {
                 Text(
                     text = identAndAboutWithBlob.ident.publicKey,
                     modifier = Modifier
@@ -117,9 +116,7 @@ fun IdentityBox(
             // alias + button
             Row(
                 verticalAlignment = Alignment.Top,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 Text(
                     text = identAndAboutWithBlob.getNetworkIdentifier(),
@@ -200,4 +197,3 @@ fun IdentityCardPreview() {
         }
     }
 }
-

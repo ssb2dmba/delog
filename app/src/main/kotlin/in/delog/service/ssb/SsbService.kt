@@ -107,6 +107,7 @@ class SsbService(
 
 
     suspend fun replicateSync():CompletableFuture<Boolean> {
+
         promise= CompletableFuture<Boolean>()
         identRepository.default.take(1).collect {
             if (it != null) {
@@ -121,15 +122,15 @@ class SsbService(
         try {
             val keyPair = pFeed.asKeyPair()
             if (keyPair == null || pFeed.server.isEmpty()) {
-                Log.e(TAG, "attempting to connect but no identity")
+                Log.d(TAG, "attempting to connect but no identity")
                 throw Exception("no identity")
             }
             if (pFeed.invite == null) {
-                Log.e("ssb", "attempting to connect but no invite !")
+                Log.d("ssb", "attempting to connect but no invite !")
                 throw Exception("no invite")
             }
             if (_uiState.value.connecting || _uiState.value.connected) {
-                Log.e("ssb", "already connected")
+                Log.d("ssb", "already connected")
                 throw Exception("already connected")
             }
             runBlocking {   reconnect(pFeed) }
@@ -203,9 +204,7 @@ class SsbService(
         callBack = terminationFn
 
         for (i in 0..MAX_RETRY) {
-            //disconnect()
             vertx  = Vertx.vertx()
-            //runBlocking { delay(1000) }
             secureScuttlebuttVertxClient =
                 SecureScuttlebuttVertxClient(vertx, keyPair!!, ScuttlebuttClientFactory.DEFAULT_NETWORK)
             try {
@@ -216,7 +215,7 @@ class SsbService(
                 e.message?.let { Log.e(TAG, it) }
                 if (i >= 2) throw e
             } catch (e: Exception) {
-                println(e)
+                e.message?.let { Log.d(TAG, it) }
                 //torService.torOperationManager.restart()
                 runBlocking { delay(500L * i) }
                 if (i >= MAX_RETRY) throw e
@@ -334,22 +333,27 @@ class SsbService(
             }
             val inviteString = feed.invite!!
             val invite: Invite = Invite.fromCanonicalForm(inviteString)
-            val vertx: Vertx = Vertx.vertx()
-            val ssbInviteClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
-                feed.toCanonicalForm(),
-                vertx,
-                feed.asKeyPair()!!,
-                invite,
-                ScuttlebuttClientFactory.DEFAULT_NETWORK
-            )
 
-            val params = HashMap<String, String>()
-            params["feed"] = feed.publicKey
-            val asyncRequest = RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
-            val rpcMessageAsyncResult =
-                ssbInviteClient.rawRequestService.makeAsyncRequest(asyncRequest)
-            _uiState.update { it.copy(error = null, connecting = false) }
-            callBack(rpcMessageAsyncResult)
+            for (i in 0..MAX_RETRY) {
+                val vertx: Vertx = Vertx.vertx()
+                val ssbInviteClient: ScuttlebuttClient = ScuttlebuttClientFactory.withInvite(
+                    feed.toCanonicalForm(),
+                    vertx,
+                    feed.asKeyPair()!!,
+                    invite,
+                    ScuttlebuttClientFactory.DEFAULT_NETWORK
+                )
+
+                val params = HashMap<String, String>()
+                params["feed"] = feed.publicKey
+                val asyncRequest =
+                    RPCAsyncRequest(RPCFunction(listOf("invite"), "use"), listOf(params))
+                val rpcMessageAsyncResult =
+                    ssbInviteClient.rawRequestService.makeAsyncRequest(asyncRequest)
+                _uiState.update { it.copy(error = null, connecting = false) }
+                callBack(rpcMessageAsyncResult)
+                break
+            }
         } catch (ex: Exception) {
             _uiState.update { it.copy(error = ex, connecting = false) }
             if (errorCb != null) {

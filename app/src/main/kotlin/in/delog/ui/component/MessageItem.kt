@@ -238,6 +238,7 @@ fun MessageItem(
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
+                    .padding(8.dp)
                     .width(64.dp)
             ) {
                 if( messageViewData.authorImage.isNullOrEmpty()) {
@@ -260,14 +261,12 @@ fun MessageItem(
                 Row(
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
                 ) {
 
                     Row {
                         Text(
-                            modifier = Modifier
-                                .weight(0.9f),
-                            //.padding(2.dp),
+                            modifier = Modifier.weight(0.9f),
                             text = messageViewData.authorName ?: messageViewData.author,
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.titleSmall,

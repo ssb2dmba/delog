@@ -45,10 +45,10 @@ data class About(
 
     ) {
     companion object {
-        fun empty(key: String): About {
+        fun empty(key: String, name : String=""): About {
             return About(
                 key,
-                "",
+                name,
                 "",
                 "",
                 false
@@ -140,6 +140,12 @@ data class IdentAndAboutWithBlob(
         val server = if (this.ident.server.isEmpty()) "" else "@" + this.ident.server
         return about.name + server
     }
+
+    fun getContactString(): String {
+        val server = if (this.ident.server.isEmpty()) "" else "@" + this.ident.server
+        return this.ident.publicKey + server
+    }
+
 }
 
 data class ContactAndAbout(

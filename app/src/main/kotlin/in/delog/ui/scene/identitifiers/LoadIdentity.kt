@@ -26,13 +26,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import `in`.delog.R
+import `in`.delog.db.SettingStore
+import `in`.delog.db.SettingStore.Companion.SERVER_URL
 import `in`.delog.db.model.Ident
 import `in`.delog.ui.CameraQrCodeScanner
 import `in`.delog.ui.component.EditDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.apache.tuweni.crypto.sodium.Signature
 import org.apache.tuweni.io.Base64
 import org.apache.tuweni.scuttlebutt.Identity
@@ -202,15 +208,17 @@ fun LoadIdentity(
     }
 
     if (showInviteUrlDialog) {
+        val context = LocalContext.current
+        val store = SettingStore(context)
         EditDialog(
             title = R.string.edit_default_invite_url,
             value = serverName,
             closeDialog = { showInviteUrlDialog = false },
             setValue = {
-//                CoroutineScope(Dispatchers.IO).launch {
-//                    store.saveData(SERVER_URL, it)
-//                    showInviteUrlDialog = false
-//                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    store.saveData(SERVER_URL, it)
+                    showInviteUrlDialog = false
+                }
             }
         )
     }

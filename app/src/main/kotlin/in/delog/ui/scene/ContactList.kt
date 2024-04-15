@@ -17,15 +17,17 @@
  */
 package `in`.delog.ui.scene
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,6 +39,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.internal.isLiveLiteralsEnabled
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,10 +54,11 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.db.model.About
-import `in`.delog.db.model.Contact
 import `in`.delog.db.model.ContactAndAbout
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.IdentAndAboutWithBlob
+import `in`.delog.service.ssb.SsbService.Companion.TAG
+import `in`.delog.ui.CameraQrCodeScanner
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.IdentityBox
@@ -67,12 +71,12 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun ContactList(navController: NavController) {
-    val feed = LocalActiveFeed.current ?: return
+
 
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     var showAddContactDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key1 = Unit) {
         bottomBarViewModel.setActions {}
         bottomBarViewModel.setActions {
             Spacer(modifier = Modifier.weight(1f))
@@ -80,24 +84,46 @@ fun ContactList(navController: NavController) {
         }
     }
 
+    val feed = LocalActiveFeed.current ?: return
     val contactListViewModel =
         koinViewModel<ContactListViewModel>(parameters = { parametersOf(feed.ident.publicKey) })
     val fpgDrafts: Flow<PagingData<ContactAndAbout>> = contactListViewModel.contactsPaged
     val lazyContactItems: LazyPagingItems<ContactAndAbout> = fpgDrafts.collectAsLazyPagingItems()
+    var showCameraScanner: Boolean by remember { mutableStateOf(false) }
+    var publicKey by remember { mutableStateOf("") }
+    var isError by remember { mutableStateOf(true) }
+    fun validate(text: String) {
+        val regexp="^@[a-zA-Z0-9/+]+=.ed25519@+[a-zA-Z0-9.+]*\$".toRegex()
+        isError = !regexp.matches(text)
+    }
+    if (showCameraScanner) {
+        CameraQrCodeScanner {
+            validate(it)
+            publicKey = it;
+            showCameraScanner = false
+        }
+        return
+    }
+
 
     if (showAddContactDialog) {
 
         fun addContact(strContact: String) {
-            val contact = Contact(0, feed.ident.publicKey, strContact, true)
-            contactListViewModel.insert(contact)
+            try {
+                contactListViewModel.insert(feed.ident.publicKey, strContact)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error adding contact", e)
+                // TODO toast error
+                return
+            }
             showAddContactDialog = false
+            publicKey = ""
+            isError = false
         }
 
-        var publicKey by remember { mutableStateOf("") }
-        var isError by remember { mutableStateOf(false) }
-        fun validate(text: String) {
-            isError = text.length > 5
-        }
+
+
+
         AlertDialog(
             onDismissRequest = { showAddContactDialog = false },
             containerColor = MaterialTheme.colorScheme.surface,
@@ -119,7 +145,9 @@ fun ContactList(navController: NavController) {
                     isError = isError,
                     trailingIcon = {
                         IconButton(
-                            onClick = {}
+                            onClick = {
+                                showCameraScanner = true
+                            }
                         ) {
                             Icon(
                                 Icons.Filled.PhotoCamera,
@@ -149,9 +177,10 @@ fun ContactList(navController: NavController) {
             }
         )
 
+
     }
 
-    LazyVerticalGrid(columns = GridCells.Fixed(1)) {
+    LazyColumn {
         items(
             count = lazyContactItems.itemCount,
         ) { index ->
@@ -169,6 +198,40 @@ fun ContactListItem(
 ) {
     if (contactAndAbout.about == null) contactAndAbout.about =
         About(about = contactAndAbout.contact.follow)
+    var showConfirmRemoveDialog by remember { mutableStateOf(false) }
+    if (showConfirmRemoveDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmRemoveDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Text(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    text = stringResource(id = R.string.confirm_delete),
+                    style = MaterialTheme.typography.titleSmall
+                )
+            },
+            text = {
+                Text("Remove contact from your contact list")
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showConfirmRemoveDialog = false
+                    }) {
+                    Text(stringResource(id = R.string.dismiss))
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        contactListViewModel.remove(contactAndAbout.contact)
+                        showConfirmRemoveDialog = false
+                    }) {
+                    Text(stringResource(id = R.string.confirm_delete))
+                }
+            }
+        )
+    }
     Box(modifier = Modifier.fillMaxWidth()) {
 
         val identAndAbout = IdentAndAboutWithBlob(
@@ -177,20 +240,21 @@ fun ContactListItem(
             profileImage = null // TODO
         )
         IdentityBox(identAndAboutWithBlob = identAndAbout)
-        Button(
+        IconButton(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(12.dp),
+                .align(Alignment.CenterEnd)
+                .padding(16.dp),
             onClick = {
-                contactListViewModel.remove(contactAndAbout.contact)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiary
-            )
+                showConfirmRemoveDialog = true
+            }
         ) {
-            Text(stringResource(id = R.string.unfollow))
+            Icon(
+                Icons.Filled.RemoveCircle,
+                contentDescription = stringResource(id = R.string.unfollow),
+                modifier = Modifier.width(ButtonDefaults.MinWidth)
+            )
         }
+
     }
 }
 

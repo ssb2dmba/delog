@@ -17,8 +17,12 @@
  */
 package `in`.delog.db
 
+import androidx.room.AutoMigration
 import androidx.room.Database
+import androidx.room.DeleteColumn
+import androidx.room.RenameColumn
 import androidx.room.RoomDatabase
+import androidx.room.migration.AutoMigrationSpec
 import `in`.delog.db.dao.AboutDao
 import `in`.delog.db.dao.BlobDao
 import `in`.delog.db.dao.ContactDao
@@ -48,7 +52,10 @@ import `in`.delog.db.model.RelayServer
     views = [
         AppDatabaseView.MessageInTree::class
     ],
-    version = 12
+    version = 13,
+    autoMigrations = [
+        AutoMigration (from = 12, to = 13, spec= AppDatabase.AutoMigration13::class)
+    ]
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun identDao(): IdentDao
@@ -57,6 +64,18 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun draftDao(): DraftDao
     abstract fun contactDao(): ContactDao
     abstract fun authorInfoDao(): AboutDao
-    abstract fun pubServerDao(): RelayDao
+    abstract fun relayDao(): RelayDao
     abstract fun wantDao(): BlobDao
+
+
+
+    @DeleteColumn(tableName = "RelayServer", columnName = "public_key")
+    @RenameColumn(
+        tableName = "RelayServer",
+        fromColumnName = "server",
+        toColumnName = "url"
+    )
+    class AutoMigration13: AutoMigrationSpec {
+    }
+
 }
