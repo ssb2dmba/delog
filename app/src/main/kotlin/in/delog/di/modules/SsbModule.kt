@@ -18,12 +18,21 @@
 package `in`.delog.di.modules
 
 import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.SyncStatusMonitor
+import `in`.delog.service.ssb.SyncWorker
 import `in`.delog.service.ssb.TorService
+import `in`.delog.service.ssb.WorkManagerSyncStatusMonitor
+import org.koin.androidx.workmanager.dsl.workerOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.koin.core.module.dsl.bind
+import kotlinx.coroutines.Dispatchers
 
 val ssbModule = module {
 
     single { TorService(get()) }
-    single { SsbService(get(), get(), get(), get(), get()) }
-
+    single { Dispatchers.IO }
+    single { SsbService(get(), get(), get(), get(), get(),get()) }
+    singleOf (::WorkManagerSyncStatusMonitor) { bind<SyncStatusMonitor>() }
+    workerOf(::SyncWorker)
 }

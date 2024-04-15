@@ -187,7 +187,7 @@ class SecureScuttlebuttHandshakeClient private constructor(
                     ),
                 SecretBox.Nonce.fromBytes(ByteArray(24))
             )
-            ?: throw HandshakeException("1 - Could not decrypt accept message with our shared secrets")
+            ?: throw HandshakeException("Could not decrypt accept message with our shared secrets :" + message.toString())
         val verified = serverLongTermPublicKey!!
             .verify(
                 Concatenate()

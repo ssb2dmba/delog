@@ -17,8 +17,8 @@
  */
 package `in`.delog.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -26,7 +26,6 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import `in`.delog.MainApplication
 import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
@@ -37,9 +36,9 @@ import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbService.Companion.format
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -63,21 +62,15 @@ class MessageListViewModel(
     private val blobRepository: BlobRepository
     ) : ViewModel() {
 
-
-
-    private lateinit var torStatus: LiveData<Int>
-
     private val _uiState = MutableStateFlow(FeedMainUIState())
     val uiState: StateFlow<FeedMainUIState> = _uiState.asStateFlow()
     var messagesPaged: Flow<PagingData<MessageViewData>>? = null
 
-
-    private fun synchronize() {
-        // we launch in global scope so the service still working if the viewmodel is destroyed
-        GlobalScope.launch(Dispatchers.IO) {
-            if (_uiState.value.identAndAbout==null) return@launch
-            ssbService.synchronize( _uiState.value.identAndAbout!!.ident)
-        }
+    fun synchronize() {
+            Log.i(TAG,"enqueue work")
+            viewModelScope.launch (Dispatchers.IO){
+                ssbService.replicateSync()
+            }
     }
 
     fun clearError() {
@@ -97,7 +90,7 @@ class MessageListViewModel(
             if (_uiState.value.identAndAbout == null) { // fallback to our
                 _uiState.update { it.copy(identAndAbout = identRepository.getFeed(key)) }
             }
-            synchronize()
+            //synchronize()
         }
 
         viewModelScope.launch(Dispatchers.IO) {

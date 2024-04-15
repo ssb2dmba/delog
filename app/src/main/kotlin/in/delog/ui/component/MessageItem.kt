@@ -21,6 +21,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.text.format.DateUtils
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -333,13 +334,21 @@ fun openView( it: BlobItem) {
     val context = MainApplication.applicationContext()
     val type = it.type
     try {
+
+        val mimeTypeMap = MimeTypeMap.getSingleton()
+        val extension = mimeTypeMap.getExtensionFromMimeType(type)
+
+
+        val outputDir = context.externalCacheDir
+        val outputFile = File.createTempFile("delog.in", ".$extension", outputDir)
+        File(it.uri.path!!).copyTo(outputFile, true)
+
         val intent = Intent()
         intent.setAction(Intent.ACTION_VIEW)
-
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-            val contentUri =
-                FileProvider.getUriForFile(context, "in.delog.provider", File(it.uri.path!!))
-            intent.setDataAndType(contentUri, type)
+        val contentUri =
+            FileProvider.getUriForFile(context, "in.delog.provider", outputFile)
+        intent.setDataAndType(contentUri, type)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
 
         context.startActivity(intent)
     } catch (anfe: ActivityNotFoundException) {

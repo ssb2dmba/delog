@@ -47,6 +47,7 @@ interface BlobRepository {
     suspend fun insertOwnBlob(author: String, uri: Uri): BlobItem?
     suspend fun update(author: String, uri: Uri): BlobItem?
     fun getTempFile(hash: String): File
+    suspend fun doWeAlreadyHave(author: String, hash: String): Boolean
 }
 
 class BlobRepositoryImpl(
@@ -133,16 +134,18 @@ class BlobRepositoryImpl(
 
     override suspend fun update(author: String, uri: Uri): BlobItem? {
         val blobItem = ingestBlob(uri) ?: return null
-        val existing = blobDao.get(blobItem.key)
-        if (existing == null) {
+        val existings = blobDao.getAll(blobItem.key)
+        if (existings.isEmpty()) {
             Log.w(TAG, "ingesting not wanted blob ? :${blobItem.key}")
             return null
         }
-        existing.key = blobItem.key
-        existing.has = true
-        existing.size = blobItem.size
-        existing.type = blobItem.type
-        blobDao.update(existing)
+        for (existing in existings) {
+            existing.key = blobItem.key
+            existing.has = true
+            existing.size = blobItem.size
+            existing.type = blobItem.type
+            blobDao.update(existing)
+        }
         return blobItem
     }
 
@@ -239,6 +242,33 @@ class BlobRepositoryImpl(
         val tmpFile =  File(context.cacheDir, hexhash)
         if (!tmpFile.exists()) tmpFile.createNewFile()
         return tmpFile
+    }
+
+    override suspend fun doWeAlreadyHave(author: String, hash: String): Boolean {
+        var alreadyHave = false
+        var type = ""
+        var size = 0L
+        val blobLines = blobDao.getAll(hash)
+        blobLines.forEach {
+            if (it.has) {
+                alreadyHave = true
+                type = it.type ?: ""
+                size = it.size
+            }
+        }
+        if (!alreadyHave) return false
+        blobLines.forEach {
+            if (!it.has) {
+                it.type = type
+                it.size = size
+                it.has = true
+                blobDao.update(it)
+            }
+        }
+
+
+
+        return alreadyHave
     }
 
 }
