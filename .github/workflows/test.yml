@@ -38,7 +38,9 @@ jobs:
           disable-animations: true
           ndk: 25.1.8937393
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew connectedCheck -PrunInGithubCi=true -PcucumberUseAndroidJUnitRunner=false --no-daemon --stacktrace
+          script: | 
+            ./gradlew connectedCheck -PrunInGithubCi=true -PcucumberUseAndroidJUnitRunner=false --no-daemon --stacktrace 
+            ./gradlew connectedCheck -PrunInGithubCi=true -PcucumberUseAndroidJUnitRunner=true --no-daemon --stacktrace
 
 #      - name: run cucumber tests
 #        uses: reactivecircus/android-emulator-runner@v2
