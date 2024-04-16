@@ -69,7 +69,7 @@ android {
             ]
         }
 
-        if (runInGithubCi.toBoolean()) {
+        if (project.hasProperty('runInGithubCi')) {
             ndk.abiFilters 'x86_64'
         } else {
             ndk.abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
