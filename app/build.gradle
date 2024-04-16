@@ -58,19 +58,14 @@ android {
 
 
     defaultConfig {
-        minSdk 26
+        minSdk 21
         targetSdk 34
         versionCode 1
         versionName "1.0"
         applicationId  "in.delog.ssb"
         testApplicationId  "in.delog.ssb.test"
         testInstrumentationRunner getInstrumentation()
-
-        if (runInGithubCi.toBoolean()) {
-            ndk.abiFilters 'x86_64'
-        } else {
-            ndk.abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-        }
+        ndk.abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
 
 
         javaCompileOptions {
@@ -282,21 +277,13 @@ gradle.projectsEvaluated {
     preBuild.dependsOn 'generateSWIGsource'
 }
 
-def nativeTasks = []
-if (runInGithubCi.toBoolean()) {
-    nativeTasks = [
-            [input_arch: 'x86_64', output_arch: 'android-westmere', ndk_platform: 'android-21'],
-    ]
-} else {
-    nativeTasks = [
-            [input_arch: 'arm', output_arch: 'android-armv6', ndk_platform: 'android-19'],
-            [input_arch: 'armv7-a', output_arch: 'android-armv7-a', ndk_platform: 'android-19'],
-            [input_arch: 'armv8-a', output_arch: 'android-armv8-a', ndk_platform: 'android-21'],
-            [input_arch: 'x86', output_arch: 'android-i686', ndk_platform: 'android-19'],
-            [input_arch: 'x86_64', output_arch: 'android-westmere', ndk_platform: 'android-21'],
-    ]
-}
-
+def nativeTasks = [
+        [input_arch: 'arm', output_arch: 'android-armv6', ndk_platform: 'android-19'],
+        [input_arch: 'armv7-a', output_arch: 'android-armv7-a', ndk_platform: 'android-19'],
+        [input_arch: 'armv8-a', output_arch: 'android-armv8-a', ndk_platform: 'android-21'],
+        [input_arch: 'x86', output_arch: 'android-i686', ndk_platform: 'android-19'],
+        [input_arch: 'x86_64', output_arch: 'android-westmere', ndk_platform: 'android-21'],
+]
 nativeTasks.each { opts ->
     def taskname = "compileNative_${opts['output_arch']}"
 
