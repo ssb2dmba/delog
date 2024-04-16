@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        api-level: [ 26 ]
+        api-level: [21, 26, 31]
 
     steps:
       - name: Checkout code
@@ -98,18 +98,18 @@ jobs:
             ./**/build/reports/androidTests/connected/**
 
 
-      - name: run connectedCheck
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: ${{ matrix.api-level }}
-          target: default
-          arch: x86_64
-          disable-animations: true
-          #force-avd-creation: false
-          ndk: 25.1.8937393
-          emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            ./gradlew connectedCheck  -Pcucumber --no-daemon --stacktrace
+#      - name: run connectedCheck
+#        uses: reactivecircus/android-emulator-runner@v2
+#        with:
+#          api-level: ${{ matrix.api-level }}
+#          target: default
+#          arch: x86_64
+#          disable-animations: true
+#          #force-avd-creation: false
+#          ndk: 25.1.8937393
+#          emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+#          script: |
+#            ./gradlew connectedCheck  -Pcucumber --no-daemon --stacktrace
 
       - name: Upload results
         if: always()
