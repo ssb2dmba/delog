@@ -80,7 +80,7 @@ jobs:
           ndk: 25.1.8937393
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: | 
-            ./gradlew connectedCheck -PrunInGithubCi --no-daemon --stacktrace
+            ./gradlew connectedCheck --no-daemon --stacktrace
 
       - name: Upload results
         uses: actions/upload-artifact@v3
@@ -102,7 +102,7 @@ jobs:
           ndk: 25.1.8937393
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            ./gradlew connectedCheck -PrunInGithubCi -Pcucumber --no-daemon --stacktrace
+            ./gradlew connectedCheck  -Pcucumber --no-daemon --stacktrace
 
       - name: Upload results
         uses: actions/upload-artifact@v3
