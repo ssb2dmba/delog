@@ -8,7 +8,7 @@ Feature: Onboarding with mnemonic
     Then I wait '5000'
     Then I click 'identifiers'
     Then I wait '5000'
-    Then I click button 'new_identifier'
+    Then I click 'New identifier'
     Then "load identifier" text is presented
     Then I click 'from mnemonic'
     Then "Please select your 24 words mnemonic" text is presented
