@@ -60,14 +60,14 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      - name: create AVD and generate snapshot for caching
-        #if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: ${{ matrix.api-level }}
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          script: echo "Generated AVD snapshot for caching."
+#      - name: create AVD and generate snapshot for caching
+#        #if: steps.avd-cache.outputs.cache-hit != 'true'
+#        uses: reactivecircus/android-emulator-runner@v2
+#        with:
+#          api-level: ${{ matrix.api-level }}
+#          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+#          disable-animations: false
+#          script: echo "Generated AVD snapshot for caching."
 
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest --no-daemon --stacktrace
@@ -79,7 +79,7 @@ jobs:
           target: default
           arch: x86_64
           disable-animations: true
-          force-avd-creation: false
+          #force-avd-creation: false
           ndk: 25.1.8937393
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: | 
@@ -102,7 +102,7 @@ jobs:
           target: default
           arch: x86_64
           disable-animations: true
-          force-avd-creation: false
+          #force-avd-creation: false
           ndk: 25.1.8937393
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
