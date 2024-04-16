@@ -57,6 +57,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
+          cache: gradle
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -73,7 +74,7 @@ jobs:
 #          script: echo "Generated AVD snapshot for caching."
 
       - name: build tests
-        run: ./gradlew assembleDebug assembleAndroidTest --no-daemon --stacktrace
+        run: ./gradlew assembleDebug assembleAndroidTest  --stacktrace
 
       - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
@@ -86,7 +87,7 @@ jobs:
           ndk: 25.1.8937393
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: | 
-            ./gradlew connectedCheck --no-daemon --stacktrace
+            ./gradlew connectedCheck  --stacktrace
 
       - name: Upload results
         if: always()
@@ -109,7 +110,7 @@ jobs:
 #          ndk: 25.1.8937393
 #          emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
 #          script: |
-#            ./gradlew connectedCheck  -Pcucumber --no-daemon --stacktrace
+#            ./gradlew connectedCheck  -Pcucumber --stacktrace
 
       - name: Upload results
         if: always()
