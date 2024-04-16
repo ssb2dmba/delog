@@ -288,7 +288,7 @@ gradle.projectsEvaluated {
 def nativeTasks = []
 if (runInGithubCi.toBoolean()) {
     nativeTasks = [
-            [input_arch: 'x86', output_arch: 'android-i686', ndk_platform: 'android-19']
+            [input_arch: 'x86_64', output_arch: 'android-westmere', ndk_platform: 'android-21'],
     ]
 } else {
     nativeTasks = [
