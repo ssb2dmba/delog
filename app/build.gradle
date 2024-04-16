@@ -58,7 +58,7 @@ android {
         versionName "1.0"
         applicationId  "in.delog.ssb"
         testApplicationId  "in.delog.ssb.test"
-        if (!cucumberUseAndroidJUnitRunner.toBoolean()) {
+        if (project.hasProperty('cucumber')) {
             testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         } else {
             testInstrumentationRunner "in.delog.ssb.test.Instrumentation"

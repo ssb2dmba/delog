@@ -6,7 +6,7 @@ Feature: Onboarding with mnemonic
     When I open application
     Then I open drawer
     Then I click 'identifiers'
-    Then I click button 'new_identifier'
+    Then I click 'New identifier'
     Then "load identifier" text is presented
     Then I click 'from mnemonic'
     Then "Please select your 24 words mnemonic" text is presented

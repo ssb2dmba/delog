@@ -34,7 +34,7 @@ class CommonSteps(
     @Then("I click {string}")
     fun I_click(s: String) {
         Thread.sleep(sleep)
-        onNodeWithText(s).performClick();
+        onNodeWithText(s, true, true, true).performClick();
         Thread.sleep(sleep)
     }
 
