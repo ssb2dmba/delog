@@ -69,6 +69,9 @@ jobs:
           disable-animations: false
           script: echo "Generated AVD snapshot for caching."
 
+      - name: build tests
+        run: ./gradlew assembleDebug assembleAndroidTest --no-daemon --stacktrace
+
       - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
         with:
