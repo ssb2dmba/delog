@@ -63,7 +63,7 @@ class CommonSteps(
     fun I_submit_webview() {
         Thread.sleep(sleep)
         onWebView().withElement(findElement(Locator.ID, "captcha"))
-            .perform(DriverAtoms.webKeys("1234"))
+            .perform(DriverAtoms.webKeys("1234"),)
         onWebView().withElement(findElement(Locator.NAME, "action")).perform(webClick())
         Thread.sleep(sleep)
     }
