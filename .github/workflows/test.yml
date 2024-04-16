@@ -10,6 +10,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      matrix:
+        api-level: [26]
 
     steps:
       - name: Checkout code
@@ -23,28 +26,47 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: 17
 
+      - name: create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
       - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 26
+          api-level: ${{ matrix.api-level }}
           target: default
           arch: x86_64
           disable-animations: true
+          force-avd-creation: false
           ndk: 25.1.8937393
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: | 
-            ./gradlew connectedCheck -PrunInGithubCi=true -Pcucumber --no-daemon --stacktrace
+            ./gradlew connectedCheck -PrunInGithubCi -Pcucumber --no-daemon --stacktrace
 
       - name: Upload results
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.api-level }}-instrumentation-test-results
+          name: cucumber-api-${{ matrix.api-level }}-instrumentation-test-results
           path: |
             emulator.log
             ./**/build/reports/androidTests/connected/**
