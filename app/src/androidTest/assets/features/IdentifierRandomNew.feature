@@ -5,7 +5,7 @@ Feature: Onboarding with new key
     When I open application
     Then I open drawer
     Then I click 'identifiers'
-    Then I click button 'new_identifier'
+    Then I click 'New identifier'
     Then "load identifier" text is presented
     Then I click 'from entropy'
     Then I submit webview passing succesfully the captcha
