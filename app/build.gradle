@@ -23,6 +23,11 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
+def getTestInstrumentationRunner = {
+    project.hasProperty('cucumber')
+            ? 'in.delog.ssb.test.Instrumentation'
+            : 'androidx.test.runner.AndroidJUnitRunner'
+}
 
 android {
     namespace 'in.delog'
@@ -58,16 +63,8 @@ android {
         versionName "1.0"
         applicationId  "in.delog.ssb"
         testApplicationId  "in.delog.ssb.test"
-        if (project.hasProperty('cucumber')) {
-            testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        } else {
-            testInstrumentationRunner "in.delog.ssb.test.Instrumentation"
-            testInstrumentationRunnerArguments = [
-                    cucumberUseAndroidJUnitRunner: 'true',
-                    //uncomment this to clear app data before each test when running with orchestrator
-                    clearPackageData             : 'true'
-            ]
-        }
+        testInstrumentationRunner getTestInstrumentationRunner()
+
 
         if (project.hasProperty('runInGithubCi')) {
             ndk.abiFilters 'x86_64'
