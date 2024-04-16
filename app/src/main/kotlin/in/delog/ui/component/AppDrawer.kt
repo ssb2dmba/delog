@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,7 +82,7 @@ fun AppDrawer(
 
             if (feed != null) {
                 // user's image
-                ProfileImage(identAndAboutWithBlob = feed)
+                //ProfileImage(identAndAboutWithBlob = feed)
                 // user's name
                 Text(
                     modifier = Modifier.padding(16.dp),
@@ -92,14 +93,14 @@ fun AppDrawer(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.outline
                 )
-                Image(
-                    modifier = Modifier.width(280.dp),
-                    painter = rememberQrBitmapPainter(
-                        content = feed.getContactString()
-                    ),
-                    contentDescription = "QR Code",
-                    contentScale = ContentScale.FillWidth
-                )
+//                Image(
+//                    modifier = Modifier.width(280.dp),
+//                    painter = rememberQrBitmapPainter(
+//                        content = feed.getContactString()
+//                    ),
+//                    contentDescription = "QR Code",
+//                    contentScale = ContentScale.FillWidth
+//                )
             }
         }
         for (i in itemsList) {
@@ -125,6 +126,7 @@ private fun NavigationListItem(
             .clickable {
                 itemClick()
             }
+            .testTag(item.label)
             .padding(horizontal = 24.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

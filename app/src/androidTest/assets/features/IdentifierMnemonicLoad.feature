@@ -5,7 +5,9 @@ Feature: Onboarding with mnemonic
   Scenario: Load from mnemonic
     When I open application
     Then I open drawer
+    Then I wait '5000'
     Then I click 'identifiers'
+    Then I wait '5000'
     Then I click button 'new_identifier'
     Then "load identifier" text is presented
     Then I click 'from mnemonic'
