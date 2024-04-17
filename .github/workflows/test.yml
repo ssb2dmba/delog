@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        api-level: [ 26 ]
+        api-level: [21, 26 ]
 
     steps:
       - name: Checkout code
