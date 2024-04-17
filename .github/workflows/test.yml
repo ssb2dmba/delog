@@ -37,6 +37,9 @@ jobs:
   test:
     name: tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        api-level: [ 26 ]
     needs: [build]
     steps:
       - name: Free Disk Space (Ubuntu)
