@@ -38,8 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
-        max-parallel: 1
         api-level: [ 21, 26, 29, 30 ]
     needs: [build]
     steps:
