@@ -52,7 +52,7 @@ class IdentListViewModel(
     val count: LiveData<Int> = repository.count
 
     fun insert(ident: Ident, alias: String? = null) {
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             // insert complete ident and about
             val about = About(
                 ident.publicKey,
@@ -61,11 +61,13 @@ class IdentListViewModel(
             )
             val id = repository.insert(IdentAndAbout(ident, about))
             ident.oid = id
+            repository.setFeedAsDefaultFeed(ident)
+            Log.i(TAG, "redeem invite !!!!!")
             redeemInvite(ident)
         }
     }
-    private fun redeemInvite(ident: Ident) {
-        viewModelScope.launch {
+    private suspend fun redeemInvite(ident: Ident) {
+        //viewModelScope.launch {
             ssbService.connectWithInvite(ident,
                 {
                     // everything is going according to the plan
@@ -75,7 +77,7 @@ class IdentListViewModel(
                 {
                     MainApplication.toastify(it.message.toString())
                 })
-        }
+        //}
     }
 
     fun setFeedAsDefaultFeed(ident: Ident) {

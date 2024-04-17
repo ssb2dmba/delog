@@ -37,6 +37,7 @@ import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.ui.component.TextError
+import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.IdentListViewModel
@@ -178,7 +179,8 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     if (newIdent != null) {
         LaunchedEffect(key1 = Unit) {
             newIdent!!.invite?.let {
-                navController.navigate(Scenes.FeedList.route) {
+                val argUri = makeArgUri(newIdent!!.publicKey)
+                navController.navigate("${Scenes.MainFeed.route}/${argUri}") {
                     popUpTo(navController.graph.startDestinationId) {
                         inclusive = true
                     }

@@ -108,11 +108,6 @@ fun IdentNew(navController: NavHostController) {
             }
         } else {
             identListViewModel.insert(ident = ident)
-            navController.navigate(Scenes.FeedList.route) {
-                popUpTo(navController.graph.startDestinationId) {
-                    inclusive = true
-                }
-            }
         }
     }
 

@@ -14,6 +14,8 @@ Feature: Onboarding with new key
     Then I open drawer
     Then I click 'identifiers'
     Then "test random@delog.in" text is presented
+    Then I click 'test random@delog.in'
+    Then I click element with testTag 'sync'
 
 
 
