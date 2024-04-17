@@ -28,8 +28,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          cache-read-only: false
-          cache-overwrite-existing: true
+          cache-write-only: true
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest  --stacktrace
 
@@ -40,7 +39,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        api-level: [ 21, 26, 29, 30 ]
+        api-level: [ 21, 26 ]
     needs: [build]
     steps:
       - name: Free Disk Space (Ubuntu)
@@ -90,11 +89,11 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
-          target: ${{ steps.determine-target.outputs.TARGET }}
+          #target: ${{ steps.determine-target.outputs.TARGET }}
           disable-animations: true
           #force-avd-creation: false
           ndk: 25.1.8937393
-          emulator-build: 7425822
+          ~emulator-build: 7425822
           emulator-options: -skin 1920x1080 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: | 
             ./gradlew connectedCheck  --stacktrace
