@@ -19,12 +19,18 @@
 - [x] hypertext link embedding
 - [x] Tor low-power-integration
 - [x] Video preview
+- [x] blob support
+- [x] scheduled sync (Workmanager)
+- [ ] post edit
+- [ ] post delete
+- [ ] feed delete
 - [.] quotes, reply, vote support
-- [ ] blob support
 - [ ] draft ordering & support
 - [ ] ...
 
 ## Build
+
+[![Android Tests](https://github.com/ssb2dmba/delog/actions/workflows/test.yml/badge.svg)](https://github.com/ssb2dmba/delog/actions/workflows/test.yml)
 
 Project build well with Android Studio Giraffe | 2022.3.1 Patch 3
 
@@ -36,5 +42,11 @@ You will need an Android NDK and set in the Android Studio env i.e.:
 
 ## Running tests
 
-Given `cucumberUseAndroidJUnitRunner` in `gradle.properties` you can run cucumber-android 
-bdd tests (default) or JUnit4 classic `connectedAndroidTest`.
+You can run instrumentation tests with:
+
+`./gradlew connectedCheck` 
+
+and you can run Cucumber tests with :
+
+`./gradlew connectedCheck  -Pcucumber`
+
