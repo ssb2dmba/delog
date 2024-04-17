@@ -39,6 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        max-parallel: 1
         api-level: [ 21, 26, 29, 30 ]
     needs: [build]
     steps:
