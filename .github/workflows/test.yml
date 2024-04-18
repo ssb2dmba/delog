@@ -31,8 +31,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           cache-read-only: false
+
       - name: build tests
-        run: ./gradlew assembleDebug assembleAndroidTest  --stacktrace
+        run: ./gradlew assembleDebug assembleAndroidTest
 
   test:
     name: tests
@@ -61,9 +62,6 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: cleanup
-        run: echo  rm -fr ~/.gradle
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -90,7 +88,7 @@ jobs:
           sdcard-path-or-size: 2048M
           ndk: 25.1.8937393
           script: | 
-            ./gradlew connectedCheck  --stacktrace
+            ./gradlew connectedCheck
 
       - name: Upload results
         if: always()
@@ -116,7 +114,7 @@ jobs:
           sdcard-path-or-size: 2048M
           ndk: 25.1.8937393
           script: |
-            ./gradlew connectedCheck  -Pcucumber --stacktrace
+            ./gradlew connectedCheck  -Pcucumber
 
       - name: Upload results
         if: always()
