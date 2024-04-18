@@ -45,14 +45,16 @@ class IdentListViewModel(
 ) : ViewModel() {
 
 
-    private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
-    var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
+    var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
+    val insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
     var idents: LiveData<List<IdentAndAboutWithBlob>> = repository.idents.asLiveData()
     val default: LiveData<IdentAndAboutWithBlob?> = repository.default.asLiveData()
     val count: LiveData<Int> = repository.count
 
     fun insert(ident: Ident, alias: String? = null) {
-        viewModelScope.launch(Dispatchers.IO) {
+        // must be on global scope not to be killed
+        GlobalScope.launch(Dispatchers.IO) {
+            Log.i(TAG, "insert ident !!")
             // insert complete ident and about
             val about = About(
                 ident.publicKey,

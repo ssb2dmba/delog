@@ -108,6 +108,7 @@ fun IdentNew(navController: NavHostController) {
             }
         } else {
             identListViewModel.insert(ident = ident)
+
         }
     }
 

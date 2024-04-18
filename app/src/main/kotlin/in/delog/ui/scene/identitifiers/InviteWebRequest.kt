@@ -26,20 +26,10 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -49,7 +39,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.webkit.ProxyConfig
 import androidx.webkit.ProxyController
@@ -57,7 +46,6 @@ import androidx.webkit.WebViewFeature
 import com.google.accompanist.web.LoadingState
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
-import `in`.delog.ui.component.IdentityBox
 
 @Composable
 fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
@@ -78,22 +66,22 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
     if (loading.value && (webViewState.loadingState is LoadingState.Loading
                 || webViewState.loadingState is LoadingState.Initializing)
     ) {
-//                Column(
-//                    horizontalAlignment = Alignment.CenterHorizontally,
-//                    modifier = Modifier.fillMaxSize()
-//                ) {
-//                    Text(
-//                        "contacting $startUrl " + webViewState.loadingState.toString(),
-//                        style = MaterialTheme.typography.titleMedium,
-//                        modifier = Modifier.padding(12.dp)
-//                    )
-//                    Column(
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        modifier = Modifier.fillMaxWidth()
-//                    ) {
-//                        CircularProgressIndicator()
-//                    }
-//                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Text(
+                        "contacting $startUrl " + webViewState.loadingState.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
     }
 
     val webError = remember { mutableStateOf("") }
@@ -108,69 +96,58 @@ fun InviteWebRequest(startUrl: String, callBack: (String) -> Unit) {
                 .setProxyOverride(proxyConfig, { Runnable { } }, { })
         }
     }
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Row(Modifier.weight(1f)) {
-            val state = rememberScrollState()
-            Column(
-                Modifier
-                    .verticalScroll(state)
-                    .fillMaxSize()
-            ) {
-                WebView(
-                    modifier = Modifier.fillMaxSize(),
-                    state = webViewState,
-                    onCreated = {
-                        it.settings.javaScriptEnabled = true
-
-                        it.layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-
-                        it.webViewClient = object : WebViewClient() {
-
-                            override fun onPageStarted(
-                                view: WebView?,
-                                url: String?,
-                                favicon: Bitmap?
-                            ) {
-                                super.onPageStarted(view, url, favicon)
-                            }
-
-                            override fun onPageFinished(view: WebView?, url: String?) {
-                                super.onPageFinished(view, url)
-                                loading.value = false
-                            }
 
 
-                            override fun onReceivedError(
-                                view: WebView?,
-                                request: WebResourceRequest?,
-                                error: WebResourceError?
-                            ) {
-                                super.onReceivedError(view, request, error)
-                                loading.value = false
-                                Log.e("webview", error.toString())
-                                if (error != null) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        webError.value = error.description as String
-                                    } else {
-                                        webError.value = error.toString()
-                                    }
-                                }
-                            }
+    WebView(
+        modifier = Modifier.fillMaxSize(),
+        state = webViewState,
+        onCreated = {
+            it.settings.javaScriptEnabled = true
+
+            it.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+
+            it.webViewClient = object : WebViewClient() {
+
+                override fun onPageStarted(
+                    view: WebView?,
+                    url: String?,
+                    favicon: Bitmap?
+                ) {
+                    super.onPageStarted(view, url, favicon)
+                }
+
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    loading.value = false
+                }
+
+
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    super.onReceivedError(view, request, error)
+                    loading.value = false
+                    Log.e("webview", error.toString())
+                    if (error != null) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            webError.value = error.description as String
+                        } else {
+                            webError.value = error.toString()
                         }
                     }
-                )
-                Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.ime))
+                }
             }
-
         }
-
-    }
+    )
 }
+
+
+
 
 
 

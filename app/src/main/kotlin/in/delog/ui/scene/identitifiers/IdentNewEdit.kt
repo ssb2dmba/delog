@@ -180,6 +180,7 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
         LaunchedEffect(key1 = Unit) {
             newIdent!!.invite?.let {
                 val argUri = makeArgUri(newIdent!!.publicKey)
+                identListViewModel._insertedIdent.value = null
                 navController.navigate("${Scenes.MainFeed.route}/${argUri}") {
                     popUpTo(navController.graph.startDestinationId) {
                         inclusive = true
