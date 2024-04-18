@@ -37,10 +37,10 @@ jobs:
             ~/.m2/repository
             ./.gradle
             app/build
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/builddict.txt', '**/*.toml') }}
+            libsodium
+          key: gradle-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/builddict.txt', '**/*.toml') }}
-            gradle-${{ runner.os }}
+            gradle-${{ runner.os }}-${{ github.sha }}
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
       - name: clean previous build
@@ -84,10 +84,10 @@ jobs:
             ~/.m2/repository
             ./.gradle
             app/build
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/builddict.txt', '**/*.toml') }}
+            libsodium
+          key: gradle-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/builddict.txt', '**/*.toml') }}
-            gradle-${{ runner.os }}
+            gradle-${{ runner.os }}-${{ github.sha }}
 
       - name: Enable KVM group perms
         run: |
