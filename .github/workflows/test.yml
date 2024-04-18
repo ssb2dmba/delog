@@ -31,6 +31,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           cache-read-only: false
+          gradle-version: 8.2
 
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest
