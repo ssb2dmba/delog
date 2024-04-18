@@ -55,14 +55,11 @@ fun IdentList(navController: NavHostController) {
 
     val idents: State<List<IdentAndAboutWithBlob>> = identListViewModel.idents.observeAsState(listOf())
 
-    LaunchedEffect(Unit) {
-        bottomBarViewModel.setActions {}
-        bottomBarViewModel.setActions {
-            Spacer(modifier = Modifier.weight(1f))
-            IdentListFab(navController = navController)
-        }
+    bottomBarViewModel.setActions {}
+    bottomBarViewModel.setActions {
+        Spacer(modifier = Modifier.weight(1f))
+        IdentListFab(navController = navController)
     }
-
 
     LazyColumn {
         items(idents.value) { identAndAbout ->

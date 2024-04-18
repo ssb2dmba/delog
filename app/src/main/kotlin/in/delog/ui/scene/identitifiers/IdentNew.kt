@@ -46,15 +46,10 @@ fun IdentNew(navController: NavHostController) {
 
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     val identListViewModel = koinViewModel<IdentListViewModel>()
-
-    LaunchedEffect(Unit) {
-        bottomBarViewModel.setActions { }
-    }
-
+    bottomBarViewModel.setActions { }
     var inviteUrl: String? by remember { mutableStateOf(null) }
     var invite: String? by remember { mutableStateOf(null) }
     var identity: Identity? by remember { mutableStateOf(null) }
-    var hasNavigated by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val store = SettingStore(context)
     val serverUrl = store.getData(SERVER_URL).collectAsState(initial = null)
@@ -84,33 +79,6 @@ fun IdentNew(navController: NavHostController) {
         inviteUrl = pInviteUrl
     }
 
-    fun doneWithoutInvite() {
-        if (hasNavigated) return
-        hasNavigated = true
-        val ident = Ident(
-            0,
-            identity!!.toCanonicalForm(),
-            "",
-            8008,
-            identity!!.privateKeyAsBase64String(),
-            false,
-            -1,
-            null,
-            null
-        )
-        val exists = identListViewModel.idents.value!!.any { it.ident.publicKey == ident.publicKey }
-        if (exists) {
-            val argUri = makeArgUri(ident.publicKey)
-            navController.navigate("${Scenes.MainFeed.route}/${argUri}") {
-                popUpTo(navController.graph.startDestinationId) {
-                    inclusive = true
-                }
-            }
-        } else {
-            identListViewModel.insert(ident = ident)
-
-        }
-    }
 
     if (identity == null) {
         LoadIdentity(serverUrl.value!!, ::setIdentity)
@@ -118,11 +86,9 @@ fun IdentNew(navController: NavHostController) {
         if (invite == null) {
             if (inviteUrl != null) {
                 InviteWebRequest(inviteUrl!!, ::setInvite)
-            } else {
-                doneWithoutInvite()
+                return
             }
-        } else {
-            IdentNewEdit(navController, identity!!, invite!!)
         }
+        IdentNewEdit(navController, identity!!, invite)
     }
 }

@@ -202,6 +202,7 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                             modifier = Modifier
                                 .focusRequester(focusRequester)
                                 .fillMaxSize()
+                                .testTag("draft_edit_text_field")
                                 .defaultMinSize(minHeight = 200.dp)
                                 .onFocusEvent { focusState ->
                                     if (focusState.isFocused) {
@@ -282,7 +283,7 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                 Log.i(TAG,"update draft content as text with:" + tfv.text)
                 draftViewModel.updateDraftContentAsText(tfv.text)
                 Log.i(TAG,"got:" + draftViewModel.messageViewData.value.contentAsText)
-                draftViewModel.save(messageViewData!!)
+                draftViewModel.save(draftViewModel.messageViewData.value)
                 Toast
                     .makeText(
                         context,
@@ -402,6 +403,7 @@ fun DraftPublishDialog(navHostController: NavHostController, viewModel: DraftVie
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier
+                    .testTag("confirm_publish")
                     .padding(15.dp)
                     .clickable {
                         viewModel.onPublishDialogDismiss()

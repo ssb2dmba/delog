@@ -36,6 +36,7 @@ import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.DraftRepository
+import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.model.Mention
 import `in`.delog.model.MessageViewData
@@ -70,6 +71,7 @@ class DraftViewModel(
     private val messageRepository: MessageRepository,
     private val draftRepository: DraftRepository,
     private val blobRepository: BlobRepository,
+    private val identRepository: IdentRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -92,6 +94,11 @@ class DraftViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
+            var about = identRepository.findByPublicKey(feed.publicKey)
+            _messageViewData.update { it.copy(
+                authorName = about?.about?.name,
+                authorImage = about?.about?.image
+            ) }
             if (draftId > 0) {
                 val draft = draftRepository.getById(draftId)
                 _messageViewData.update { draft.toMessageViewData(format, blobRepository) }
@@ -113,9 +120,6 @@ class DraftViewModel(
                 }
                 putParentInContentAsText()
             }
-
-
-
         }
     }
 

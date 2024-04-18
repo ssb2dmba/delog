@@ -76,12 +76,10 @@ fun ContactList(navController: NavController) {
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     var showAddContactDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(key1 = Unit) {
-        bottomBarViewModel.setActions {}
-        bottomBarViewModel.setActions {
-            Spacer(modifier = Modifier.weight(1f))
-            ContactListFab { showAddContactDialog = true }
-        }
+    bottomBarViewModel.setActions {}
+    bottomBarViewModel.setActions {
+        Spacer(modifier = Modifier.weight(1f))
+        ContactListFab { showAddContactDialog = true }
     }
 
     val feed = LocalActiveFeed.current ?: return

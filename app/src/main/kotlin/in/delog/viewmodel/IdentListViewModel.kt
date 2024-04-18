@@ -65,7 +65,11 @@ class IdentListViewModel(
             ident.oid = id
             repository.setFeedAsDefaultFeed(ident)
             Log.i(TAG, "redeem invite !!!!!")
-            redeemInvite(ident)
+            if (ident.invite!=null) {
+                redeemInvite(ident)
+            } else {
+                _insertedIdent.value = ident
+            }
         }
     }
     private suspend fun redeemInvite(ident: Ident) {
@@ -78,6 +82,7 @@ class IdentListViewModel(
                 },
                 {
                     MainApplication.toastify(it.message.toString())
+                    _insertedIdent.value = ident
                 })
         //}
     }

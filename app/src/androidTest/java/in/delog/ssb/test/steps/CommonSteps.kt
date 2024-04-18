@@ -13,11 +13,11 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 
 class CommonSteps(
-    val composeRuleHolder: ComposeRuleHolder,
-    val scenarioHolder: ActivityScenarioHolder
+    private val composeRuleHolder: ComposeRuleHolder,
+    private val scenarioHolder: ActivityScenarioHolder
 ) : SemanticsNodeInteractionsProvider by composeRuleHolder.composeRule {
 
-    val sleep = 100L // used to add some wait to visualize says 1000L
+    private val sleep = 100L // used to add some wait to visualize says 1000L
 
     @When("^I open application$")
     fun iOpenComposeActivity() {
@@ -34,28 +34,35 @@ class CommonSteps(
     @Then("I click {string}")
     fun I_click(s: String) {
         Thread.sleep(sleep)
-        onNodeWithText(s, true, true, true).performClick();
+        onNodeWithText(s, substring=true, ignoreCase = true, useUnmergedTree = true).performClick()
+        Thread.sleep(sleep)
+    }
+
+    @Then("I click on testTag {string}")
+    fun I_click_test_tag(s: String) {
+        Thread.sleep(sleep)
+        onNodeWithTag(s, true).performClick()
         Thread.sleep(sleep)
     }
 
     @Then("I click element with testTag {string}")
     fun I_clickTestTag(s: String) {
         Thread.sleep(sleep)
-        onNodeWithTag(s).performClick();
+        onNodeWithTag(s).performClick()
         Thread.sleep(sleep)
     }
 
     @Then("I click button {string}")
     fun I_click2(s: String) {
         Thread.sleep(sleep)
-        onNodeWithTag(s).performClick();
+        onNodeWithTag(s).performClick()
         Thread.sleep(sleep)
     }
 
     @Then("I open drawer")
     fun I_open_drawer() {
         Thread.sleep(sleep)
-        onNode(hasTestTag("openDrawer")).performClick();
+        onNode(hasTestTag("openDrawer")).performClick()
         Thread.sleep(sleep)
     }
 
@@ -74,7 +81,6 @@ class CommonSteps(
         onNode(hasTestTag(testTag)).performTextInput(value)
         Thread.sleep(sleep)
     }
-
 
     @Then("I wait {string}")
     fun I_wait(value: String) {
