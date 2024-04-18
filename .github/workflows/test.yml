@@ -60,10 +60,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-          cache: gradle
 
       - name: cleanup
-        run: rm -fr ~/.gradle
+        run: echo  rm -fr ~/.gradle
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
