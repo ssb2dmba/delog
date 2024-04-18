@@ -32,7 +32,7 @@ def getTestInstrumentationRunner = {
 android {
     namespace 'in.delog'
     compileSdk 34
-    ndkVersion "25.1.8937393"
+    //ndkVersion "25.1.8937393"
     sourceSets {
         main {
             jniLibs.srcDirs = ['src/main/jniLibs']
