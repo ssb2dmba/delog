@@ -27,11 +27,24 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+      - name: Setup cache gradle wrapper
+        uses: actions/cache@v4
         with:
-          gradle-version: 8.2
-
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            $HOME/.m2/repository
+            ~/.m2/repository
+            ./.gradle
+            app/build
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/builddict.txt', '**/*.toml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/builddict.txt', '**/*.toml') }}
+            gradle-${{ runner.os }}
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+      - name: clean previous build
+        run: ./gradlew clean
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest
 
@@ -62,10 +75,19 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+      - name: Setup cache gradle wrapper
+        uses: actions/cache@v4
         with:
-          gradle-version: 8.2
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.m2/repository
+            ./.gradle
+            app/build
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/builddict.txt', '**/*.toml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/builddict.txt', '**/*.toml') }}
+            gradle-${{ runner.os }}
 
       - name: Enable KVM group perms
         run: |
