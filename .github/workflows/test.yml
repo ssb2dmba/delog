@@ -27,17 +27,10 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Cache build dir
-        id: cache-scipy-build
-        uses: actions/cache@v2
-        with:
-          path: libsodium
-          key: libsodium-${{ runner.os }}
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          cache-write-only: true
+          cache-read-only: false
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest  --stacktrace
 
@@ -69,10 +62,13 @@ jobs:
           java-version: 17
           cache: gradle
 
+      - name: cleanup
+        run: rm -fr ~/.gradle
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          cache-read-only: true
+          cache-read-only: false
 
       - name: Enable KVM group perms
         run: |
