@@ -40,7 +40,7 @@ jobs:
             libsodium
           key: gradle-${{ runner.os }}-shared-cache
           restore-keys: |
-            gradle-${{ runner.os }}-${{ github.sha }}
+            gradle-${{ runner.os }}-shared-cache
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
       - name: clean previous build

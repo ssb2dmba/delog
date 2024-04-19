@@ -17,21 +17,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import in.delog.libsodium.NaCl;
 
 
-class HashTest {
+public class HashTest {
 
-    @BeforeAll
-    static void checkAvailable() {
+    @Before
+    public void checkAvailable() {
         NaCl.sodium();
     }
 
     @Test
-    void sha2_256() {
+    public void sha2_256() {
         String horseSha2 = "fd62862b6dc213bee77c2badd6311528253c6cb3107e03c16051aa15584eca1c";
         String cowSha2 = "beb134754910a4b4790c69ab17d3975221f4c534b70c8d6e82b30c165e8c0c09";
 
@@ -49,7 +49,7 @@ class HashTest {
     }
 
     @Test
-    void sha2_256_withoutSodium() {
+    public void sha2_256_withoutSodium() {
         Hash.USE_SODIUM = false;
         try {
             String horseSha2 = "fd62862b6dc213bee77c2badd6311528253c6cb3107e03c16051aa15584eca1c";
@@ -72,7 +72,7 @@ class HashTest {
     }
 
     @Test
-    void sha2_512_256() {
+    public void sha2_512_256() {
         String horseSha2 = "6d64886cd066b81cf2dcf16ae70e97017d35f2f4ab73c5c5810aaa9ab573dab3";
         String cowSha2 = "7d26bad15e2f266cb4cbe9b1913978cb8a8bd08d92ee157b6be87c92dfce2d3e";
 
@@ -90,7 +90,7 @@ class HashTest {
     }
 
     @Test
-    void keccak256() {
+    public void keccak256() {
         String horseKeccak256 = "c87f65ff3f271bf5dc8643484f66b200109caffe4bf98c4cb393dc35740b28c0";
         String cowKeccak256 = "c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4";
 
@@ -108,7 +108,7 @@ class HashTest {
     }
 
     @Test
-    void sha3_256() {
+    public void sha3_256() {
         String horseSha3 = "d8137088d21c7c0d69107cd51d1c32440a57aa5c59f73ed7310522ea491000ac";
         String cowSha3 = "fba26f1556b8c7b473d01e3eae218318f752e808407794fc0b6490988a33a82d";
 
@@ -126,7 +126,7 @@ class HashTest {
     }
 
     @Test
-    void sha3_512() {
+    public void sha3_512() {
         String horseSha3 =
                 "d78700def5dd85a9f5a1f8cce8614889e696d4dc82b17189e4974acc050659b49494f03cd0bfbb13a32132b4b4af5e16efd8b0643a5453c87e8e6dfb086b3568";
         String cowSha3 =

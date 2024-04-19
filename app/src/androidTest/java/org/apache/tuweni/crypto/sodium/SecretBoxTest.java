@@ -19,27 +19,25 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-//import org.junit.runner.RunWith;
+import org.junit.Before;
+import org.junit.Test;
 
 import in.delog.libsodium.NaCl;
 
-//@RunWith(AndroidJUnit4.class)
+
 class SecretBoxTest {
 
 
-    @BeforeAll
-    static void checkAvailable() {
+    @Before
+    public void checkAvailable() {
         NaCl.sodium();
         ///System.loadLibrary("libsodiumjni");
         //Sodium.sodium_init();
     }
 
     @Test
-    void checkCombinedEncryptDecrypt() {
+    public void checkCombinedEncryptDecrypt() {
         SecretBox.Key key = SecretBox.Key.random();
         SecretBox.Nonce nonce = SecretBox.Nonce.random().increment();
 
@@ -56,7 +54,7 @@ class SecretBoxTest {
     }
 
     @Test
-    void checkCombinedEncryptDecryptEmptyMessage() {
+    public void checkCombinedEncryptDecryptEmptyMessage() {
         SecretBox.Key key = SecretBox.Key.random();
         SecretBox.Nonce nonce = SecretBox.Nonce.random().increment();
 
@@ -68,7 +66,7 @@ class SecretBoxTest {
     }
 
     @Test
-    void checkDetachedEncryptDecrypt() {
+    public void checkDetachedEncryptDecrypt() {
         SecretBox.Key key = SecretBox.Key.random();
         SecretBox.Nonce nonce = SecretBox.Nonce.random().increment();
 
@@ -86,7 +84,7 @@ class SecretBoxTest {
     }
 
     @Test
-    void checkDetachedEncryptDecryptEmptyMessage() {
+    public void checkDetachedEncryptDecryptEmptyMessage() {
         SecretBox.Key key = SecretBox.Key.random();
         SecretBox.Nonce nonce = SecretBox.Nonce.random().increment();
 
@@ -98,7 +96,7 @@ class SecretBoxTest {
     }
 
     @Test
-    void checkCombinedEncryptDecryptWithPassword() {
+    public void checkCombinedEncryptDecryptWithPassword() {
         String password = "a random password";
 
         byte[] message = "This is a test message".getBytes(UTF_8);
@@ -133,7 +131,7 @@ class SecretBoxTest {
     }
 
     @Test
-    void checkCombinedEncryptDecryptEmptyMessageWithPassword() {
+    public void checkCombinedEncryptDecryptEmptyMessageWithPassword() {
         String password = "a random password";
 
         byte[] cipherText = SecretBox
@@ -156,7 +154,7 @@ class SecretBoxTest {
     }
 
     @Test
-    void checkDetachedEncryptDecryptWithPassword() {
+    public void checkDetachedEncryptDecryptWithPassword() {
         String password = "a random password";
 
         byte[] message = "This is a test message".getBytes(UTF_8);
@@ -193,7 +191,7 @@ class SecretBoxTest {
     }
 
     @Test
-    void checkDetachedEncryptDecryptEmptyMessageWithPassword() {
+    public void checkDetachedEncryptDecryptEmptyMessageWithPassword() {
         String password = "a random password";
 
         DetachedEncryptionResult result = SecretBox

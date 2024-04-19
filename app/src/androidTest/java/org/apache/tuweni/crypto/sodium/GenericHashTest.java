@@ -12,26 +12,27 @@
  */
 package org.apache.tuweni.crypto.sodium;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+import org.junit.Before;
+import org.junit.Test;
+
 
 import in.delog.libsodium.NaCl;
 
-@RunWith(AndroidJUnit4.class)
-class GenericHashTest {
 
-    @BeforeAll
-    static void checkAvailable() {
+public class GenericHashTest {
+
+    @Before
+    public void checkAvailable() {
         NaCl.sodium();
     }
 
     @Test
-    void hashValue() {
+    public void hashValue() {
         GenericHash.Input.fromBytes(Bytes.random(384));
         GenericHash.hash(64, GenericHash.Input.fromBytes(Bytes.random(384)));
         //GenericHash.Hash output = GenericHash.hash(64, GenericHash.Input.fromBytes(Bytes.random(384)));
@@ -40,7 +41,7 @@ class GenericHashTest {
     }
 
     @Test
-    void hashWithKeyValue() {
+    public void hashWithKeyValue() {
         GenericHash.Hash output = GenericHash
                 .hash(64, GenericHash.Input.fromBytes(Bytes.random(384)), GenericHash.Key.fromBytes(Bytes.random(32)));
         assertNotNull(output);

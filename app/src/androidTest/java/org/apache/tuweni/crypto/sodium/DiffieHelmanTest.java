@@ -18,20 +18,20 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import in.delog.libsodium.NaCl;
 
-class DiffieHelmanTest {
+public class DiffieHelmanTest {
 
-    @BeforeAll
-    static void checkAvailable() {
+    @Before
+    public void checkAvailable() {
         NaCl.sodium();
     }
 
     @Test
-    void testScalarMultiplication() {
+    public void testScalarMultiplication() {
         DiffieHelman.KeyPair keyPair = DiffieHelman.KeyPair.random();
         DiffieHelman.KeyPair secondKeyPair = DiffieHelman.KeyPair.random();
 
@@ -42,7 +42,7 @@ class DiffieHelmanTest {
     }
 
     @Test
-    void testEquals() {
+    public void testEquals() {
         DiffieHelman.KeyPair keyPair = DiffieHelman.KeyPair.random();
         DiffieHelman.KeyPair keyPair2 = DiffieHelman.KeyPair.forSecretKey(keyPair.secretKey());
         assertEquals(keyPair.secretKey().bytes().toHexString(), keyPair2.secretKey().bytes().toHexString());
@@ -51,7 +51,7 @@ class DiffieHelmanTest {
     }
 
     @Test
-    void testEqualsSecretKey() {
+    public void testEqualsSecretKey() {
         DiffieHelman.KeyPair keyPair = DiffieHelman.KeyPair.random();
         DiffieHelman.KeyPair keyPair2 = DiffieHelman.KeyPair.forSecretKey(keyPair.secretKey());
         assertEquals(keyPair.secretKey(), keyPair2.secretKey());
@@ -59,7 +59,7 @@ class DiffieHelmanTest {
     }
 
     @Test
-    void testEqualsPublicKey() {
+    public void testEqualsPublicKey() {
         DiffieHelman.KeyPair keyPair = DiffieHelman.KeyPair.random();
         DiffieHelman.KeyPair keyPair2 = DiffieHelman.KeyPair.forSecretKey(keyPair.secretKey());
         assertEquals(keyPair.publicKey().bytes().toHexString(), keyPair2.publicKey().bytes().toHexString());
@@ -68,7 +68,7 @@ class DiffieHelmanTest {
 
 
     @Test
-    void testFromBoxPubKey() {
+    public void testFromBoxPubKey() {
         Bytes bytes = Bytes32.random();
         Box.PublicKey pkey = Box.PublicKey.fromBytes(bytes);
         DiffieHelman.PublicKey dpk = DiffieHelman.PublicKey.forBoxPublicKey(pkey);
@@ -77,7 +77,7 @@ class DiffieHelmanTest {
     }
 
     @Test
-    void testEqualsPublicKeyFromBytes() {
+    public void testEqualsPublicKeyFromBytes() {
         Bytes bytes = Bytes32.random();
         DiffieHelman.PublicKey pkey = DiffieHelman.PublicKey.fromBytes(bytes);
         DiffieHelman.PublicKey pkey2 = DiffieHelman.PublicKey.fromBytes(bytes);
@@ -86,13 +86,13 @@ class DiffieHelmanTest {
     }
 
     @Test
-    void testInvalidBytes() {
+    public void testInvalidBytes() {
         Bytes bytes = Bytes.random(20);
         assertThrows(IllegalArgumentException.class, () -> DiffieHelman.PublicKey.fromBytes(bytes));
     }
 
     @Test
-    void testInvalidBytesSecretKey() {
+    public void testInvalidBytesSecretKey() {
         Bytes bytes = Bytes.random(20);
         assertThrows(IllegalArgumentException.class, () -> DiffieHelman.SecretKey.fromBytes(bytes));
     }

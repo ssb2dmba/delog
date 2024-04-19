@@ -16,27 +16,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
+
 
 import in.delog.libsodium.NaCl;
 
 class SignatureTest {
 
-    @BeforeAll
-    static void checkAvailable() {
+    @Before
+    public void checkAvailable() {
         NaCl.sodium();
     }
 
     @Test
-    void testEqualityAndRecovery() {
+    public void testEqualityAndRecovery() {
         Signature.KeyPair kp = Signature.KeyPair.random();
         Signature.KeyPair otherKp = Signature.KeyPair.forSecretKey(kp.secretKey());
         assertEquals(kp, otherKp);
     }
 
     @Test
-    void checkDetachedSignVerify() {
+    public void checkDetachedSignVerify() {
         Signature.KeyPair kp = Signature.KeyPair.random();
         Bytes signature = Signature.signDetached(Bytes.fromHexString("deadbeef"), kp.secretKey());
         boolean result = Signature.verifyDetached(Bytes.fromHexString("deadbeef"), signature, kp.publicKey());
@@ -44,7 +45,7 @@ class SignatureTest {
     }
 
     @Test
-    void checkSignAndVerify() {
+    public void checkSignAndVerify() {
         Signature.KeyPair keyPair = Signature.KeyPair.random();
         Bytes signed = Signature.sign(Bytes.fromHexString("deadbeef"), keyPair.secretKey());
         Bytes messageBytes = Signature.verify(signed, keyPair.publicKey());
