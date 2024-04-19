@@ -38,7 +38,7 @@ jobs:
             ./.gradle
             app/build
             libsodium
-          key: gradle-${{ runner.os }}-${{ github.sha }}
+          key: gradle-${{ runner.os }}-shared-cache
           restore-keys: |
             gradle-${{ runner.os }}-${{ github.sha }}
       - name: Change wrapper permissions
@@ -85,9 +85,9 @@ jobs:
             ./.gradle
             app/build
             libsodium
-          key: gradle-${{ runner.os }}-${{ github.sha }}
+          key: gradle-${{ runner.os }}-shared-cache
           restore-keys: |
-            gradle-${{ runner.os }}-${{ github.sha }}
+            gradle-${{ runner.os }}-shared-cache
 
       - name: Enable KVM group perms
         run: |
