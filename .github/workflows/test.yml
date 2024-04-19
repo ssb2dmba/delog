@@ -38,13 +38,11 @@ jobs:
             ./.gradle
             app/build
             libsodium
-          key: gradle-${{ runner.os }}-shared-cache
-          restore-keys: |
-            gradle-${{ runner.os }}-shared-cache
+          key: gradle-${{ runner.os }}-shared-cache-${{ github.sha }}
+
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
-      - name: clean previous build
-        run: ./gradlew clean
+
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest
 
@@ -85,9 +83,7 @@ jobs:
             ./.gradle
             app/build
             libsodium
-          key: gradle-${{ runner.os }}-shared-cache
-          restore-keys: |
-            gradle-${{ runner.os }}-shared-cache
+          key: gradle-${{ runner.os }}-shared-cache-${{ github.sha }}
 
       - name: Enable KVM group perms
         run: |
@@ -146,4 +142,3 @@ jobs:
           path: |
             emulator.log
             ./**/build/reports/androidTests/connected/**
-
