@@ -61,6 +61,7 @@ class IdentListViewModel(
                 name = alias ?: ident.publicKey.subSequence(0, 6).toString(),
                 dirty = true
             )
+
             val id = repository.insert(IdentAndAbout(ident, about))
             ident.oid = id
             repository.setFeedAsDefaultFeed(ident)

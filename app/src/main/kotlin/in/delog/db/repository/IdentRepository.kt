@@ -83,9 +83,16 @@ class FeedRepositoryImpl(
     }
 
     override suspend fun insert(feed: IdentAndAbout): Long {
-        val id = identDao.insert(feed = feed.ident)
+        var exist = identDao.findByPublicKey(feed.ident.publicKey)
+        var id = 0L
+        if (exist == null) {
+            id = identDao.insert(feed = feed.ident)
+            aboutDao.insert(feed.about!!)
+        } else {
+            id = exist.ident.oid
+            aboutDao.update(feed.about!!)
+        }
         identDao.setFeedAsDefaultFeed(id)
-        aboutDao.insert(feed.about!!)
         return id
     }
 
