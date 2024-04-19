@@ -12,8 +12,9 @@
  */
 package org.apache.tuweni.crypto.sodium;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.Before;

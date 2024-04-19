@@ -1,16 +1,13 @@
 package `in`.delog.ssb.test
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import `in`.delog.db.model.Ident
 import `in`.delog.model.SsbMessageContent
 import `in`.delog.model.SsbSignableMessage
 import `in`.delog.model.SsbSignedMessage
-import `in`.delog.ssb.*
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
+
 class SsbSignMessageTest {
 
     val feed = Ident(
