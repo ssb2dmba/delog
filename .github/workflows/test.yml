@@ -27,21 +27,18 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Setup cache gradle wrapper
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.2
+          cache-read-only: false
+
+      - name: Setup build cache
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            $HOME/.m2/repository
-            ~/.m2/repository
-            ./.gradle
             app/build
-            libsodium
-          key: gradle-${{ runner.os }}-shared-cache-${{ github.sha }}
-
-      - name: Change wrapper permissions
-        run: chmod +x ./gradlew
+          key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
 
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest
@@ -73,23 +70,24 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Setup cache gradle wrapper
-        uses: actions/cache@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            ~/.m2/repository
-            ./.gradle
-            app/build
-            libsodium
-          key: gradle-${{ runner.os }}-shared-cache-${{ github.sha }}
+          gradle-version: 8.2
+          cache-read-only: false
 
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+
+      - name: Setup build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            app/build
+          key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
 
       - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
