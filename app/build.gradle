@@ -32,7 +32,7 @@ def getTestInstrumentationRunner = {
 android {
     namespace 'in.delog'
     compileSdk 34
-    //ndkVersion "25.1.8937393"
+    //ndkVersion "25.1.8937393" // ndk is loaded apart of the gradle build
     sourceSets {
         main {
             jniLibs.srcDirs = ['src/main/jniLibs']
@@ -64,14 +64,7 @@ android {
         applicationId  "in.delog.ssb"
         testApplicationId  "in.delog.ssb.test"
         testInstrumentationRunner getTestInstrumentationRunner()
-
-
-        if (project.hasProperty('runInGithubCi')) {
-            ndk.abiFilters 'x86_64'
-        } else {
-            ndk.abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-        }
-
+        ndk.abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -135,9 +128,6 @@ android {
     }
 }
 
-configurations.all {
-    resolutionStrategy.force("junit:junit:4.13.2")
-}
 
 
 task nativeLibsToJar(type: Jar, description: 'create a jar archive of the native libs') {
@@ -149,43 +139,53 @@ tasks.withType(JavaCompile) {
     compileTask -> compileTask.dependsOn(nativeLibsToJar)
 }
 
+
+configurations.configureEach {
+    resolutionStrategy {
+        force "junit:junit:4.13.2"
+    }
+}
+
 dependencies {
     // Android Kotlin Project
-    //implementation 'androidx.compose.material:material:1.6.3'
+    //implementation platform('androidx.compose:compose-bom:2024.02.02')
+    //androidTestImplementation platform('androidx.compose:compose-bom:2024.02.02')
+
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+
     implementation 'androidx.paging:paging-compose:3.2.1'
     implementation 'androidx.webkit:webkit:1.10.0'
     implementation 'androidx.navigation:navigation-compose:2.7.7'
-    androidTestImplementation 'junit:junit:4.13.2'
-    ext.kotlin_version = "1.9.22" //1.9.23
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-    implementation "androidx.core:core-ktx:1.12.0"
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation "androidx.core:core-ktx:1.13.0"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation platform('androidx.compose:compose-bom:2024.02.02')
-    androidTestImplementation platform('androidx.compose:compose-bom:2024.02.02')
-    // Android Room
-    ext.room_version = '2.6.1'
-    implementation("androidx.room:room-runtime:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    implementation("androidx.room:room-paging:$room_version")
+
+    // Android Room 2.6.1
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    implementation("androidx.room:room-paging:2.6.1")
+
     // material 3 and adaptive accompanist
     implementation "androidx.compose.material3:material3:1.2.1"
     implementation('com.google.accompanist:accompanist-insets:0.30.1')
     implementation('com.google.accompanist:accompanist-adaptive:0.32.0')
     implementation "com.google.accompanist:accompanist-permissions:0.32.0"
-    implementation "androidx.compose.material:material-icons-extended"
+    implementation "androidx.compose.material:material-icons-extended:1.6.5" // <- TODO
     implementation "androidx.compose.material3:material3-window-size-class:1.2.1"
-    // Android Studio Preview support
-    implementation 'androidx.compose.ui:ui-tooling-preview'
-    debugImplementation 'androidx.compose.ui:ui-tooling'
-    implementation 'androidx.activity:activity-compose'
+
+    // Preview in Studio support
+    implementation 'androidx.compose.ui:ui-tooling-preview:1.6.5'
+    debugImplementation 'androidx.compose.ui:ui-tooling:1.6.5'
+    implementation 'androidx.activity:activity-compose:1.9.0'
+
     //Koin
-    ext.koin_version = '3.5.0'
-    implementation "io.insert-koin:koin-android:$koin_version"
-    implementation "io.insert-koin:koin-androidx-compose:$koin_version"
-    implementation "io.insert-koin:koin-androidx-workmanager:$koin_version"
+    implementation "io.insert-koin:koin-android:3.5.0"
+    implementation "io.insert-koin:koin-androidx-compose:3.5.0"
+    implementation "io.insert-koin:koin-androidx-workmanager:3.5.0"
+
     // live data + view model
     implementation "androidx.compose.runtime:runtime-livedata"
     kapt 'androidx.lifecycle:lifecycle-compiler:2.7.0'
@@ -193,14 +193,12 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-    // crypto
-    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
-    implementation('org.bouncycastle:bcpkix-jdk15on:1.70')
-    implementation("org.miracl.milagro.amcl:milagro-crypto-java:0.4.0")
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+    implementation 'androidx.emoji2:emoji2-emojipicker:1.4.0'
+
     // kmp-tor
-    ext.vTor = "4.8.6-0"
-    ext.vKmpTor = "1.4.4"
-    implementation("io.matthewnelson.kotlin-components:kmp-tor:$vTor-$vKmpTor")
+    implementation("io.matthewnelson.kotlin-components:kmp-tor:4.8.6-0-1.4.4")
+
     // tools & networking
     implementation("org.syncope.identityconnectors:framework:0.4.3")
     compileOnly('io.vertx:vertx-core:4.4.1')
@@ -211,6 +209,7 @@ dependencies {
     implementation("com.google.guava:guava:31.1-jre")
     implementation('io.vertx:vertx-lang-kotlin-coroutines:4.4.1')
     implementation('org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0')
+
     // link preview
     implementation 'com.linkedin.urls:url-detector:0.1.17'
     implementation 'org.jsoup:jsoup:1.17.2'
@@ -224,14 +223,12 @@ dependencies {
     implementation "androidx.media3:media3-datasource-okhttp:1.3.1"
     implementation "androidx.media3:media3-exoplayer-hls:1.3.1"
     implementation 'com.github.lincollincol:compose-audiowaveform:1.1.1'
+
     // Rendering clickable text
     implementation 'com.google.accompanist:accompanist-flowlayout:0.30.0'
     implementation 'com.google.accompanist:accompanist-webview:0.30.0'
     implementation 'com.github.jeziellago:compose-markdown:0.3.6'
 
-    implementation "androidx.datastore:datastore-preferences:1.0.0"
-
-    implementation 'androidx.emoji2:emoji2-emojipicker:1.4.0'
     // qr code printing
     implementation "com.google.zxing:core:3.5.2"
     implementation 'com.halilibo.compose-richtext:printing:0.16.0'
@@ -246,20 +243,25 @@ dependencies {
     }
 
 
-    androidTestUtil 'androidx.test:orchestrator:1.4.2'
-    androidTestImplementation 'androidx.compose.ui:ui-test-junit4:1.6.5'
-    // junit5 for org.apache
-    androidTestImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    androidTestImplementation("de.mannodermaus.junit5:android-test-core:1.3.0")
-    androidTestRuntimeOnly("de.mannodermaus.junit5:android-test-runner:1.3.0")
+    // Testing
+    androidTestImplementation 'junit:junit:4.13.2'
+
+    // junit5 for Apache Tuweni
+    androidTestImplementation "org.junit.jupiter:junit-jupiter-api:5.9.2"
+    androidTestImplementation 'androidx.test:core:1.5.0'
+    androidTestImplementation "androidx.test:runner:1.5.2"
+    androidTestImplementation "androidx.test:rules:1.5.0"
+
     // e2e integration tests
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation('androidx.test.espresso:espresso-web:3.5.1')
 
-    androidTestImplementation 'androidx.test:core:1.5.0'
-    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4:1.6.5'
+
     androidTestImplementation 'io.cucumber:cucumber-android:4.10.0'
     androidTestImplementation 'io.cucumber:cucumber-picocontainer:4.8.1'
+
+    androidTestUtil 'androidx.test:orchestrator:1.4.2'
 
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-1'
 
@@ -320,6 +322,7 @@ nativeTasks.each { opts ->
         preBuild.dependsOn taskname
         preBuild.dependsOn taskname
     }
+
 }
 
 

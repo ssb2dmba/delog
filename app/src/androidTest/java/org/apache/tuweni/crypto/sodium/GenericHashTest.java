@@ -14,9 +14,7 @@ package org.apache.tuweni.crypto.sodium;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -34,7 +32,6 @@ class GenericHashTest {
 
     @Test
     void hashValue() {
-        Bytes a = Bytes.random(384);
         GenericHash.Input.fromBytes(Bytes.random(384));
         GenericHash.hash(64, GenericHash.Input.fromBytes(Bytes.random(384)));
         //GenericHash.Hash output = GenericHash.hash(64, GenericHash.Input.fromBytes(Bytes.random(384)));

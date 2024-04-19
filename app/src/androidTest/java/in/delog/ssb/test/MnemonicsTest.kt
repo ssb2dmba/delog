@@ -1,5 +1,6 @@
 package `in`.delog.ssb.test
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import `in`.delog.service.ssb.Dict
 import `in`.delog.service.ssb.WordList
 import `in`.delog.service.ssb.mnemonicToSignature
@@ -7,8 +8,10 @@ import `in`.delog.service.ssb.secretKeyToMnemonic
 import org.apache.tuweni.io.Base64
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
 import java.util.*
 
+@RunWith(AndroidJUnit4::class)
 class MnemonicsTest {
 
 

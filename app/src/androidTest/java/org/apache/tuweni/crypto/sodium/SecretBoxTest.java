@@ -23,11 +23,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+//import org.junit.runner.RunWith;
 
 import in.delog.libsodium.NaCl;
 
-@RunWith(AndroidJUnit4.class)
+//@RunWith(AndroidJUnit4.class)
 class SecretBoxTest {
 
 
