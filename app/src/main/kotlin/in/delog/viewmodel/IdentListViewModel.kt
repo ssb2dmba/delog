@@ -54,18 +54,15 @@ class IdentListViewModel(
     fun insert(ident: Ident, alias: String? = null) {
         // must be on global scope not to be killed
         GlobalScope.launch(Dispatchers.IO) {
-            Log.i(TAG, "insert ident !!")
             // insert complete ident and about
             val about = About(
                 ident.publicKey,
                 name = alias ?: ident.publicKey.subSequence(0, 6).toString(),
                 dirty = true
             )
-
             val id = repository.insert(IdentAndAbout(ident, about))
             ident.oid = id
             repository.setFeedAsDefaultFeed(ident)
-            Log.i(TAG, "redeem invite !!!!!")
             if (ident.invite!=null) {
                 redeemInvite(ident)
             } else {

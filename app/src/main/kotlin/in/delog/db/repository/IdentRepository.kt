@@ -84,7 +84,7 @@ class FeedRepositoryImpl(
 
     override suspend fun insert(feed: IdentAndAbout): Long {
         var exist = identDao.findByPublicKey(feed.ident.publicKey)
-        var id = 0L
+        var id : Long
         if (exist == null) {
             id = identDao.insert(feed = feed.ident)
             aboutDao.insert(feed.about!!)

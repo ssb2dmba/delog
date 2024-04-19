@@ -17,7 +17,7 @@ class CommonSteps(
     private val scenarioHolder: ActivityScenarioHolder
 ) : SemanticsNodeInteractionsProvider by composeRuleHolder.composeRule {
 
-    private val sleep = 200L // used to add some wait to visualize says 1000L
+    private val sleep = 300L // used to add some wait to visualize says 1000L
 
     @When("^I open application$")
     fun iOpenComposeActivity() {
@@ -41,7 +41,8 @@ class CommonSteps(
     @Then("I click on testTag {string}")
     fun I_click_test_tag(s: String) {
         Thread.sleep(sleep)
-        onNodeWithTag(s, true).performClick()
+        onAllNodesWithTag(s).onFirst().performClick()
+        //onNodeWithTag(s, true).performClick()
         Thread.sleep(sleep)
     }
 

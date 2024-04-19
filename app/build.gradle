@@ -128,8 +128,6 @@ android {
     }
 }
 
-
-
 task nativeLibsToJar(type: Jar, description: 'create a jar archive of the native libs') {
     from fileTree(dir: 'libs', include: '**/*.so')
     into 'lib/'
@@ -148,9 +146,6 @@ configurations.configureEach {
 
 dependencies {
     // Android Kotlin Project
-    //implementation platform('androidx.compose:compose-bom:2024.02.02')
-    //androidTestImplementation platform('androidx.compose:compose-bom:2024.02.02')
-
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
 
     implementation 'androidx.paging:paging-compose:3.2.1'
@@ -173,7 +168,7 @@ dependencies {
     implementation('com.google.accompanist:accompanist-insets:0.30.1')
     implementation('com.google.accompanist:accompanist-adaptive:0.32.0')
     implementation "com.google.accompanist:accompanist-permissions:0.32.0"
-    implementation "androidx.compose.material:material-icons-extended:1.6.5" // <- TODO
+    implementation "androidx.compose.material:material-icons-extended:1.6.5"
     implementation "androidx.compose.material3:material3-window-size-class:1.2.1"
 
     // Preview in Studio support
@@ -241,7 +236,6 @@ dependencies {
         exclude group: 'commons-logging', module: 'commons-logging-api' //, version: '1.2'
         exclude group: 'org.apache.xmlbeans', module: 'xmlbeans' //, version: '2.6.0'
     }
-
 
     // Testing
     androidTestImplementation 'junit:junit:4.13.2'

@@ -57,7 +57,6 @@ fun MnemonicForm(callBack: (Identity?) -> Unit) {
         Text("Please select your 24 words mnemonic")
         Spacer(modifier = Modifier.height(16.dp))
         Row {
-
             Box {
                 var expanded by remember { mutableStateOf(false) }
                 var selectedOptionText by remember { mutableStateOf("") }
@@ -89,14 +88,15 @@ fun MnemonicForm(callBack: (Identity?) -> Unit) {
                     if (selectedOptionText.length > 1) {
                         filteringOptions =
                             options.filter { it.contains(selectedOptionText, ignoreCase = true) }
-                        if (selectedOptionText in filteringOptions) {
-                            phrase.add(selectedOptionText)
-                            selectedOptionText = ""
-                            expanded = false
-                        }
+
                         expanded = true
                     } else {
                         filteringOptions = listOf()
+                    }
+                    if (filteringOptions.size == 1 && selectedOptionText in filteringOptions) {
+                        phrase.add(selectedOptionText)
+                        selectedOptionText = ""
+                        expanded = false
                     }
                     if (filteringOptions.isNotEmpty()) {
                         ExposedDropdownMenu(
