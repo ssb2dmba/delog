@@ -38,6 +38,7 @@ jobs:
         with:
           path: |
             app/build
+            libsodium
           key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
 
       - name: build tests
@@ -87,6 +88,7 @@ jobs:
         with:
           path: |
             app/build
+            libsodium
           key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
 
       - name: run connectedCheck
