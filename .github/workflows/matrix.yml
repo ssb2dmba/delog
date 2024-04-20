@@ -1,0 +1,140 @@
+name: Android Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: false # kept
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.2
+          cache-read-only: false
+
+      - name: Setup build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            app/build
+            libsodium
+          key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
+
+      - name: build tests
+        run: ./gradlew assembleDebug assembleAndroidTest
+
+  test:
+    name: tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        api-level: [ 26, 33 ]
+    needs: [build]
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: false # kept
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.2
+          cache-read-only: false
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Setup build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            app/build
+            libsodium
+          key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
+
+      - name: run connectedCheck
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 4096M
+          target: ${{ matrix.api-level != 33 && 'default' || 'aosp_atd' }}
+          disable-animations: true
+          heap-size: ${{ matrix.api-level != 24 && '512M' || '' }}
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          channel: canary
+          sdcard-path-or-size: 2048M
+          ndk: 25.1.8937393
+          script: |
+            ./gradlew connectedCheck
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-${{ matrix.api-level }}-instrumentation-results
+          path: |
+            emulator.log
+            ./**/build/reports/androidTests/connected/**
+      - name: run connectedCheck
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 4096M
+          target: ${{ matrix.api-level != 33 && 'default' || 'aosp_atd' }}
+          disable-animations: true
+          heap-size: ${{ matrix.api-level != 24 && '512M' || '' }}
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          channel: canary
+          sdcard-path-or-size: 2048M
+          ndk: 25.1.8937393
+          script: |
+            ./gradlew connectedCheck  -Pcucumber
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-${{ matrix.api-level }}-cucumber-results
+          path: |
+            emulator.log
+            ./**/build/reports/androidTests/connected/**
