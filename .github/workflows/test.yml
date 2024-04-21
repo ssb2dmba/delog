@@ -8,6 +8,8 @@ on:
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
     name: build & test
     runs-on: ubuntu-latest
     steps:
@@ -41,8 +43,8 @@ jobs:
             libsodium
           key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
 
-      - name: build tests
-        run: ./gradlew assembleDebug assembleAndroidTest
+#      - name: build tests
+#        run: ./gradlew assembleDebug assembleAndroidTest
 
       - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
