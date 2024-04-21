@@ -23,7 +23,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.Assert.*;
 
@@ -34,7 +34,7 @@ public class BoxTest {
     private static Box.Seed seed;
     private static Box.Nonce nonce;
 
-    @Before
+    @BeforeClass
     public void setup() {
         NaCl.sodium();
         nonce = Box.Nonce.random();

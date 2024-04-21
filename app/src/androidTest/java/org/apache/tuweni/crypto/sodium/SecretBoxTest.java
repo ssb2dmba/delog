@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import in.delog.libsodium.NaCl;
@@ -30,7 +30,7 @@ import in.delog.libsodium.NaCl;
 class SecretBoxTest {
 
 
-    @Before
+    @BeforeClass
     public void checkAvailable() {
         NaCl.sodium();
         ///System.loadLibrary("libsodiumjni");

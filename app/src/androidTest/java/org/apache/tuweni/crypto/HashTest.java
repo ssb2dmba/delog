@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import in.delog.libsodium.NaCl;
@@ -26,7 +26,7 @@ import in.delog.libsodium.NaCl;
 
 public class HashTest {
 
-    @Before
+    @BeforeClass
     public void checkAvailable() {
         NaCl.sodium();
     }

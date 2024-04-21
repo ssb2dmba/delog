@@ -24,7 +24,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.sodium.PasswordHash.Algorithm;
 import org.apache.tuweni.crypto.sodium.PasswordHash.Salt;
 import org.apache.tuweni.crypto.sodium.PasswordHash.VerificationResult;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
@@ -33,7 +33,7 @@ import in.delog.libsodium.NaCl;
 
 class PasswordHashTest {
 
-    @Before
+    @BeforeClass
     public void checkAvailable() {
         NaCl.sodium();
     }

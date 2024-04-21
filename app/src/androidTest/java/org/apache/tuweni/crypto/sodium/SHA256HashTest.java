@@ -20,7 +20,7 @@ import static org.testng.AssertJUnit.assertNotNull;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.Hash;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
@@ -28,7 +28,7 @@ import in.delog.libsodium.NaCl;
 
 class SHA256HashTest {
 
-    @Before
+    @BeforeClass
     public void checkAvailable() {
         NaCl.sodium();
     }

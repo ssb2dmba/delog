@@ -27,7 +27,7 @@ import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.crypto.SECP256K1.PublicKey;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.crypto.SECP256K1.Signature;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
@@ -39,7 +39,7 @@ import in.delog.libsodium.NaCl;
 
 public class SECP256K1Test {
 
-    @Before
+    @BeforeClass
     public void setup() {
         NaCl.sodium();
     }

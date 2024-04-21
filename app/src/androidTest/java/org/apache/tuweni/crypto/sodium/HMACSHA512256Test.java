@@ -19,13 +19,13 @@ import static org.junit.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertFalse;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import in.delog.libsodium.NaCl;
 
 public class HMACSHA512256Test {
-    @Before
+    @BeforeClass
     public void checkAvailable() {
         NaCl.sodium();
     }

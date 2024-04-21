@@ -20,14 +20,14 @@ import static org.junit.Assert.assertThrows;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import in.delog.libsodium.NaCl;
 
 public class DiffieHelmanTest {
 
-    @Before
+    @BeforeClass
     public void checkAvailable() {
         NaCl.sodium();
     }

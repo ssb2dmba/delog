@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
@@ -26,7 +26,7 @@ import in.delog.libsodium.NaCl;
 
 public class GenericHashTest {
 
-    @Before
+    @BeforeClass
     public void checkAvailable() {
         NaCl.sodium();
     }
