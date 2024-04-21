@@ -33,6 +33,14 @@ jobs:
           gradle-version: 8.2
           cache-read-only: false
 
+      - name: Setup build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            app/build
+            libsodium
+          key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
+
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest
 
