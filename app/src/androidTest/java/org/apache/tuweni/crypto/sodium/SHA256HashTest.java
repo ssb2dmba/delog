@@ -12,21 +12,24 @@
  */
 package org.apache.tuweni.crypto.sodium;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNotNull;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.Hash;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 
 import in.delog.libsodium.NaCl;
 
 class SHA256HashTest {
 
-    @BeforeAll
-    static void checkAvailable() {
+    @BeforeClass
+    public void checkAvailable() {
         NaCl.sodium();
     }
 

@@ -13,34 +13,33 @@ package org.apache.tuweni.crypto.sodium;
  * specific language governing permissions and limitations under the License.
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.sodium.PasswordHash.Algorithm;
 import org.apache.tuweni.crypto.sodium.PasswordHash.Salt;
 import org.apache.tuweni.crypto.sodium.PasswordHash.VerificationResult;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 
 import in.delog.libsodium.NaCl;
 
-@RunWith(AndroidJUnit4.class)
+
 class PasswordHashTest {
 
-    @BeforeAll
-    static void checkAvailable() {
+    @BeforeClass
+    public void checkAvailable() {
         NaCl.sodium();
     }
 
     @Test
-    void shouldGenerateSameKeyForSameParameters() {
+    public void shouldGenerateSameKeyForSameParameters() {
         String password = "A very insecure password";
         Salt salt = Salt.random();
 
@@ -86,7 +85,7 @@ class PasswordHashTest {
     }
 
     @Test
-    void shouldThrowForLowOpsLimitWithArgon2i() {
+    public void shouldThrowForLowOpsLimitWithArgon2i() {
         assertThrows(IllegalArgumentException.class, () -> {
             PasswordHash
                     .hash(
@@ -100,7 +99,7 @@ class PasswordHashTest {
     }
 
     @Test
-    void checkHashAndVerify() {
+    public void checkHashAndVerify() {
 
         String password = "A very insecure password";
 
@@ -117,7 +116,7 @@ class PasswordHashTest {
     }
 
     @Test
-    void checkHashAndVerifyNeedingRehash() {
+    public void checkHashAndVerifyNeedingRehash() {
         String password = "A very insecure password";
         String hash = PasswordHash.hashInteractive(password);
         assertTrue(PasswordHash.needsRehash(hash));

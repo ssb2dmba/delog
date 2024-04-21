@@ -37,6 +37,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApp"
         android:usesCleartextTraffic="true"
+        android:testOnly="false"
         tools:targetApi="34">
         <activity
             android:name=".MainActivity"

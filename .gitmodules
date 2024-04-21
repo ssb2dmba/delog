@@ -1,0 +1,4 @@
+[submodule "libsodium"]
+  path = libsodium
+  url = https://github.com/jedisct1/libsodium.git
+  branch=6bece9c8c45259998f83ce243b1933e76c03f545

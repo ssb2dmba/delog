@@ -37,6 +37,7 @@ import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.ui.component.TextError
+import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.IdentListViewModel
@@ -47,8 +48,9 @@ import org.koin.androidx.compose.koinViewModel
 
 @Preview
 @Composable
-fun previewIdentNewEdit() {
-    val inviteString ="udwhjyymzan454unyeirqbicgarsg4w3q664iadehiss4ek5gystc4ad.onion:8008:@u64QhYoJN4EKUtXi/T1hVvVYf+Rqm/t50rvNUFsXVK8=.ed25519~86Dn5SUBAuTbzJARsgV99LBu/qb4dxMoJZYSR5HcRzk="
+fun PreviewIdentNewEdit() {
+    val inviteString =
+        "udwhjyymzan454unyeirqbicgarsg4w3q664iadehiss4ek5gystc4ad.onion:8008:@u64QhYoJN4EKUtXi/T1hVvVYf+Rqm/t50rvNUFsXVK8=.ed25519~86Dn5SUBAuTbzJARsgV99LBu/qb4dxMoJZYSR5HcRzk="
     val ident = Ident(
         oid = 0,
         publicKey = "@8bKCopZL2rilN7rPgd7/IyKj0RYPcilWsqaezvkGFRU=.ed25519",
@@ -60,19 +62,20 @@ fun previewIdentNewEdit() {
         defaultIdent = true,
         lastPush = null
     )
-    InnerNewIdentNewEdit(ident) { ident, alias -> }
+    InnerNewIdentNewEdit(ident) { _, _ -> }
 }
 
 
 @Composable
-fun InnerNewIdentNewEdit(ident: Ident,
-                         callback: (ident: Ident, alias: String) -> Unit
+fun InnerNewIdentNewEdit(
+    ident: Ident,
+    callback: (ident: Ident, alias: String) -> Unit
 ) {
 
     var aliasInput by remember { mutableStateOf("") }
     var serverInput by remember { mutableStateOf(ident.server) }
     var portInput by remember { mutableStateOf(ident.port.toString()) }
-    val isValid = (aliasInput.length > 1) && (serverInput.length > 1) && (portInput.length == 4)
+    val isValid = (aliasInput.length > 1)  && (portInput.length == 4)
     var defaultServer by remember { mutableStateOf(true) }
     var loading by remember { mutableStateOf(false) }
     if (loading) {
@@ -163,7 +166,7 @@ fun InnerNewIdentNewEdit(ident: Ident,
                     ident.defaultIdent = defaultServer
                     ident.server = serverInput
                     ident.port = portInput.toInt()
-                    callback( ident,  aliasInput)
+                    callback(ident, aliasInput)
                 },
                 content = { Text(stringResource(id = R.string.save)) }
             )
@@ -172,35 +175,38 @@ fun InnerNewIdentNewEdit(ident: Ident,
 }
 
 @Composable
-fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteString: String) {
+fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteString: String?) {
     val identListViewModel = koinViewModel<IdentListViewModel>()
     val newIdent by identListViewModel.insertedIdent.observeAsState(null)
     if (newIdent != null) {
         LaunchedEffect(key1 = Unit) {
-            newIdent!!.invite?.let {
-                navController.navigate(Scenes.FeedList.route) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
-                    }
+
+            val argUri = makeArgUri(newIdent!!.publicKey)
+            identListViewModel._insertedIdent.value = null
+            navController.navigate("${Scenes.MainFeed.route}/${argUri}") {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
                 }
             }
         }
         return
     }
-    val invite: Invite?
-    try {
-        invite = Invite.fromCanonicalForm(inviteString)
-    } catch (e: MalformedInviteCodeException) {
-        Card{
-            TextError("invite is malformed ! ${e.message}, $inviteString")
+    var invite: Invite? = null
+    if (inviteString != null) {
+        try {
+            invite = Invite.fromCanonicalForm(inviteString)
+        } catch (e: MalformedInviteCodeException) {
+            Card {
+                TextError("invite is malformed ! ${e.message}, $inviteString")
+            }
+            return
         }
-        return
     }
     val ident = Ident(
         oid = 0,
         publicKey = identity.toCanonicalForm(),
-        server = invite.host,
-        port = invite.port,
+        server = invite?.host ?: "",
+        port = invite?.port ?: 8008,
         privateKey = identity.privateKeyAsBase64String(),
         invite = inviteString,
         sortOrder = 1,
@@ -208,8 +214,8 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
         lastPush = null
     )
 
-    InnerNewIdentNewEdit(ident) { ident, alias ->
-        identListViewModel.insert(ident = ident, alias)
+    InnerNewIdentNewEdit(ident) { it, alias ->
+        identListViewModel.insert(ident = it, alias)
     }
 
 }

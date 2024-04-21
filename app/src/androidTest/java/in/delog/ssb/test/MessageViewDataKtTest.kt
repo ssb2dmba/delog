@@ -8,10 +8,10 @@ import `in`.delog.model.serializeMessageContent
 import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService.Companion.format
 import org.junit.Assert.assertEquals
-import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
+
+import org.junit.Test
+
 class MessageViewDataKtTest {
 
 

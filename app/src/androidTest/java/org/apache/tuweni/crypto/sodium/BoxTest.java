@@ -12,29 +12,30 @@
  */
 package org.apache.tuweni.crypto.sodium;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.Assert.*;
 
 import in.delog.libsodium.NaCl;
 
-class BoxTest {
+public class BoxTest {
 
     private static Box.Seed seed;
     private static Box.Nonce nonce;
 
-    @BeforeAll
-    static void setup() {
+    @BeforeClass
+    public void setup() {
         NaCl.sodium();
         nonce = Box.Nonce.random();
         // @formatter:off
@@ -47,18 +48,13 @@ class BoxTest {
         // @formatter:on
     }
 
-    @BeforeEach
-    void incrementNonce() {
-        nonce = nonce.increment();
-    }
-
     @Test
-    void badBytes() {
+    public void badBytes() {
         assertThrows(IllegalArgumentException.class, () -> Box.PublicKey.fromBytes(Bytes.random(20)));
     }
 
     @Test
-    void testObjectEquality() {
+    public void testObjectEquality() {
         Box.PublicKey pk = Box.PublicKey.fromBytes(Bytes32.random());
         assertEquals(pk, pk);
         Box.PublicKey pk2 = Box.PublicKey.fromBytes(Bytes32.random());
@@ -68,7 +64,7 @@ class BoxTest {
     }
 
     @Test
-    void testObjectEqualityNonce() {
+    public void testObjectEqualityNonce() {
         Box.Nonce pk = Box.Nonce.fromBytes(Bytes.random(24));
         assertEquals(pk, pk);
         Box.Nonce pk2 = Box.Nonce.fromBytes(Bytes.random(24));
@@ -78,7 +74,7 @@ class BoxTest {
     }
 
     @Test
-    void toBytes() {
+    public void toBytes() {
         Bytes32 value = Bytes32.random();
         Box.PublicKey pk = Box.PublicKey.fromBytes(value);
         assertEquals(value, pk.bytes());
@@ -86,7 +82,7 @@ class BoxTest {
     }
 
     @Test
-    void encryptDecryptSealed() {
+    public void encryptDecryptSealed() {
         Box.KeyPair keyPair = Box.KeyPair.random();
         Bytes encrypted = Box.encryptSealed(Bytes.fromHexString("deadbeef"), keyPair.publicKey());
         Bytes decrypted = Box.decryptSealed(encrypted, keyPair.publicKey(), keyPair.secretKey());
@@ -94,7 +90,7 @@ class BoxTest {
     }
 
     @Test
-    void encryptDecryptDetached() {
+    public void encryptDecryptDetached() {
         Box.KeyPair sender = Box.KeyPair.random();
         Box.KeyPair receiver = Box.KeyPair.random();
         Box.Nonce nonce = Box.Nonce.zero();
@@ -106,7 +102,7 @@ class BoxTest {
     }
 
     @Test
-    void checkCombinedEncryptDecrypt() {
+    public void checkCombinedEncryptDecrypt() {
         Box.KeyPair aliceKeyPair = Box.KeyPair.random();
         Box.KeyPair bobKeyPair = Box.KeyPair.fromSeed(seed);
 
@@ -127,7 +123,7 @@ class BoxTest {
     }
 
     @Test
-    void checkCombinedPrecomputedEncryptDecrypt() {
+    public void checkCombinedPrecomputedEncryptDecrypt() {
         Box.KeyPair aliceKeyPair = Box.KeyPair.random();
         Box.KeyPair bobKeyPair = Box.KeyPair.random();
 
@@ -159,7 +155,7 @@ class BoxTest {
     }
 
     @Test
-    void checkDetachedEncryptDecrypt() {
+    public void checkDetachedEncryptDecrypt() {
         Box.KeyPair aliceKeyPair = Box.KeyPair.random();
         Box.KeyPair bobKeyPair = Box.KeyPair.random();
 
@@ -199,7 +195,7 @@ class BoxTest {
     }
 
     @Test
-    void checkDetachedPrecomputedEncryptDecrypt() {
+    public void checkDetachedPrecomputedEncryptDecrypt() {
         Box.KeyPair aliceKeyPair = Box.KeyPair.random();
         Box.KeyPair bobKeyPair = Box.KeyPair.random();
 
@@ -237,14 +233,14 @@ class BoxTest {
     }
 
     @Test
-    void checkBoxKeyPairForSignatureKeyPair() {
+    public void checkBoxKeyPairForSignatureKeyPair() {
         Signature.KeyPair signKeyPair = Signature.KeyPair.random();
         Box.KeyPair boxKeyPair = Box.KeyPair.forSignatureKeyPair(signKeyPair);
         assertNotNull(boxKeyPair);
     }
 
     @Test
-    void checkBoxKeysForSignatureKeys() {
+    public void checkBoxKeysForSignatureKeys() {
         Signature.KeyPair keyPair = Signature.KeyPair.random();
         Box.PublicKey boxPubKey = Box.PublicKey.forSignaturePublicKey(keyPair.publicKey());
         Box.SecretKey boxSecretKey = Box.SecretKey.forSignatureSecretKey(keyPair.secretKey());

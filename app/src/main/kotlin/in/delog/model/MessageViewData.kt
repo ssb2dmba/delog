@@ -57,15 +57,15 @@ data class MessageViewData(
 
 }
 
-fun MessageViewData.Companion.empty(author: String): MessageViewData {
+fun MessageViewData.Companion.empty(author: String, authorName:String = "", authorImage: String?=""): MessageViewData {
     return MessageViewData(
         oid = 0L,
         key = "",
         timestamp = System.currentTimeMillis(),
         author = author,
         contentAsText = "{ \"type\": \"post\", \"text\": \"\"}",
-        authorName = "",
-        authorImage = "",
+        authorName = authorName,
+        authorImage = authorImage,
         pName = "",
         type = "",
         root = "",

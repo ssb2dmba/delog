@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -126,7 +127,7 @@ fun IdentityBox(
                     modifier = Modifier.weight(1f)
                 )
                 if (identAndAboutWithBlob.ident.defaultIdent && onClick != null) {
-                    FilledTonalIconButton(
+                    FilledIconButton(
                         onClick = {
                             onClick.invoke(identAndAboutWithBlob)
                         }

@@ -4,7 +4,6 @@ import `in`.delog.db.model.Ident
 import `in`.delog.model.SsbMessageContent
 import `in`.delog.model.SsbSignableMessage
 import `in`.delog.model.SsbSignedMessage
-import `in`.delog.ssb.*
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

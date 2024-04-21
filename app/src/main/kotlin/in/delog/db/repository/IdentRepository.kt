@@ -17,6 +17,7 @@
  */
 package `in`.delog.db.repository
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.room.Transaction
 import `in`.delog.db.dao.AboutDao
@@ -25,6 +26,7 @@ import `in`.delog.db.model.About
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAbout
 import `in`.delog.db.model.IdentAndAboutWithBlob
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -76,13 +78,21 @@ class FeedRepositoryImpl(
 
 
     override fun setFeedAsDefaultFeed(it: Ident) {
+        Log.i(TAG, "setFeedAsDefaultFeed ${it.oid}")
         identDao.setFeedAsDefaultFeed(it.oid)
     }
 
     override suspend fun insert(feed: IdentAndAbout): Long {
-        val id = identDao.insert(feed = feed.ident)
+        var exist = identDao.findByPublicKey(feed.ident.publicKey)
+        var id : Long
+        if (exist == null) {
+            id = identDao.insert(feed = feed.ident)
+            aboutDao.insert(feed.about!!)
+        } else {
+            id = exist.ident.oid
+            aboutDao.update(feed.about!!)
+        }
         identDao.setFeedAsDefaultFeed(id)
-        aboutDao.insert(feed.about!!)
         return id
     }
 

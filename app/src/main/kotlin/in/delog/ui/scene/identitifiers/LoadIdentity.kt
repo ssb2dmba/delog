@@ -15,6 +15,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -127,18 +129,46 @@ fun LoadIdentity(
 
         Row(
             verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.Center
         ) {
-            Box(
+            Column(
                 modifier = Modifier.size(96.dp)
             ) {
                 Checkbox(
-                    modifier = Modifier.align(Alignment.TopCenter),
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .testTag("disable_server"),
                     checked = getInvite,
                     onCheckedChange = { getInvite = !getInvite }
                 )
-                FilledTonalIconButton(
-                    modifier = Modifier.align(Alignment.BottomCenter),
+
+            }
+
+            Column(
+                //modifier = Modifier.weight(1f),
+                //horizontalAlignment = Alignment.CenterHorizontally,
+                //verticalArrangement = Arrangement.Center
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = String.format(
+                        stringResource(R.string.get_invite_and_redeem_it),
+                        serverName
+                    ),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Row(
+            verticalAlignment = Alignment.Top,
+            //horizontalArrangement = Arrangement.Start
+        ) {
+            Column(
+                modifier = Modifier.size(96.dp),
+                //verticalArrangement = Arrangement.Top,
+            ) {
+                FilledIconButton(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                     onClick = {
                         showInviteUrlDialog = true
                     }
@@ -149,21 +179,11 @@ fun LoadIdentity(
                         modifier = Modifier.size(ButtonDefaults.IconSize)
                     )
                 }
+
             }
             Column {
-
-                Text(
-                    String.format(
-                        stringResource(R.string.get_invite_and_redeem_it),
-                        serverName
-                    ),
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 ElevatedButton(
-                    modifier = Modifier.padding(start = 8.dp, top = 8.dp),
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(0.8f),
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -177,7 +197,7 @@ fun LoadIdentity(
 
 
                 ElevatedButton(
-                    modifier = Modifier.padding(start = 8.dp, top = 8.dp),
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(0.8f),
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -190,7 +210,7 @@ fun LoadIdentity(
                 )
 
                 ElevatedButton(
-                    modifier = Modifier.padding(end = 8.dp, top = 8.dp),
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(0.8f),
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         containerColor = MaterialTheme.colorScheme.primaryContainer

@@ -17,6 +17,7 @@
  */
 package `in`.delog.db.repository
 
+import android.util.Log
 import androidx.paging.PagingSource
 import `in`.delog.db.dao.DraftDao
 import `in`.delog.db.model.Draft
@@ -38,6 +39,7 @@ class DraftRepositoryImpl(private val draftDao: DraftDao) : DraftRepository {
     }
 
     override suspend fun insert(draft: Draft): Long {
+        Log.i("DraftRepositoryImpl", "insert $draft")
         return draftDao.insert(draft)
     }
 
@@ -54,6 +56,7 @@ class DraftRepositoryImpl(private val draftDao: DraftDao) : DraftRepository {
     }
 
     override fun update(draft: Draft) {
+        Log.i("DraftRepositoryImpl", "update $draft")
         return draftDao.update(draft)
     }
 

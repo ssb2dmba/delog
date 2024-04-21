@@ -13,12 +13,12 @@
 package org.apache.tuweni.crypto;
 
 import static org.apache.tuweni.bytes.Bytes.fromHexString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -27,8 +27,9 @@ import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.crypto.SECP256K1.PublicKey;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.crypto.SECP256K1.Signature;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 
 import java.math.BigInteger;
 import java.util.Random;
@@ -36,48 +37,48 @@ import java.util.Random;
 import in.delog.libsodium.NaCl;
 
 
-class SECP256K1Test {
+public class SECP256K1Test {
 
-    @BeforeAll
-    static void setup() {
+    @BeforeClass
+    public void setup() {
         NaCl.sodium();
     }
 
     @Test
-    void testCreatePrivateKey_NullEncoding() {
+    public void testCreatePrivateKey_NullEncoding() {
         assertThrows(NullPointerException.class, () -> SecretKey.fromBytes(null));
     }
 
     @Test
-    void testPrivateKeyEquals() {
+    public void testPrivateKeyEquals() {
         SecretKey secretKey1 = SecretKey.fromInteger(BigInteger.TEN);
         SecretKey secretKey2 = SecretKey.fromInteger(BigInteger.TEN);
         assertEquals(secretKey1, secretKey2);
     }
 
     @Test
-    void testPrivateHashCode() {
+    public void testPrivateHashCode() {
         SecretKey secretKey = SecretKey.fromInteger(BigInteger.TEN);
         assertNotEquals(0, secretKey.hashCode());
     }
 
     @Test
-    void testCreatePublicKey_NullEncoding() {
+    public void testCreatePublicKey_NullEncoding() {
         assertThrows(NullPointerException.class, () -> SECP256K1.PublicKey.fromBytes(null));
     }
 
     @Test
-    void testCreatePublicKey_EncodingTooShort() {
+    public void testCreatePublicKey_EncodingTooShort() {
         assertThrows(IllegalArgumentException.class, () -> SECP256K1.PublicKey.fromBytes(Bytes.wrap(new byte[63])));
     }
 
     @Test
-    void testCreatePublicKey_EncodingTooLong() {
+    public void testCreatePublicKey_EncodingTooLong() {
         assertThrows(IllegalArgumentException.class, () -> SECP256K1.PublicKey.fromBytes(Bytes.wrap(new byte[65])));
     }
 
     @Test
-    void testPublicKeyEquals() {
+    public void testPublicKeyEquals() {
         SECP256K1.PublicKey publicKey1 = SECP256K1.PublicKey
                 .fromBytes(
                         fromHexString(
@@ -90,7 +91,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testPublicHashCode() {
+    public void testPublicHashCode() {
         SECP256K1.PublicKey publicKey = SECP256K1.PublicKey
                 .fromBytes(
                         fromHexString(
@@ -100,21 +101,21 @@ class SECP256K1Test {
     }
 
     @Test
-    void testCreateKeyPair_PublicKeyNull() {
+    public void testCreateKeyPair_PublicKeyNull() {
         assertThrows(
                 NullPointerException.class,
                 () -> SECP256K1.KeyPair.create(null, SECP256K1.PublicKey.fromBytes(Bytes.wrap(new byte[64]))));
     }
 
     @Test
-    void testCreateKeyPair_PrivateKeyNull() {
+    public void testCreateKeyPair_PrivateKeyNull() {
         assertThrows(
                 NullPointerException.class,
                 () -> SECP256K1.KeyPair.create(SecretKey.fromBytes(Bytes32.wrap(new byte[32])), null));
     }
 
     @Test
-    void testKeyPairGeneration() {
+    public void testKeyPairGeneration() {
         SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.random();
         assertNotNull(keyPair);
         assertNotNull(keyPair.secretKey());
@@ -122,7 +123,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testKeyPairEquals() {
+    public void testKeyPairEquals() {
         SecretKey secretKey1 = SecretKey.fromInteger(BigInteger.TEN);
         SecretKey secretKey2 = SecretKey.fromInteger(BigInteger.TEN);
         SECP256K1.PublicKey publicKey1 = SECP256K1.PublicKey
@@ -141,19 +142,19 @@ class SECP256K1Test {
     }
 
     @Test
-    void testKeyPairHashCode() {
+    public void testKeyPairHashCode() {
         SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.random();
         assertNotEquals(0, keyPair.hashCode());
     }
 
     @Test
-    void testKeyPairGeneration_PublicKeyRecovery() {
+    public void testKeyPairGeneration_PublicKeyRecovery() {
         SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.random();
         assertEquals(keyPair.publicKey(), SECP256K1.PublicKey.fromSecretKey(keyPair.secretKey()));
     }
 
     @Test
-    void testPublicKeyRecovery() {
+    public void testPublicKeyRecovery() {
         SecretKey secretKey = SecretKey.fromInteger(BigInteger.TEN);
         SECP256K1.PublicKey expectedPublicKey = SECP256K1.PublicKey
                 .fromBytes(
@@ -165,7 +166,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testCreateSignature() {
+    public void testCreateSignature() {
         SECP256K1.Signature signature = new SECP256K1.Signature((byte) 0, BigInteger.ONE, BigInteger.TEN);
         assertEquals(BigInteger.ONE, signature.r());
         assertEquals(BigInteger.TEN, signature.s());
@@ -173,7 +174,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testEncodeSignature() {
+    public void testEncodeSignature() {
         SECP256K1.Signature signature = new SECP256K1.Signature((byte) 0, BigInteger.ONE, BigInteger.TEN);
         assertEquals(
                 "0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000a00",
@@ -181,7 +182,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testCreateSignatureFromEncoding() {
+    public void testCreateSignatureFromEncoding() {
         SECP256K1.Signature signature = SECP256K1.Signature
                 .fromBytes(
                         fromHexString(
@@ -192,17 +193,17 @@ class SECP256K1Test {
     }
 
     @Test
-    void testCreateSignatureWithNullR() {
+    public void testCreateSignatureWithNullR() {
         assertThrows(NullPointerException.class, () -> SECP256K1.Signature.create((byte) 1, null, BigInteger.ONE));
     }
 
     @Test
-    void testCreateSignatureWithNullS() {
+    public void testCreateSignatureWithNullS() {
         assertThrows(NullPointerException.class, () -> SECP256K1.Signature.create((byte) 1, BigInteger.ONE, null));
     }
 
     @Test
-    void testCreateSignatureWithZeroR() {
+    public void testCreateSignatureWithZeroR() {
         Exception throwable = assertThrows(
                 IllegalArgumentException.class,
                 () -> SECP256K1.Signature.create((byte) 1, BigInteger.ZERO, BigInteger.ONE));
@@ -212,7 +213,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testCreateSignatureWithZeroS() {
+    public void testCreateSignatureWithZeroS() {
         Exception throwable = assertThrows(
                 IllegalArgumentException.class,
                 () -> SECP256K1.Signature.create((byte) 1, BigInteger.ONE, BigInteger.ZERO));
@@ -222,7 +223,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testCreateSignatureWithRHigherThanCurve() {
+    public void testCreateSignatureWithRHigherThanCurve() {
         BigInteger curveN = SECP256K1.Parameters.CURVE.getN();
         Exception throwable = assertThrows(
                 IllegalArgumentException.class,
@@ -233,7 +234,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testCreateSignatureWithSHigherThanCurve() {
+    public void testCreateSignatureWithSHigherThanCurve() {
         BigInteger curveN = SECP256K1.Parameters.CURVE.getN();
         Exception throwable = assertThrows(
                 IllegalArgumentException.class,
@@ -244,7 +245,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testRecoverPublicKeyFromSignature() {
+    public void testRecoverPublicKeyFromSignature() {
         SecretKey secretKey =
                 SecretKey.fromInteger(new BigInteger("c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4", 16));
         SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(secretKey);
@@ -277,14 +278,14 @@ class SECP256K1Test {
     }
 
     @Test
-    void testCannotRecoverPublicKeyFromSignature() {
+    public void testCannotRecoverPublicKeyFromSignature() {
         SECP256K1.Signature signature =
                 new Signature((byte) 0, SECP256K1.Parameters.CURVE_ORDER.subtract(BigInteger.ONE), BigInteger.valueOf(10));
         assertNull(SECP256K1.PublicKey.recoverFromSignature(Bytes.of("Random data".getBytes(UTF_8)), signature));
     }
 
     @Test
-    void testSignatureGeneration() {
+    public void testSignatureGeneration() {
         SecretKey secretKey =
                 SecretKey.fromInteger(new BigInteger("c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4", 16));
         SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(secretKey);
@@ -300,7 +301,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testSignatureVerification() {
+    public void testSignatureVerification() {
         SecretKey secretKey =
                 SecretKey.fromInteger(new BigInteger("c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4", 16));
         SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(secretKey);
@@ -344,7 +345,7 @@ class SECP256K1Test {
 //    }
 
     @Test
-    void testEncodedBytes() {
+    public void testEncodedBytes() {
         KeyPair kp = SECP256K1.KeyPair.random();
         Signature sig = SECP256K1.sign(Bytes.of(1, 2, 3), kp);
         assertEquals(65, sig.bytes().size());
@@ -352,7 +353,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void testSharedSecretBytes() {
+    public void testSharedSecretBytes() {
         KeyPair kp = SECP256K1.KeyPair.random();
         KeyPair otherKP = SECP256K1.KeyPair.random();
         Bytes32 sharedSecret = SECP256K1.calculateKeyAgreement(kp.secretKey(), otherKP.publicKey());
@@ -361,7 +362,7 @@ class SECP256K1Test {
     }
 
     @Test
-    void encryptDecrypt() {
+    public void encryptDecrypt() {
         KeyPair kp = SECP256K1.KeyPair.random();
         Bytes encrypted = SECP256K1.encrypt(kp.publicKey(), Bytes.fromHexString("0xdeadbeef"));
         Bytes decrypted = SECP256K1.decrypt(kp.secretKey(), encrypted);

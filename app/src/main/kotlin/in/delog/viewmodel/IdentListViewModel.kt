@@ -45,13 +45,14 @@ class IdentListViewModel(
 ) : ViewModel() {
 
 
-    private var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
-    var insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
+    var _insertedIdent: MutableStateFlow<Ident?> = MutableStateFlow(null)
+    val insertedIdent: StateFlow<Ident?> = _insertedIdent.asStateFlow()
     var idents: LiveData<List<IdentAndAboutWithBlob>> = repository.idents.asLiveData()
     val default: LiveData<IdentAndAboutWithBlob?> = repository.default.asLiveData()
     val count: LiveData<Int> = repository.count
 
     fun insert(ident: Ident, alias: String? = null) {
+        // must be on global scope not to be killed
         GlobalScope.launch(Dispatchers.IO) {
             // insert complete ident and about
             val about = About(
@@ -61,11 +62,16 @@ class IdentListViewModel(
             )
             val id = repository.insert(IdentAndAbout(ident, about))
             ident.oid = id
-            redeemInvite(ident)
+            repository.setFeedAsDefaultFeed(ident)
+            if (ident.invite!=null) {
+                redeemInvite(ident)
+            } else {
+                _insertedIdent.value = ident
+            }
         }
     }
-    private fun redeemInvite(ident: Ident) {
-        viewModelScope.launch {
+    private suspend fun redeemInvite(ident: Ident) {
+        //viewModelScope.launch {
             ssbService.connectWithInvite(ident,
                 {
                     // everything is going according to the plan
@@ -74,8 +80,9 @@ class IdentListViewModel(
                 },
                 {
                     MainApplication.toastify(it.message.toString())
+                    _insertedIdent.value = ident
                 })
-        }
+        //}
     }
 
     fun setFeedAsDefaultFeed(ident: Ident) {

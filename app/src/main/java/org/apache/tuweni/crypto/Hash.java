@@ -45,7 +45,7 @@ public final class Hash {
     // SHA-3
     private static final String SHA3_256 = "SHA3-256";
     private static final String SHA3_512 = "SHA3-512";
-    static boolean USE_SODIUM = Boolean.parseBoolean(System.getProperty("org.apache.tuweni.crypto.useSodium", "true"));
+    public static boolean USE_SODIUM = Boolean.parseBoolean(System.getProperty("org.apache.tuweni.crypto.useSodium", "true"));
 
     private Hash() {
     }

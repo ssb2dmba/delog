@@ -1,5 +1,6 @@
 package `in`.delog.ssb.test
 
+
 import `in`.delog.service.ssb.Dict
 import `in`.delog.service.ssb.WordList
 import `in`.delog.service.ssb.mnemonicToSignature
@@ -8,6 +9,7 @@ import org.apache.tuweni.io.Base64
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.*
+
 
 class MnemonicsTest {
 

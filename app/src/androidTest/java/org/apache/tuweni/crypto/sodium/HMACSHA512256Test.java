@@ -12,31 +12,33 @@
  */
 package org.apache.tuweni.crypto.sodium;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
+
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertFalse;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import in.delog.libsodium.NaCl;
 
-class HMACSHA512256Test {
-    @BeforeAll
-    static void checkAvailable() {
+public class HMACSHA512256Test {
+    @BeforeClass
+    public void checkAvailable() {
         NaCl.sodium();
     }
 
     @Test
-    void testHmacsha512256() {
+    public void testHmacsha512256() {
         HMACSHA512256.Key key = HMACSHA512256.Key.random();
         Bytes authenticator = HMACSHA512256.authenticate(Bytes.fromHexString("deadbeef"), key);
         assertTrue(HMACSHA512256.verify(authenticator, Bytes.fromHexString("deadbeef"), key));
     }
 
     @Test
-    void testHmacsha512256InvalidAuthenticator() {
+    public void testHmacsha512256InvalidAuthenticator() {
         HMACSHA512256.Key key = HMACSHA512256.Key.random();
         Bytes authenticator = HMACSHA512256.authenticate(Bytes.fromHexString("deadbeef"), key);
         assertThrows(
@@ -46,7 +48,7 @@ class HMACSHA512256Test {
     }
 
     @Test
-    void testHmacsha512256NoMatch() {
+    public void testHmacsha512256NoMatch() {
         HMACSHA512256.Key key = HMACSHA512256.Key.random();
         Bytes authenticator = HMACSHA512256.authenticate(Bytes.fromHexString("deadbeef"), key);
         assertFalse(HMACSHA512256.verify(authenticator.reverse(), Bytes.fromHexString("deadbeef"), key));

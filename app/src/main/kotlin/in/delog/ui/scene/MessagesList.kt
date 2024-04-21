@@ -101,15 +101,13 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
     val uiState by viewModel.uiState.observeAsState(FeedMainUIState())
     val ssbService :SsbService by inject(SsbService::class.java)
     val ssbUiState by ssbService.uiState.observeAsState(SsbUIState())
-    LaunchedEffect(key1 = Unit) {
-        bottomBarViewModel.setActions {
-            Spacer(
-                modifier = Modifier
-                    .weight(1f)
-                    .background(MaterialTheme.colorScheme.onSurfaceVariant)
-            )
-            NewDraftFab(navController)
-        }
+    bottomBarViewModel.setActions {
+        Spacer(
+            modifier = Modifier
+                .weight(1f)
+                .background(MaterialTheme.colorScheme.onSurfaceVariant)
+        )
+        NewDraftFab(navController)
     }
     if (uiState.identAndAbout == null ) {
         return
