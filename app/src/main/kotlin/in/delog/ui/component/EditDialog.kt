@@ -19,6 +19,7 @@ package `in`.delog.ui.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
@@ -94,6 +95,7 @@ fun EditDialog(
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
+                        keyboardOptions = KeyboardOptions(autoCorrect = false),
                         placeholder = { Text(text = "Enter value") },
                         value = txtField.value,
                         onValueChange = {

@@ -223,12 +223,11 @@ private fun PreferencesTextField(
     var dirty by remember { mutableStateOf(false) }
     var innerValue = remember { mutableStateOf(storeState.value) }
     if (dirty) {
-        val kOpts = keyboardOptions ?: KeyboardOptions.Default
         TextField(
             modifier = Modifier.padding(horizontal = 28.dp),
             label = { Text(title) },
             value = innerValue.value!!,
-            keyboardOptions = kOpts,
+            keyboardOptions = KeyboardOptions(autoCorrect = false),
             onValueChange = {
                 innerValue.value = it
             },

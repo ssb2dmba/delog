@@ -112,7 +112,8 @@ fun InnerNewIdentNewEdit(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("alias")
+                    .testTag("alias"),
+                keyboardOptions = KeyboardOptions(autoCorrect = false),
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(Modifier.fillMaxWidth()) {
@@ -128,7 +129,8 @@ fun InnerNewIdentNewEdit(
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     },
-                    modifier = Modifier.weight(0.7f)
+                    modifier = Modifier.weight(0.7f),
+                    keyboardOptions = KeyboardOptions(autoCorrect = false),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedTextField(
