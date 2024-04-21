@@ -36,6 +36,7 @@ jobs:
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest
 
+      - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -84,5 +85,5 @@ jobs:
           path: |
             ./**/build/reports/androidTests/connected/**
 
-      - name: run connectedCheck
+
 
