@@ -33,6 +33,9 @@ import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import io.netty.channel.ConnectTimeoutException
 import io.vertx.core.Vertx
+import io.vertx.core.VertxOptions
+import io.vertx.core.dns.AddressResolverOptions
+import io.vertx.core.metrics.MetricsOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -93,10 +96,21 @@ class SsbService(
     lateinit var callBack: () -> Unit
     lateinit var vertx: Vertx
 
+
+    init {
+        val vertxOptions = VertxOptions()
+        vertxOptions.preferNativeTransport = true
+        vertxOptions.setMetricsOptions(MetricsOptions().setEnabled(false))
+        vertxOptions.setAddressResolverOptions(AddressResolverOptions().setServers(listOf("8.8.8.8")))
+        //vertxOptions.eventLoopPoolSize = 1000000
+        vertx  = Vertx.vertx(vertxOptions)
+    }
+
     companion object {
         const val MAX_RETRY = 10
         val objectMapper = jacksonObjectMapper()
         const val TAG: String = "dlog-ssb-service"
+
 
         val format = Json {
             prettyPrint = true
@@ -118,7 +132,7 @@ class SsbService(
     }
 
 
-    private fun replicate(pFeed: Ident) {
+    private suspend fun replicate(pFeed: Ident) {
         try {
             val keyPair = pFeed.asKeyPair()
             if (keyPair == null || pFeed.server.isEmpty()) {
@@ -133,7 +147,7 @@ class SsbService(
                 Log.d("ssb", "already connected")
                 throw Exception("already connected")
             }
-            runBlocking {   reconnect(pFeed) }
+            reconnect(pFeed)
         } catch (e: Exception) {
             _uiState.update { it.copy(error = e, connecting = false, connected=false) }
             e.message?.let { Log.e(TAG, it) }
@@ -204,7 +218,7 @@ class SsbService(
         callBack = terminationFn
 
         for (i in 0..MAX_RETRY) {
-            vertx  = Vertx.vertx()
+
             secureScuttlebuttVertxClient =
                 SecureScuttlebuttVertxClient(vertx, keyPair!!, ScuttlebuttClientFactory.DEFAULT_NETWORK)
             try {
@@ -283,6 +297,7 @@ class SsbService(
 
             // let's call all of our friends
             contactRepository.geContacts(feedCannonicalForm).forEach {
+        Log.i(TAG, "calling friend ${it.follow}")
                 ourSequence = messageRepository.getLastSequence(it.follow)
                 feedService?.createHistoryStream(
                     it.follow,

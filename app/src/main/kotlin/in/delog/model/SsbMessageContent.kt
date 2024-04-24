@@ -7,7 +7,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class Mention(
     val link: String,
-    val name: String,
+    val name: String?="",
     val type: String?=null,
     val size: Long?=null
 )

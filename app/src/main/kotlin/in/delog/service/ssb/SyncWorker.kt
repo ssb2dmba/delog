@@ -56,7 +56,7 @@ class SyncWorker (
             .setInputData(SyncWorker::class.delegatedData())
             .build()
 
-        fun periodicSyncWork() = PeriodicWorkRequestBuilder<SyncWorker>(15L, TimeUnit.MINUTES)
+        fun periodicSyncWork() = PeriodicWorkRequestBuilder<SyncWorker>(1L, TimeUnit.MINUTES)
         .setConstraints(SyncConstraints)
         .setInputData(SyncWorker::class.delegatedData())
         .build()

@@ -44,7 +44,6 @@ fun UrlPreviewCard(
 
     Column(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.secondaryContainer)
             .clickable {
                 runCatching { uri.openUri(url) }
             }
@@ -62,9 +61,8 @@ fun UrlPreviewCard(
             text = previewInfo.verifiedUrl?.host ?: previewInfo.url,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp),
-            color = MaterialTheme.colorScheme.onSecondary,
+                .fillMaxWidth(),
+            color = MaterialTheme.colorScheme.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -73,10 +71,7 @@ fun UrlPreviewCard(
             text = previewInfo.title,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+                .fillMaxWidth(),
         )
 
         Text(
@@ -84,12 +79,7 @@ fun UrlPreviewCard(
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp),
-            color = MaterialTheme.colorScheme.onSecondary,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis
+                .padding(top = 6.dp),
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }

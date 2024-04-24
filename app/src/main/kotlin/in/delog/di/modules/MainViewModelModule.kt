@@ -65,7 +65,7 @@ val mainViewModel = module {
 
     factory<DraftRepository> { (DraftRepositoryImpl(get())) }
     viewModel { DraftListViewModel(get(), get(), get()) }
-    viewModel { ContactListViewModel(get(), get(), get()) }
+    viewModel { ContactListViewModel(get(), get(), get(), get()) }
 
     single { ContactRepositoryImpl(get()) }
     factory<ContactRepository> { (ContactRepositoryImpl(get())) }
