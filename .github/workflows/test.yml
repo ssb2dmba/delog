@@ -34,6 +34,8 @@ jobs:
         with:
           path: |
             ./.gradle
+            ~/.android/avd/*
+            ~/.android/adb*            
             ./app/build
             ./libsodium
           key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
