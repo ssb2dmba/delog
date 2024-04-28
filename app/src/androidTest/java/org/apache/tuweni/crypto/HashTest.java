@@ -17,16 +17,23 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import junit.framework.TestCase;
+
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.BeforeClass;
+import org.apache.tuweni.crypto.Hash;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import in.delog.libsodium.NaCl;
 
 
-public class HashTest {
+@RunWith(AndroidJUnit4.class)
+public class HashTest  {
 
-    @BeforeClass
+    @Before
     public void checkAvailable() {
         NaCl.sodium();
     }

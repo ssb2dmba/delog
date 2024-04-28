@@ -32,6 +32,17 @@ class SsbSignMessageTest {
         lastPush = null
     )
 
+    val feed3 = Ident(
+        privateKey="o8h5H7E9sL+rOWAmWdpgPSIKvrwBnAoZnWLAc76P7bJh8In3fQdz7qWHvqI198Bd7Xw0UnS5p95wC8YOot9xvQ==",
+    oid = -1, port = 8080,
+    publicKey = "",
+    defaultIdent = true,
+    server = "",
+    sortOrder = -1,
+    invite = null,
+    lastPush = null
+    )
+
     @Test
     fun ssbSignMessage() {
         /*

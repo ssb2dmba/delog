@@ -57,7 +57,7 @@ android {
     }
 
     defaultConfig {
-        minSdk 21
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -137,12 +137,12 @@ tasks.withType(JavaCompile) {
     compileTask -> compileTask.dependsOn(nativeLibsToJar)
 }
 
+configurations.all {
+        resolutionStrategy {
+            force "junit:junit:4.13.2"
+        }
+   }
 
-configurations.configureEach {
-    resolutionStrategy {
-        force "junit:junit:4.13.2"
-    }
-}
 
 dependencies {
     // Android Kotlin Project
@@ -158,6 +158,7 @@ dependencies {
 
     // Android Room 2.6.1
     implementation("androidx.room:room-runtime:2.6.1")
+    implementation 'androidx.work:work-testing:2.9.0'
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
@@ -196,13 +197,14 @@ dependencies {
 
     // tools & networking
     implementation("org.syncope.identityconnectors:framework:0.4.3")
-    compileOnly('io.vertx:vertx-core:4.4.1')
+    compileOnly('io.vertx:vertx-core:4.5.7')
+    implementation('io.vertx:vertx-lang-kotlin-coroutines:4.5.7')
     implementation('org.slf4j:slf4j-api:2.0.7')
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")
     implementation 'commons-codec:commons-codec:1.16.0'
     implementation("com.google.guava:guava:31.1-jre")
-    implementation('io.vertx:vertx-lang-kotlin-coroutines:4.4.1')
+
     implementation('org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0')
 
     // link preview
@@ -329,7 +331,7 @@ gradle.projectsEvaluated {
 }
 
 apply plugin: "c"
-
+/**
 task cleanLibsodium {
     doLast {
         exec {
@@ -347,3 +349,4 @@ task cleanLibsodium {
         }
     }
 }
+*/

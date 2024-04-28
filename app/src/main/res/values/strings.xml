@@ -69,4 +69,5 @@
     <string name="forward">forward</string>
     <string name="back">back</string>
     <string name="later">later</string>
+    <string name="leak_canary_test_class_name">assertk.Assert</string>
 </resources>

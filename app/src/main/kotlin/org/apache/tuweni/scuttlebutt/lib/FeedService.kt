@@ -17,17 +17,21 @@
 package org.apache.tuweni.scuttlebutt.lib
 
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import `in`.delog.db.model.About
+import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.toJsonResponse
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.MessageRepository
+import `in`.delog.model.SsbSignedMessage
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
+import `in`.delog.viewmodel.toSignable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
@@ -165,7 +169,7 @@ class FeedService(
         val rpcStreamRequest = rpcMessage.asJSON(SsbService.objectMapper, RPCStreamRequest2::class.java)
         val id = rpcStreamRequest.id
         // TODO -10 below is a hack amid we implement last push stored cursor
-        val sequence = rpcStreamRequest.seq - 10
+        val sequence =  rpcStreamRequest.seq - 10
         val remoteLimit = rpcStreamRequest.limit
         if (sequence < 1) {
             Log.w(TAG, String.format("pub is requesting complete history !", sequence))
@@ -173,6 +177,7 @@ class FeedService(
         val remoteSequence = sequence.toLong()
         val batchSize = 100.coerceAtMost(remoteLimit) // TODO put in config
         val messages = messageRepository.getMessagePage(id, remoteSequence, batchSize)
+
         for (m: Message in messages) {
             Log.d(TAG, "> [${rpcMessage.requestNumber()}] :" + m)
             val response = RPCCodec.encodeResponse(

@@ -24,8 +24,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import `in`.delog.db.model.About
 import `in`.delog.db.model.Contact
 import `in`.delog.db.model.RelayServer
+import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.RelayRepository
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +38,7 @@ class ContactListViewModel(
     private val author: String,
     private val contactRepository: ContactRepository,
     private val relayRepository: RelayRepository,
+    private val aboutRepository: AboutRepository,
 ) : ViewModel() {
 
     var contactsPaged = Pager(
@@ -50,7 +53,7 @@ class ContactListViewModel(
 
     fun insert(author: String, strContact: String) {
         viewModelScope.launch(Dispatchers.IO){
-            val publicKey=strContact.split("@")[1]
+            val publicKey="@" + strContact.split("@")[1]
             val serverUrl=strContact.split("@").last()
             val exist = contactRepository.getByAuthorAndFollow(author, publicKey)
             if (exist!=null) {
@@ -63,6 +66,8 @@ class ContactListViewModel(
                 relayRepository.insert(relay)
                 relay = relayRepository.getByUrl(serverUrl)
             }
+            val about = About(publicKey)
+            aboutRepository.insertOrUpdate(about)
             val contact = Contact(0, author, publicKey, true, relay!!.oid)
             contactRepository.insert(contact)
         }
