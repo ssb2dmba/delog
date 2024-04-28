@@ -56,10 +56,10 @@ jobs:
           api-level: 33
           arch: x86_64
           #profile: pixel_2
-          #ram-size: 4096M
+          ram-size: 4096M
           target: 'aosp_atd'
           disable-animations: true
-          #emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           #channel: canary
           #sdcard-path-or-size: 2048M
           ndk: 25.1.8937393
