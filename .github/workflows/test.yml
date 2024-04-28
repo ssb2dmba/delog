@@ -29,11 +29,11 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: 8.2
-          cache-read-only: false
+#      - name: Setup Gradle
+#        uses: gradle/actions/setup-gradle@v3
+#        with:
+#          gradle-version: 8.2
+#          cache-read-only: false
 
       - name: Setup build cache
         uses: actions/cache@v4
@@ -44,8 +44,8 @@ jobs:
           key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
           restore-keys: build-${{ runner.os }}-shared-cache
 
-#      - name: build tests
-#        run: ./gradlew assembleDebug assembleAndroidTest
+      - name: build tests
+        run: ./gradlew assembleDebug assembleAndroidTest
 
       - name: run connectedCheck
         uses: reactivecircus/android-emulator-runner@v2
