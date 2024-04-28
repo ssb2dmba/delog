@@ -39,8 +39,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            app/build
-            libsodium
+            ./.gradle
+            ./app/build
+            ./libsodium
           key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
           restore-keys: build-${{ runner.os }}-shared-cache
 
