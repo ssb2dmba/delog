@@ -196,7 +196,7 @@ dependencies {
 
     // tools & networking
     implementation("org.syncope.identityconnectors:framework:0.4.3")
-    compileOnly('io.vertx:vertx-core:4.4.1')
+    compileOnly('io.vertx:vertx-core:4.5.7')
     implementation('org.slf4j:slf4j-api:2.0.7')
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")
