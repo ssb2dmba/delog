@@ -179,7 +179,7 @@ dependencies {
 
     //Koin
     implementation "io.insert-koin:koin-android:3.5.0"
-    implementation "io.insert-koin:koin-androidx-compose:3.5.0"
+    implementation "io.insert-koin:koin-androidx-compose:3.5.6"
     implementation "io.insert-koin:koin-androidx-workmanager:3.5.0"
 
     // live data + view model
