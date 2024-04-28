@@ -331,7 +331,7 @@ gradle.projectsEvaluated {
 }
 
 apply plugin: "c"
-
+/**
 task cleanLibsodium {
     doLast {
         exec {
@@ -349,3 +349,4 @@ task cleanLibsodium {
         }
     }
 }
+*/
