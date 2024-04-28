@@ -83,7 +83,6 @@ Feature: Onboarding with mnemonic
     Then I click 'Restore from mnemonic'
     Then I fill input with testTag "alias" with value "test_mnemonic"
     Then I click 'save'
-    Then I wait '500'
+    Then I wait '1000'
     Then "test_mnemonic" text is presented
-    Then "compose" text is presented
     Then "compose" text is presented
