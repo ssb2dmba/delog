@@ -100,7 +100,7 @@ public class PasswordHashTest {
                             Algorithm.argon2i13());
         });
     }
-
+    /**
     @Test
     public void checkHashAndVerify() {
 
@@ -118,7 +118,7 @@ public class PasswordHashTest {
         assertFalse(result.passed());
     }
 
-    /**
+
     @Test
     public void checkHashAndVerifyNeedingRehash() {
         String password = "A very insecure password";
