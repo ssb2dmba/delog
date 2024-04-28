@@ -258,7 +258,7 @@ dependencies {
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4:1.6.5'
 
     androidTestImplementation 'io.cucumber:cucumber-android:4.10.0'
-    androidTestImplementation 'io.cucumber:cucumber-picocontainer:4.8.1'
+    androidTestImplementation 'io.cucumber:cucumber-picocontainer:7.17.0'
 
     androidTestUtil 'androidx.test:orchestrator:1.4.2'
 
