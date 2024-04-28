@@ -67,6 +67,8 @@ interface MessageDao {
     @Query("SELECT * FROM message ORDER BY timestamp desc")
     fun findByDefaultFeed(): LiveData<List<Message>>
 
+    @Query("SELECT * FROM message WHERE author = :author ORDER BY timestamp desc")
+    fun listByDefaultFeed(author: String): List<Message>
 
     @Query("SELECT * FROM message WHERE author = :author order by sequence desc limit 1")
     fun getLastMessage(author: String): Message?

@@ -21,20 +21,22 @@ import static org.junit.Assert.assertNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import in.delog.libsodium.NaCl;
 
 
-class SecretBoxTest {
+@RunWith(AndroidJUnit4.class)
+public class SecretBoxTest {
 
 
     @BeforeClass
-    public void checkAvailable() {
+    public static void checkAvailable() {
         NaCl.sodium();
-        ///System.loadLibrary("libsodiumjni");
-        //Sodium.sodium_init();
     }
 
     @Test

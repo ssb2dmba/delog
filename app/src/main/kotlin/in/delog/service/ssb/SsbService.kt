@@ -102,7 +102,6 @@ class SsbService(
         vertxOptions.preferNativeTransport = true
         vertxOptions.setMetricsOptions(MetricsOptions().setEnabled(false))
         vertxOptions.setAddressResolverOptions(AddressResolverOptions().setServers(listOf("8.8.8.8")))
-        //vertxOptions.eventLoopPoolSize = 1000000
         vertx  = Vertx.vertx(vertxOptions)
     }
 

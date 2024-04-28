@@ -16,13 +16,18 @@ package org.apache.tuweni.crypto.sodium;
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import in.delog.libsodium.NaCl;
 import static org.junit.Assert.assertEquals;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+@RunWith(AndroidJUnit4.class)
 public class ConcatenateTest {
 
     @BeforeClass
-    public void checkAvailable() {
+    public static void checkAvailable() {
         NaCl.sodium();
     }
 

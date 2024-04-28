@@ -30,6 +30,9 @@ interface MessageRepository {
     suspend fun addMessage(message: Message)
     suspend fun existsMessage(key: String): Boolean
     suspend fun findByDefaultFeed(): LiveData<List<Message>>
+
+    suspend fun listByDefaultFeed(author: String): List<Message>
+
     fun getPagedMessages(key: String): PagingSource<Int, MessageAndAbout>
     fun getMessagePage(author: String, seqStart: Long, limit: Int): List<Message>
     fun getLastMessage(author: String): Message?
@@ -71,6 +74,7 @@ class MessageRepositoryImpl(
         messageDao.insert(message)
     }
 
+
     override suspend fun existsMessage(key: String): Boolean {
         return messageDao.existsByKey(key)
     }
@@ -102,6 +106,11 @@ class MessageRepositoryImpl(
     override suspend fun findByDefaultFeed(): LiveData<List<Message>> {
         return messageDao.findByDefaultFeed()
     }
+
+    override suspend fun listByDefaultFeed(author: String): List<Message> {
+        return messageDao.listByDefaultFeed(author)
+    }
+
 
 
     override fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout> {

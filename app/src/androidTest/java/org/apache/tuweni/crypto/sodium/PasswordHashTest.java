@@ -20,21 +20,24 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.sodium.PasswordHash.Algorithm;
 import org.apache.tuweni.crypto.sodium.PasswordHash.Salt;
 import org.apache.tuweni.crypto.sodium.PasswordHash.VerificationResult;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 
 import in.delog.libsodium.NaCl;
 
-
-class PasswordHashTest {
+@RunWith(AndroidJUnit4.class)
+public class PasswordHashTest {
 
     @BeforeClass
-    public void checkAvailable() {
+    public static void checkAvailable() {
         NaCl.sodium();
     }
 

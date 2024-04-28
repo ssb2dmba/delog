@@ -18,18 +18,22 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.Hash;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 
 import in.delog.libsodium.NaCl;
 
-class SHA256HashTest {
+@RunWith(AndroidJUnit4.class)
+public class SHA256HashTest {
 
     @BeforeClass
-    public void checkAvailable() {
+    public static void checkAvailable() {
         NaCl.sodium();
     }
 

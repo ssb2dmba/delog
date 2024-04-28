@@ -40,6 +40,7 @@ jobs:
             app/build
             libsodium
           key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
+          restore-keys: build-${{ runner.os }}-shared-cache
 
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest
