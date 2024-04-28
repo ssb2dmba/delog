@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
@@ -29,6 +31,7 @@ import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.crypto.SECP256K1.Signature;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 
 import java.math.BigInteger;
@@ -37,10 +40,11 @@ import java.util.Random;
 import in.delog.libsodium.NaCl;
 
 
+@RunWith(AndroidJUnit4.class)
 public class SECP256K1Test {
 
     @BeforeClass
-    public void setup() {
+    public static void setup() {
         NaCl.sodium();
     }
 

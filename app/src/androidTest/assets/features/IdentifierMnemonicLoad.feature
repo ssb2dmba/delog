@@ -81,9 +81,9 @@ Feature: Onboarding with mnemonic
     Then I fill input with testTag "input_key" with value "bar"
     Then I click on testTag 'validate'
     Then I click 'Restore from mnemonic'
-    Then I wait '20000'
     Then I fill input with testTag "alias" with value "test_mnemonic"
     Then I click 'save'
     Then I wait '500'
     Then "test_mnemonic" text is presented
+    Then "compose" text is presented
     Then "compose" text is presented

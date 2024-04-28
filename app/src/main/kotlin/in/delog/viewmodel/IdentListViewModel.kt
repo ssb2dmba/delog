@@ -86,8 +86,8 @@ class IdentListViewModel(
     }
 
     fun setFeedAsDefaultFeed(ident: Ident) {
-        Log.d(TAG, "long click on ident: $ident")
-        viewModelScope.launch(Dispatchers.IO) {
+        // GlobalScope required to avoid being killed
+        GlobalScope.launch(Dispatchers.IO) {
             repository.setFeedAsDefaultFeed(ident)
         }
     }

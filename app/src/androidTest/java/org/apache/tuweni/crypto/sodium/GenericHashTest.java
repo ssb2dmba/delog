@@ -16,18 +16,22 @@ package org.apache.tuweni.crypto.sodium;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 
 import in.delog.libsodium.NaCl;
 
 
+@RunWith(AndroidJUnit4.class)
 public class GenericHashTest {
 
     @BeforeClass
-    public void checkAvailable() {
+    public static void checkAvailable() {
         NaCl.sodium();
     }
 

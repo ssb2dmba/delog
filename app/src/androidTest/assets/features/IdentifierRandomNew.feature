@@ -50,13 +50,9 @@ Feature: Onboarding with new key
     Then I click 'save'
     Then "test message" text is presented
     Then I click 'publish'
-    Then I wait '1000'
     Then I click 'dismiss'
     Then I click 'publish'
     Then I click on testTag 'confirm_publish'
-    Then I wait '5000'
     Then I open drawer
     Then I click 'thread'
-    Then I wait '10000'
     Then "test message" text is presented
-    Then I wait '10000'

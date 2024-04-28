@@ -22,6 +22,7 @@ import `in`.delog.db.AppDatabaseView
 import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.BlobRepository
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.viewmodel.BlobItem
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -82,7 +83,7 @@ fun MessageViewData.serializeMessageContent(format: Json): MessageContent {
             this.contentAsText
         )
     } catch (e: SerializationException) {
-        Log.e("MessageViewData.toMessageContent", this.contentAsText  )
+        Log.e(TAG, e.toString()  )
         MessageContent(
             "error with: '${this.contentAsText}'",
             "post",

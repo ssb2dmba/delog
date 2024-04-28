@@ -21,21 +21,25 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.Assert.*;
+import org.junit.runner.RunWith;
 
 import in.delog.libsodium.NaCl;
 
+@RunWith(AndroidJUnit4.class)
 public class BoxTest {
 
     private static Box.Seed seed;
     private static Box.Nonce nonce;
 
     @BeforeClass
-    public void setup() {
+    public static void setup() {
         NaCl.sodium();
         nonce = Box.Nonce.random();
         // @formatter:off

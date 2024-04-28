@@ -17,7 +17,6 @@
  */
 package `in`.delog.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,6 +26,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import `in`.delog.db.AppDatabaseView
+import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.BlobRepository
@@ -36,10 +36,8 @@ import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.SsbMessageContent
 import `in`.delog.model.SsbSignableMessage
-import `in`.delog.model.SsbSignedMessage
 import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService
-import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbService.Companion.format
 import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
@@ -122,4 +120,16 @@ class MessageListViewModel(
                 }.cachedIn(viewModelScope)
         }
     }
+
+}
+
+fun Message.toSignable(): SsbSignableMessage {
+    return SsbSignableMessage(
+        author = author,
+        sequence = sequence,
+        timestamp = timestamp,
+        content = SsbMessageContent.serialize(contentAsText),
+        previous = previous,
+        hash =  "sha256",
+    )
 }

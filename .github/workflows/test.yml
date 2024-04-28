@@ -8,6 +8,8 @@ on:
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
     name: build & test
     runs-on: ubuntu-latest
     steps:
@@ -27,11 +29,23 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Setup build cache
+        uses: actions/cache@v4
         with:
-          gradle-version: 8.2
-          cache-read-only: false
+          path: |
+            ./.gradle
+            ~/.android/avd/*
+            ~/.android/adb*            
+            ./app/build
+            ./libsodium
+          key: build-${{ runner.os }}-shared-cache-${{ github.sha }}
+          restore-keys: build-${{ runner.os }}-shared-cache
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
       - name: build tests
         run: ./gradlew assembleDebug assembleAndroidTest
@@ -41,7 +55,7 @@ jobs:
         with:
           api-level: 33
           arch: x86_64
-          profile: pixel_2
+          #profile: pixel_2
           ram-size: 4096M
           target: 'aosp_atd'
           disable-animations: true
@@ -61,11 +75,12 @@ jobs:
             ./**/build/reports/androidTests/connected/**
 
       - name: run connectedCheck
+        if: always()
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
           arch: x86_64
-          profile: pixel_2
+          #profile: pixel_2
           ram-size: 4096M
           target: 'aosp_atd'
           disable-animations: true
@@ -84,6 +99,3 @@ jobs:
           name: api-instrumentation-results
           path: |
             ./**/build/reports/androidTests/connected/**
-
-
-

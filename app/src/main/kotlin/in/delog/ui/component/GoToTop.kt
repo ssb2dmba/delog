@@ -75,8 +75,8 @@ fun GoToTop(
                 Text(text = stringResource(id = R.string.goToTop))
             },
             onClick = onClicked,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary,
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onTertiary,
             modifier = modifier
                 .offset(x = 0.dp, y = bottomOffset)
                 .height(36.dp)
