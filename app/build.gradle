@@ -193,7 +193,7 @@ dependencies {
     implementation 'androidx.emoji2:emoji2-emojipicker:1.4.0'
 
     // kmp-tor
-    implementation("io.matthewnelson.kotlin-components:kmp-tor:4.8.6-0-1.4.4")
+    implementation("io.matthewnelson.kotlin-components:kmp-tor:4.8.10-0-1.4.4")
 
     // tools & networking
     implementation("org.syncope.identityconnectors:framework:0.4.3")
