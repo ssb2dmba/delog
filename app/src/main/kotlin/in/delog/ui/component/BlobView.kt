@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,8 +72,7 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
             AsyncImage(
                 model = model,
                 contentDescription = blobItem.uri.toString(),
-                //contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().clickable { action(blobItem)  },
             )
         } else {
             val intent = Intent(Intent.ACTION_VIEW)
@@ -97,7 +97,7 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.padding(8.dp).align(Alignment.TopStart))
                 Icon(
-                    tint= MaterialTheme.colorScheme.primary,
+                    tint= MaterialTheme.colorScheme.outline,
                     imageVector = Icons.Default.BrokenImage,
                     modifier = Modifier
                         .size(96.dp)
@@ -117,15 +117,8 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
                     modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.Default.PlayCircle,
                     contentDescription="play media",
-                    tint = MaterialTheme.colorScheme.onSecondary,
+                    tint = MaterialTheme.colorScheme.outline,
                 )
-            }
-        } else {
-            IconButton(
-                modifier = Modifier.size(64.dp).align(Alignment.TopStart),
-                onClick = { action(blobItem) },
-            ) {
-                cta()
             }
         }
     }

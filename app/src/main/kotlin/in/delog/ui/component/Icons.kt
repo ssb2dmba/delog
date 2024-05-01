@@ -22,7 +22,7 @@ fun CancelIcon() {
         imageVector = Icons.Default.Cancel,
         null,
         modifier = Modifier.fillMaxSize(),
-        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+        tint = MaterialTheme.colorScheme.primary,
     )
 }
 
@@ -32,7 +32,7 @@ fun PageViewIcon() {
         imageVector = Icons.Default.Pageview,
         null,
         modifier = Modifier.fillMaxSize(),
-        tint = MaterialTheme.colorScheme.onSecondary,
+        tint = MaterialTheme.colorScheme.outline,
     )
 }
 

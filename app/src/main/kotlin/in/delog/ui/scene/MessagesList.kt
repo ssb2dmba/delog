@@ -124,10 +124,12 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
         for (r in ssbUiState.blobDown.keys) {
             if (ssbUiState.blobSize[r]!=null &&
                 ssbUiState.blobDown[r]!!.toFloat() < ssbUiState.blobSize[r]!!.toFloat()) {
-                LinearProgressIndicator(
-                    progress = { ssbUiState.blobDown[r]!!.toFloat() / ssbUiState.blobSize[r]!!.toFloat() },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                if (ssbUiState.blobDown[r]!=null && ssbUiState.blobSize[r]!=null ) {
+                    LinearProgressIndicator(
+                        progress = { ssbUiState.blobDown[r]!!.toFloat() / ssbUiState.blobSize[r]!!.toFloat() },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }
