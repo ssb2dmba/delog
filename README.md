@@ -2,6 +2,8 @@
 
 ## An Android Kotlin JetPack Compose Room Koin Material3 Secure Scuttlebutt (SSB) Application
 
+[![Android Tests](https://github.com/ssb2dmba/delog/actions/workflows/test.yml/badge.svg)](https://github.com/ssb2dmba/delog/actions/workflows/test.yml)
+
 - [x] multiple identities
 - [x] Secret Handshake Protocol by Dominic Tar boworred from [Apache Tuweni](https://github.com/apache/incubator-tuweni)
 - [x] follow-bot invite consume
@@ -30,7 +32,6 @@
 
 ## Build
 
-[![Android Tests](https://github.com/ssb2dmba/delog/actions/workflows/test.yml/badge.svg)](https://github.com/ssb2dmba/delog/actions/workflows/test.yml)
 
 Project build well with Android Studio Giraffe | 2022.3.1 Patch 3
 
