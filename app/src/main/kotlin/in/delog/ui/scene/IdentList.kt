@@ -42,6 +42,7 @@ import `in`.delog.R
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.IdentListViewModel
@@ -63,7 +64,7 @@ fun IdentList(navController: NavHostController) {
 
     LazyColumn {
         items(idents.value) { identAndAbout ->
-            val argUri = identAndAbout.ident.oid
+
 
             Card(
                 colors = CardDefaults.cardColors(),
@@ -76,10 +77,13 @@ fun IdentList(navController: NavHostController) {
                             identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
                         },
                         onClick = {
-                            identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
+                            val argUri = makeArgUri(identAndAbout.ident.publicKey)
+
                             navController.navigate("${Scenes.MainFeed.route}/${argUri}")
                         },
                         onDoubleClick = {
+                            val argUri = identAndAbout.ident.oid
+                            identListViewModel.setFeedAsDefaultFeed(identAndAbout.ident)
                             navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
                         }
                     )
@@ -88,6 +92,7 @@ fun IdentList(navController: NavHostController) {
                     identAndAboutWithBlob = identAndAbout,
                     short = true,
                     onClick = {
+                        val argUri = identAndAbout.ident.oid
                         navController.navigate("${Scenes.AboutEdit.route}/${argUri}")
                     }
                 )

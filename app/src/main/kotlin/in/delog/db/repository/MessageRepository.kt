@@ -18,12 +18,14 @@
 package `in`.delog.db.repository
 
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.paging.PagingSource
 import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
 import `in`.delog.model.SsbMessageContent
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 
 
 interface MessageRepository {
@@ -71,7 +73,11 @@ class MessageRepositoryImpl(
     }
 
     override suspend fun addMessage(message: Message) {
-        messageDao.insert(message)
+        try {
+            messageDao.insert(message)
+        } catch (e: SQLiteConstraintException) {
+            Log.e(TAG, e.message ?: "error adding existing message")
+        }
     }
 
 
@@ -82,14 +88,8 @@ class MessageRepositoryImpl(
     override suspend fun maybeAddMessageAndBlobs(blobRepository: BlobRepository,message: Message) {
         // TODO validate signature here
         if (!existsMessage(message.key)) {
-            try {
-                addMessage(message)
-                addBlobs(blobRepository, message.author, message)
-            } catch (e: SQLiteConstraintException) {
-                e.printStackTrace()
-                // some race conditions can occur
-                // not in @Transaction for now cause otherwise might introduce too slowess
-            }
+            addMessage(message)
+            addBlobs(blobRepository, message.author, message)
         }
     }
 

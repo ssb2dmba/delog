@@ -6,15 +6,23 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,8 +72,7 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
             AsyncImage(
                 model = model,
                 contentDescription = blobItem.uri.toString(),
-                //contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().clickable { action(blobItem)  },
             )
         } else {
             val intent = Intent(Intent.ACTION_VIEW)
@@ -90,7 +97,7 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.padding(8.dp).align(Alignment.TopStart))
                 Icon(
-                    tint= MaterialTheme.colorScheme.primary,
+                    tint= MaterialTheme.colorScheme.outline,
                     imageVector = Icons.Default.BrokenImage,
                     modifier = Modifier
                         .size(96.dp)
@@ -99,11 +106,20 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
                 )
             }
         }
-        IconButton(
-            modifier = Modifier.size(32.dp).align(Alignment.TopEnd).padding(5.dp),
-            onClick = { action(blobItem) },
-        ) {
-            cta()
+        if (mediaType.contains("video")) {
+            IconButton(
+                modifier = Modifier.fillMaxSize()
+                    .defaultMinSize(minWidth = 200.dp, minHeight = 200.dp)
+                    .align(Alignment.Center),
+                onClick = { action(blobItem) }
+            ) {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.Default.PlayCircle,
+                    contentDescription="play media",
+                    tint = MaterialTheme.colorScheme.outline,
+                )
+            }
         }
     }
 }
@@ -115,7 +131,7 @@ fun previewBlobView() {
     val b1 = BlobItem(
         key = "&YsGsrC3iYbfU9ZS1qw0XTPGGLxxpapUreC/fo0xICNA=.sha256",
         size = 100,
-        type = "application/pdf",
+        type = "image/video",
         uri = Uri.EMPTY
     )
     MyTheme(

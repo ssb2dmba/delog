@@ -26,7 +26,6 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import `in`.delog.db.AppDatabaseView
-import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.BlobRepository
@@ -34,8 +33,6 @@ import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.model.MessageViewData
-import `in`.delog.model.SsbMessageContent
-import `in`.delog.model.SsbSignableMessage
 import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.format
@@ -85,20 +82,22 @@ class MessageListViewModel(
         torService.status.observeForever {
             _uiState.update { it.copy(torStatus = torService.status.value) }
         }
+        // setup the feed of interest
         viewModelScope.launch(Dispatchers.IO) {
             if (key.startsWith("%")) {
                 val m: Message? = messageRepository.getMessage(key)
                 if (m != null) {
-                    identRepository
                     _uiState.update { it.copy(identAndAbout = identRepository.getFeed(m.author)) }
                 }
+            }
+            if (key.startsWith("@")) {
+                _uiState.update { it.copy(identAndAbout = identRepository.getFeed(key)) }
             }
             if (_uiState.value.identAndAbout == null) { // fallback to our
                 _uiState.update { it.copy(identAndAbout = identRepository.getFeed(key)) }
             }
-            synchronize()
         }
-
+        // set up the message list
         viewModelScope.launch(Dispatchers.IO) {
             messagesPaged = Pager(
                 PagingConfig(
@@ -112,24 +111,12 @@ class MessageListViewModel(
                 } else { // starts with %
                     messageTreeRepository.getPagedMessageByKey(key)
                 }
-            }
-                .flow.map { pagingData ->
+            }.flow.map { pagingData ->
                     pagingData.map { msgAndAbout ->
                         msgAndAbout.toMessageViewData(format, blobRepository)
                     }
                 }.cachedIn(viewModelScope)
+            synchronize()
         }
     }
-
-}
-
-fun Message.toSignable(): SsbSignableMessage {
-    return SsbSignableMessage(
-        author = author,
-        sequence = sequence,
-        timestamp = timestamp,
-        content = SsbMessageContent.serialize(contentAsText),
-        previous = previous,
-        hash =  "sha256",
-    )
 }
