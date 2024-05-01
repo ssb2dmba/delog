@@ -78,7 +78,7 @@ fun BlobsEdit(blobs: Array<BlobItem>, action: (key: BlobItem) -> Unit, actionIco
                     state = listState,
                     horizontalArrangement = Arrangement.spacedBy(0.dp),
                     verticalArrangement = Arrangement.spacedBy(0.dp),
-                    modifier = Modifier.height(300.dp),
+                    modifier = Modifier.height(300.dp).fillMaxWidth(),
                     contentPadding = PaddingValues(all = 0.dp)
                 ) {
                     items(blobs) { blobItem ->

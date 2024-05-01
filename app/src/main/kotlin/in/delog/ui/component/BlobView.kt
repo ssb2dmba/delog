@@ -9,12 +9,19 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -99,11 +106,27 @@ fun BlobView(blobItem: BlobItem, action: (key: BlobItem) -> Unit, cta: @Composab
                 )
             }
         }
-        IconButton(
-            modifier = Modifier.size(32.dp).align(Alignment.TopEnd).padding(5.dp),
-            onClick = { action(blobItem) },
-        ) {
-            cta()
+        if (mediaType.contains("video")) {
+            IconButton(
+                modifier = Modifier.fillMaxSize()
+                    .defaultMinSize(minWidth = 200.dp, minHeight = 200.dp)
+                    .align(Alignment.Center),
+                onClick = { action(blobItem) }
+            ) {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.Default.PlayCircle,
+                    contentDescription="play media",
+                    tint = MaterialTheme.colorScheme.onSecondary,
+                )
+            }
+        } else {
+            IconButton(
+                modifier = Modifier.size(64.dp).align(Alignment.TopStart),
+                onClick = { action(blobItem) },
+            ) {
+                cta()
+            }
         }
     }
 }
@@ -115,7 +138,7 @@ fun previewBlobView() {
     val b1 = BlobItem(
         key = "&YsGsrC3iYbfU9ZS1qw0XTPGGLxxpapUreC/fo0xICNA=.sha256",
         size = 100,
-        type = "application/pdf",
+        type = "image/video",
         uri = Uri.EMPTY
     )
     MyTheme(

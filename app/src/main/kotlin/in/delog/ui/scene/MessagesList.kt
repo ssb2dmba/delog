@@ -17,7 +17,6 @@
  */
 package `in`.delog.ui.scene
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -35,30 +34,22 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
-
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -70,7 +61,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import `in`.delog.R
 import `in`.delog.model.MessageViewData
 import `in`.delog.service.ssb.SsbService
-import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbUIState
 import `in`.delog.ui.component.AppEmptyList
 import `in`.delog.ui.component.BottomBarMainButton
@@ -81,7 +71,6 @@ import `in`.delog.ui.component.MessageItem
 import `in`.delog.ui.component.makeArgUri
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
-import `in`.delog.ui.theme.torOk
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.FeedMainUIState
 import `in`.delog.viewmodel.MessageListViewModel
@@ -90,7 +79,6 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.koin.java.KoinJavaComponent.inject
-
 
 
 @Composable
@@ -161,7 +149,7 @@ fun MessagesList(navController: NavController, feedToReadKey: String) {
                         .padding(bottom = 8.dp)
                         .wrapContentHeight()
                 ) {
-                    Row() {
+                    Row {
                         Column(modifier = Modifier.weight(1f)) {
 
                             IdentityBox(

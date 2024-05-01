@@ -32,7 +32,7 @@ fun PageViewIcon() {
         imageVector = Icons.Default.Pageview,
         null,
         modifier = Modifier.fillMaxSize(),
-        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+        tint = MaterialTheme.colorScheme.onSecondary,
     )
 }
 

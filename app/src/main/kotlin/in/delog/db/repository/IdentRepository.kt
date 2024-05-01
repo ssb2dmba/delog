@@ -19,7 +19,6 @@ package `in`.delog.db.repository
 
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.room.Transaction
 import `in`.delog.db.dao.AboutDao
 import `in`.delog.db.dao.IdentDao
 import `in`.delog.db.model.About
@@ -83,8 +82,8 @@ class FeedRepositoryImpl(
     }
 
     override suspend fun insert(feed: IdentAndAbout): Long {
-        var exist = identDao.findByPublicKey(feed.ident.publicKey)
-        var id : Long
+        val exist = identDao.findByPublicKey(feed.ident.publicKey)
+        val id : Long
         if (exist == null) {
             id = identDao.insert(feed = feed.ident)
             aboutDao.insert(feed.about!!)
@@ -112,18 +111,19 @@ class FeedRepositoryImpl(
         return makeIdentAndAboutWithBlob(identDao.findByOId(id))
     }
 
-    override suspend fun getFeed(author: String): IdentAndAboutWithBlob? {
-        return identDao.findByPublicKey(author)?.let { makeIdentAndAboutWithBlob(it) }
+    override suspend fun getFeed(author: String): IdentAndAboutWithBlob {
+        var identAndAbout = identDao.findByPublicKey(author)
+        if (identAndAbout == null) {
+            val about = aboutDao.getByAuthor(author)
+            identAndAbout = IdentAndAbout(
+                ident = Ident.empty(author),
+                about = about?: About.empty(author)
+            )
+        }
+        return makeIdentAndAboutWithBlob(identAndAbout)
     }
 
     private suspend fun makeIdentAndAboutWithBlob(identAndAbout: IdentAndAbout): IdentAndAboutWithBlob {
-        if (identAndAbout==null) { // TODO used at startup ...
-            return IdentAndAboutWithBlob(
-                ident = Ident.empty(""),
-                about = About.empty(""),
-                profileImage = null
-            )
-        }
         return IdentAndAboutWithBlob(
             ident = identAndAbout.ident,
             about = identAndAbout.about ?: About.empty(identAndAbout.ident.publicKey),

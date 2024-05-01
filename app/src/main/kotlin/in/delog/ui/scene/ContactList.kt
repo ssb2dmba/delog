@@ -18,13 +18,17 @@
 package `in`.delog.ui.scene
 
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PhotoCamera
@@ -32,6 +36,8 @@ import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +69,8 @@ import `in`.delog.ui.CameraQrCodeScanner
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.BottomBarMainButton
 import `in`.delog.ui.component.IdentityBox
+import `in`.delog.ui.component.makeArgUri
+import `in`.delog.ui.navigation.Scenes
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.ContactListViewModel
 import kotlinx.coroutines.flow.Flow
@@ -185,16 +193,22 @@ fun ContactList(navController: NavController) {
             count = lazyContactItems.itemCount,
         ) { index ->
             lazyContactItems[index]?.let {
-                ContactListItem(contactAndAbout = it, contactListViewModel)
+                ContactListItem(
+                    contactAndAbout = it,
+                    contactListViewModel=contactListViewModel,
+                    navController=navController
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ContactListItem(
     contactAndAbout: ContactAndAbout,
     contactListViewModel: ContactListViewModel,
+    navController: NavController
 ) {
     if (contactAndAbout.about == null) contactAndAbout.about =
         About(about = contactAndAbout.contact.follow)
@@ -232,27 +246,45 @@ fun ContactListItem(
             }
         )
     }
-    Box(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        colors = CardDefaults.cardColors(),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .padding(bottom = 0.dp, top = 16.dp, start = 16.dp, end = 16.dp)
+            .wrapContentHeight()
+            .combinedClickable(
+                onClick = {
+                    val argUri = makeArgUri(contactAndAbout.contact.follow)
+                    navController.navigate("${Scenes.MainFeed.route}/${argUri}")
+                }
+            )
+    ) {
 
         val identAndAbout = IdentAndAboutWithBlob(
             ident = IdentAndAbout.empty(contactAndAbout.about!!.about),
             about = contactAndAbout.about!!,
             profileImage = null // TODO
         )
-        IdentityBox(identAndAboutWithBlob = identAndAbout)
-        IconButton(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(16.dp),
-            onClick = {
-                showConfirmRemoveDialog = true
-            }
-        ) {
-            Icon(
-                Icons.Filled.RemoveCircle,
-                contentDescription = stringResource(id = R.string.unfollow),
-                modifier = Modifier.width(ButtonDefaults.MinWidth)
+
+        Box(modifier =Modifier.fillMaxWidth()) {
+
+            IdentityBox(
+                identAndAboutWithBlob = identAndAbout
             )
+            IconButton(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                onClick = {
+                    showConfirmRemoveDialog = true
+                }
+            ) {
+                Icon(
+                    Icons.Filled.RemoveCircle,
+                    contentDescription = stringResource(id = R.string.unfollow),
+                    modifier = Modifier.width(ButtonDefaults.MinWidth)
+                )
+            }
         }
 
     }

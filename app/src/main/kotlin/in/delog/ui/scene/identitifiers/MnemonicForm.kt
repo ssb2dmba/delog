@@ -48,8 +48,7 @@ import java.util.Locale
 @Composable
 fun MnemonicForm(callBack: (Identity?) -> Unit) {
     val context = LocalContext.current
-    var filteringOptions: List<String>
-    val options = WordList(Locale.ENGLISH).words
+    val options = remember {  WordList(Locale.ENGLISH).words }
     val phrase = remember { mutableStateListOf<String>() }
 
     Column(Modifier.padding(all = 8.dp)) {
@@ -85,6 +84,7 @@ fun MnemonicForm(callBack: (Identity?) -> Unit) {
                         },
                         colors = ExposedDropdownMenuDefaults.textFieldColors()
                     )
+                    var filteringOptions: List<String>
                     if (selectedOptionText.length > 1) {
                         filteringOptions =
                             options.filter { it.contains(selectedOptionText, ignoreCase = true) }
@@ -98,7 +98,7 @@ fun MnemonicForm(callBack: (Identity?) -> Unit) {
                         selectedOptionText = ""
                         expanded = false
                     }
-                    if (filteringOptions.isNotEmpty()) {
+                    if (filteringOptions.isNotEmpty() && phrase.size < 24) {
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = {

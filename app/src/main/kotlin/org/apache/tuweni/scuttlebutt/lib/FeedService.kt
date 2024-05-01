@@ -31,7 +31,6 @@ import `in`.delog.db.repository.MessageRepository
 import `in`.delog.model.SsbSignedMessage
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
-import `in`.delog.viewmodel.toSignable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes

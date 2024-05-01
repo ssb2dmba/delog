@@ -17,7 +17,7 @@ class CommonSteps(
     private val scenarioHolder: ActivityScenarioHolder
 ) : SemanticsNodeInteractionsProvider by composeRuleHolder.composeRule {
 
-    private val sleep = 0L // used to add some wait to visualize says 1000L
+    private val sleep = 300L // used to add some wait to visualize says 1000L
 
     @When("^I open application$")
     fun iOpenComposeActivity() {
