@@ -25,7 +25,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import `in`.delog.GetMediaActivityResultContract
 import `in`.delog.R
-import `in`.delog.ui.scene.PermissionStatePreview
+import `in`.delog.ui.scene.about.PermissionStatePreview
 import java.util.concurrent.atomic.AtomicBoolean
 
 @OptIn(ExperimentalPermissionsApi::class)

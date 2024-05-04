@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ui.scene
+package `in`.delog.ui.scene.about
 
 
+import android.Manifest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -77,11 +78,10 @@ import `in`.delog.ui.component.ProfileImage
 import `in`.delog.ui.component.UploadFromGallery
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
+import `in`.delog.ui.scene.ExportMnemonicDialog
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.ui.theme.keySmall
-import `in`.delog.viewmodel.AboutUIState
 import `in`.delog.viewmodel.BottomBarViewModel
-import `in`.delog.viewmodel.IdentAndAboutViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -134,12 +134,13 @@ fun AboutEdit(
             // save
             ExtendedFloatingActionButton(
                 onClick = {
-                    viewModel.onSavingAbout(about)
-                    navHostController.navigate(Scenes.MainFeed.route) {
-                        popUpTo(navHostController.graph.startDestinationId) {
-                            inclusive = true
-                        }
-                    }
+                    viewModel.showPublishDialog()
+//                    viewModel.onSavingAbout(about)
+//                    navHostController.navigate(Scenes.MainFeed.route) {
+//                        popUpTo(navHostController.graph.startDestinationId) {
+//                            inclusive = true
+//                        }
+//                    }
                 },
                 icon = {
                     Icon(
@@ -375,7 +376,7 @@ fun PreviewAboutEdit() {
             DirtyAboutEdit(
                 uiState,
                 PermissionStatePreview(
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
                     PermissionStatus.Granted
                 )
             ) {}

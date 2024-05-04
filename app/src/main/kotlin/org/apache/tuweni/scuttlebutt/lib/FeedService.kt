@@ -17,21 +17,17 @@
 package org.apache.tuweni.scuttlebutt.lib
 
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import `in`.delog.db.model.About
-import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.toJsonResponse
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.MessageRepository
-import `in`.delog.model.SsbSignedMessage
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
@@ -152,6 +148,11 @@ class FeedService(
         val about: About? = m.toAbout()
         if (about != null) {
             aboutRepository.insertOrUpdate(about)
+            val message = m.toMessage()
+            Log.e(TAG, message.toString())
+            runBlocking {
+                messageRepository.maybeAddMessageAndBlobs(blobRepository, message)
+            }
         } else {
             Log.w(TAG, "unable to decode %s %s".format(m.key, m.value.contentAsString))
         }

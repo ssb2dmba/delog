@@ -40,10 +40,9 @@ import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.ContactListViewModel
 import `in`.delog.viewmodel.DraftListViewModel
 import `in`.delog.viewmodel.DraftViewModel
-import `in`.delog.viewmodel.IdentAndAboutViewModel
+import `in`.delog.ui.scene.about.IdentAndAboutViewModel
 import `in`.delog.viewmodel.IdentListViewModel
 import `in`.delog.viewmodel.MessageListViewModel
-import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 

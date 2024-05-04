@@ -225,8 +225,8 @@ class BlobRepositoryImpl(
             oid = 0,
             author = author,
             key = blob.link,
-            type = null,
-            size = 0,
+            type = blob.type,
+            size = blob.size ?: 0,
             own = false,
             has = false,
             contentWarning = null

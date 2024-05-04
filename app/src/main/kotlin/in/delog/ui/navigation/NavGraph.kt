@@ -27,11 +27,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import `in`.delog.ui.LocalActiveFeed
-import `in`.delog.ui.scene.AboutEdit
+import `in`.delog.ui.scene.about.AboutEdit
 import `in`.delog.ui.scene.ContactList
 import `in`.delog.ui.scene.DraftEdit
 import `in`.delog.ui.scene.DraftList
-import `in`.delog.ui.scene.IdentDetail
+import `in`.delog.ui.scene.about.IdentDetail
 import `in`.delog.ui.scene.IdentList
 import `in`.delog.ui.scene.MessagesList
 import `in`.delog.ui.scene.PreferencesEdit

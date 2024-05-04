@@ -41,7 +41,7 @@ fun FeedMessage.toMessage(): Message {
         author = this.value.author.id,
         sequence = this.value.sequence,
         contentAsText = this.value.contentAsString,
-        type = if (this.type.isPresent()) this.type.get() else null,
+        type = if (this.type.isPresent) this.type.get() else null,
         previous = this.value.previous,
         signature = this.value.signature,
         root = getContentStringValue("root", this.value.content),
@@ -51,7 +51,7 @@ fun FeedMessage.toMessage(): Message {
 
 
 fun FeedMessage.toAbout(): About? {
-    val ssbMe: SsbMessageContent = Json.decodeFromString<SsbMessageContent>(
+    val ssbMe: SsbMessageContent = Json.decodeFromString(
         SsbMessageContent.serializer(),
         this.value.contentAsString
     )
