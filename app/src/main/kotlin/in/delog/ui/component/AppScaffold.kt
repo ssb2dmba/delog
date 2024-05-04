@@ -34,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import `in`.delog.ui.LocalActiveFeed
+import `in`.delog.ui.navigation.Scenes
 import kotlinx.coroutines.launch
 
 
@@ -74,9 +75,7 @@ fun AppScaffold(
                             drawerState.close()
                         }
                         if (itemRoute != null) {
-                            navController.navigate(itemRoute) {
-                                popUpTo(navController.graph.startDestinationId)
-                            }
+                            navController.navigate(itemRoute)
                         }
                     }
                 }

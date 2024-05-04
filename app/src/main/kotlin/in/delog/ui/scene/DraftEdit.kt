@@ -116,9 +116,6 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
     val isKeyboardOpen by keyboardAsState() // true or false
     val bottomBarViewModel = koinViewModel<BottomBarViewModel>()
     var dirtyStatus by remember { mutableStateOf(true) }
-    val itemClicked = {
-        dirtyStatus = !dirtyStatus
-    }
     val linkState by draftViewModel.link.observeAsState(null)
     var tfv by remember {
         val initInput = SsbMessageContent.serialize(messageViewData!!.contentAsText).text
@@ -242,7 +239,7 @@ fun DraftEdit(navController: NavHostController, draftMode: String, draftId: Long
                             messageViewData = messageViewData!!,
                             showToolbar = false,
                             hasDivider = linkState != null,
-                            onClickCallBack = itemClicked
+                            onClickCallBack = { dirtyStatus= !dirtyStatus }
                         )
                     }
                 }
@@ -414,8 +411,9 @@ fun DraftPublishDialog(navHostController: NavHostController, viewModel: DraftVie
                             )
                         }
                         navHostController.navigate(Scenes.MainFeed.route) {
-                            popUpTo(navHostController.graph.startDestinationId) {
+                            popUpTo(Scenes.MainFeed.route) {
                                 inclusive = true
+                                saveState = true
                             }
                         }
                     }
@@ -464,8 +462,9 @@ fun DraftConfirmDeleteDialog(navHostController: NavHostController, viewModel: Dr
                         viewModel.onDeleteDialogDismiss()
                         viewModel.messageViewData.let { viewModel.delete(it.value) }
                         navHostController.navigate(Scenes.DraftList.route) {
-                            popUpTo(navHostController.graph.startDestinationId) {
+                            popUpTo(Scenes.MainFeed.route) {
                                 inclusive = true
+                                saveState = true
                             }
                         }
                     }

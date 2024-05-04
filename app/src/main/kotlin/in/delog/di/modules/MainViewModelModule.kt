@@ -36,6 +36,7 @@ import `in`.delog.db.repository.RelayRepository
 import `in`.delog.db.repository.RelayRepositoryImpl
 import `in`.delog.repository.DidRepository
 import `in`.delog.repository.DidRepositoryImpl
+import `in`.delog.ui.scene.postdelete.MessageDeleteViewModel
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.ContactListViewModel
 import `in`.delog.viewmodel.DraftListViewModel
@@ -61,6 +62,8 @@ val mainViewModel = module {
     factory<MessageRepository> { (MessageRepositoryImpl(get())) }
     factory<MessageTreeRepository> { (MessageTreeRepositoryImpl(get())) }
     viewModel { MessageListViewModel( get(), get(), get(), get(),get(), get(), get()) }
+    viewModel { MessageDeleteViewModel( get(), get(), get(), get() ) }
+
 
     factory<DraftRepository> { (DraftRepositoryImpl(get())) }
     viewModel { DraftListViewModel(get(), get(), get()) }

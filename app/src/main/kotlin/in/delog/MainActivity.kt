@@ -21,7 +21,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +42,7 @@ import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppBottomAppBar
 import `in`.delog.ui.component.AppScaffold
 import `in`.delog.ui.navigation.NavGraph
+import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.viewmodel.IdentListViewModel
 import kotlinx.coroutines.launch
@@ -51,13 +51,10 @@ import java.io.File
 
 class MainActivity : ComponentActivity() {
 
-    private val app: MainApplication get() = application as MainApplication
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
+
         setContent {
             MyTheme {
                 MyApp()
@@ -76,7 +73,7 @@ class MainActivity : ComponentActivity() {
 
     private fun deleteTempFiles(file: File): Boolean {
         if (file.isDirectory) {
-            val files: Array<File> = file.listFiles()
+            val files: Array<out File>? = file.listFiles()
             if (files != null) {
                 for (f in files) {
                     if (f.isDirectory) {
@@ -89,11 +86,8 @@ class MainActivity : ComponentActivity() {
         }
         return file.delete()
     }
-
 }
 
-
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MyApp() {
 
@@ -148,10 +142,13 @@ fun MyApp() {
                                 .fillMaxHeight()
                         ) {
                             NavGraph(navController = navController)
+                            navController.navigate(Scenes.MainFeed.route)
                         }
                     },
                 )
             }
         }
     }
+
+
 }

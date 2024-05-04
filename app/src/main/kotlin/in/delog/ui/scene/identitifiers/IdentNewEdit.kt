@@ -182,12 +182,12 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     val newIdent by identListViewModel.insertedIdent.observeAsState(null)
     if (newIdent != null) {
         LaunchedEffect(key1 = Unit) {
-
             val argUri = makeArgUri(newIdent!!.publicKey)
             identListViewModel._insertedIdent.value = null
             navController.navigate("${Scenes.MainFeed.route}/${argUri}") {
-                popUpTo(navController.graph.startDestinationId) {
+                popUpTo(Scenes.MainFeed.route) {
                     inclusive = true
+                    saveState = true
                 }
             }
         }
@@ -219,5 +219,4 @@ fun IdentNewEdit(navController: NavHostController, identity: Identity, inviteStr
     InnerNewIdentNewEdit(ident) { it, alias ->
         identListViewModel.insert(ident = it, alias)
     }
-
 }

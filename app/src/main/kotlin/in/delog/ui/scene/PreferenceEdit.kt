@@ -104,8 +104,9 @@ fun PreferencesEdit(navController: NavHostController) {
             BottomBarMainButton(
                 onClick = {
                     navController.navigate(Scenes.MainFeed.route) {
-                        popUpTo(navController.graph.startDestinationId) {
+                        popUpTo(Scenes.MainFeed.route) {
                             inclusive = true
+                            saveState = true
                         }
                     }
 
