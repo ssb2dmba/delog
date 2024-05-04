@@ -202,7 +202,9 @@ class BlobRepositoryImpl(
 
 
     override suspend fun deleteIfKeyUnused(key: String) {
-        messageRepository.blobIsUsefull(key)
+        if (messageRepository.blobIsUsefull(key)) {
+            blobDao.get(key)?.let { blobDao.delete(it) }
+        }
     }
 
     override suspend fun getWants(author: String): HashMap<String, Long> {

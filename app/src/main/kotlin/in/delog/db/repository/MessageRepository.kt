@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.paging.PagingSource
+import androidx.room.Transaction
 import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
@@ -46,6 +47,7 @@ interface MessageRepository {
     fun getMessage(key: String): Message?
     fun blobIsUsefull(key: String):Boolean
     suspend fun maybeAddMessageAndBlobs(blobRepository: BlobRepository, message: Message)
+    fun deleteMessage(key: String)
 }
 
 class MessageRepositoryImpl(
@@ -54,6 +56,10 @@ class MessageRepositoryImpl(
 
     override fun getMessage(key: String): Message? {
         return messageDao.getMessage(key)
+    }
+
+    override fun deleteMessage(key: String) {
+        messageDao.deleteMessage(key)
     }
 
     override fun blobIsUsefull(key: String): Boolean {
@@ -112,12 +118,13 @@ class MessageRepositoryImpl(
     }
 
 
-
+    @Transaction
     override fun getPagedFeed(author: String): PagingSource<Int, MessageAndAbout> {
         return messageDao.getPagedFeed(author)
     }
 
 
+    @Transaction
     override fun getPagedMessages(key: String): PagingSource<Int, MessageAndAbout> {
         return messageDao.getPagedMessages(key)
     }

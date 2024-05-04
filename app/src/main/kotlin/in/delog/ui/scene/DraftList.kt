@@ -88,7 +88,7 @@ fun DraftList(navController: NavHostController) {
                             messageViewData = it,
                             showToolbar = false,
                             truncate = true,
-                            onClickCallBack = {
+                            onClickCallBack = { action ->
                                 navController.navigate("${Scenes.DraftEdit.route}/${it.oid}")
                             }
                         )

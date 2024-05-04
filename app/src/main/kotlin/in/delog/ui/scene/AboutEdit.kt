@@ -136,8 +136,9 @@ fun AboutEdit(
                 onClick = {
                     viewModel.onSavingAbout(about)
                     navHostController.navigate(Scenes.MainFeed.route) {
-                        popUpTo(navHostController.graph.startDestinationId) {
+                        popUpTo(Scenes.MainFeed.route) {
                             inclusive = true
+                            saveState = true
                         }
                     }
                 },
@@ -441,7 +442,10 @@ fun AboutEditPublishDialog(
                     .clickable {
                         viewModel.onDoPublishClicked(about)
                         navHostController.navigate(Scenes.FeedList.route) {
-                            popUpTo(navHostController.graph.startDestinationId)
+                            popUpTo(Scenes.MainFeed.route) {
+                                inclusive = true
+                                saveState = true
+                            }
                         }
                     }
             )

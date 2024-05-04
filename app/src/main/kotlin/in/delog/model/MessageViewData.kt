@@ -52,7 +52,8 @@ data class MessageViewData(
     var blobs: Array<BlobItem> = arrayOf(),
     var links: Array<Mention> = arrayOf(),
     var replies:Long = 0,
-    var level: Long = 0
+    var level: Long = 0,
+    var own: Boolean = false
     ) {
     companion object
 
@@ -106,7 +107,7 @@ fun Message.toMessageViewData() = MessageViewData(
 
 suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository? =null): MessageViewData {
     val mvd = MessageViewData(
-        oid = oid ?: 0L,
+        oid = oid,
         key = "",
         timestamp = timestamp,
         author = author,
@@ -143,7 +144,8 @@ suspend fun AppDatabaseView.MessageInTree.toMessageViewData(format: Json, blobRe
         replies = replies,
         level = level,
         links = arrayOf(),
-        blobs = arrayOf()
+        blobs = arrayOf(),
+
     )
     val mc = mvd.serializeMessageContent(format)
     mvd.type=mc.type

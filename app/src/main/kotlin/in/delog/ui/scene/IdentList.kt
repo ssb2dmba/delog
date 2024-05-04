@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -106,7 +105,12 @@ fun IdentListFab(navController: NavController) {
     BottomBarMainButton(
         modifier = Modifier.testTag("new_identifier"),
         onClick = {
-            navController.navigate(Scenes.NewFeed.route)
+            navController.navigate(Scenes.NewFeed.route) {
+                popUpTo(Scenes.MainFeed.route) {
+                    inclusive = true
+                    saveState = true
+                }
+            }
         },
         text = stringResource(R.string.identifier)
     )

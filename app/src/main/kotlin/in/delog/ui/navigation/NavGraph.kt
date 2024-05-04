@@ -26,6 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.scene.AboutEdit
 import `in`.delog.ui.scene.ContactList
@@ -34,12 +35,14 @@ import `in`.delog.ui.scene.DraftList
 import `in`.delog.ui.scene.IdentDetail
 import `in`.delog.ui.scene.IdentList
 import `in`.delog.ui.scene.MessagesList
+import `in`.delog.ui.scene.postdelete.PostDelete
 import `in`.delog.ui.scene.PreferencesEdit
 import `in`.delog.ui.scene.identitifiers.IdentNew
 
 const val LINK = "link";
 const val TYPE = "draftType";
 const val OID = "id";
+
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(
@@ -62,9 +65,10 @@ fun NavGraph(navController: NavHostController) {
 
                 )
         ) {
-            Log.i("NavGraph", "share_target_route")
-            DraftEdit(navController = navController, draftMode ="post",  draftId = 0L, link= "")
+            Log.i(TAG, "share_target_route")
+            DraftEdit(navController = navController, draftMode = "post", draftId = 0L, link = "")
         }
+
         composable(
             route = Scenes.MainFeed.route + "/{" + LINK + "}",
             arguments = listOf(navArgument(LINK) { type = NavType.StringType })
@@ -120,7 +124,8 @@ fun NavGraph(navController: NavHostController) {
         composable(
             route = Scenes.DraftNew.route + "/post",
         ) { backStackEntry ->
-            DraftEdit(navController = navController, draftMode ="post",  draftId = 0L, link= "")
+            Log.i(TAG, "DraftNew/post")
+            DraftEdit(navController = navController, draftMode = "post", draftId = 0L, link = "")
         }
 
         composable(
@@ -129,10 +134,16 @@ fun NavGraph(navController: NavHostController) {
                 navArgument(LINK) { type = NavType.StringType },
                 navArgument(TYPE) { type = NavType.StringType })
         ) { backStackEntry ->
+            Log.i(TAG, "DraftNew/TYPE/LINK")
             var linkKey = backStackEntry.arguments?.getString(LINK)
             val draftType = backStackEntry.arguments?.getString(TYPE)
             if (linkKey == null) linkKey = ""
-            DraftEdit(navController = navController, draftMode =draftType!!,  draftId = 0L, link= linkKey!!)
+            DraftEdit(
+                navController = navController,
+                draftMode = draftType!!,
+                draftId = 0L,
+                link = linkKey!!
+            )
         }
 
 
@@ -140,11 +151,21 @@ fun NavGraph(navController: NavHostController) {
 
         composable(
             route = Scenes.DraftEdit.route + "/{" + OID + "}",
-            arguments = listOf(navArgument(OID) { type = NavType.LongType})
+            arguments = listOf(navArgument(OID) { type = NavType.LongType })
         ) { backStackEntry ->
             var oid = backStackEntry.arguments?.getLong(OID)
             if (oid == null) oid = 0
-            DraftEdit(navController, draftMode="", draftId= oid,link="")
+            Log.i(TAG, "DraftEdit/oid: $oid")
+            DraftEdit(navController, draftMode = "", draftId = oid, link = "")
+        }
+
+
+        composable(
+            route = Scenes.PostDelete.route + "/{" + LINK + "}",
+            arguments = listOf(navArgument(LINK) { type = NavType.StringType })
+        ) { backStackEntry ->
+            backStackEntry.arguments?.getString(LINK)
+                ?.let { PostDelete(navController, it) }
         }
 
     }

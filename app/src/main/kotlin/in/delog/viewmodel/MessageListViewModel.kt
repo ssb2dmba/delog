@@ -17,6 +17,7 @@
  */
 package `in`.delog.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,6 +36,7 @@ import `in`.delog.db.repository.MessageTreeRepository
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.toMessageViewData
 import `in`.delog.service.ssb.SsbService
+import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.SsbService.Companion.format
 import `in`.delog.service.ssb.TorService
 import kotlinx.coroutines.Dispatchers
@@ -77,6 +79,10 @@ class MessageListViewModel(
         ssbService.clearError()
     }
 
+    fun onDeletePost(messageViewData: MessageViewData) {
+        Log.i(TAG, "delete not implemented ${messageViewData.key}")
+    }
+
 
     init {
         torService.status.observeForever {
@@ -94,7 +100,14 @@ class MessageListViewModel(
                 _uiState.update { it.copy(identAndAbout = identRepository.getFeed(key)) }
             }
             if (_uiState.value.identAndAbout == null) { // fallback to our
-                _uiState.update { it.copy(identAndAbout = identRepository.getFeed(key)) }
+                if (key.startsWith("@")) {
+                    _uiState.update { it.copy(identAndAbout = identRepository.getFeed(key)) }
+                } else {
+                    identRepository.default.collect { ident ->
+                        _uiState.update { it.copy(identAndAbout = ident) }
+                    }
+                }
+
             }
         }
         // set up the message list
@@ -112,8 +125,8 @@ class MessageListViewModel(
                     messageTreeRepository.getPagedMessageByKey(key)
                 }
             }.flow.map { pagingData ->
-                    pagingData.map { msgAndAbout ->
-                        msgAndAbout.toMessageViewData(format, blobRepository)
+                    pagingData.map { msgInTree ->
+                        msgInTree.toMessageViewData(format, blobRepository)
                     }
                 }.cachedIn(viewModelScope)
             synchronize()

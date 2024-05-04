@@ -206,8 +206,9 @@ fun IdentDetailConfirmDeleteDialog(
                         viewModel.delete(uiState!!.identAndAboutWithBlob.ident)
                         onDismissRequest.invoke()
                         navHostController.navigate(Scenes.FeedList.route) {
-                            popUpTo(Scenes.FeedDetail.route) {
+                            popUpTo(Scenes.MainFeed.route) {
                                 inclusive = true
+                                saveState = true
                             }
                         }
                     }
@@ -236,8 +237,9 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
         LaunchedEffect(key1 = Unit) {
             redirect.let {
                 navHostController.navigate(Scenes.FeedList.route) {
-                    popUpTo(navHostController.graph.startDestinationId) {
+                    popUpTo(Scenes.MainFeed.route) {
                         inclusive = true
+                        saveState = true
                     }
                 }
             }
@@ -273,8 +275,9 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                 ident.defaultIdent = defaultIdent
                 vm.onSavingIdent(ident)
                 navHostController.navigate(Scenes.MainFeed.route) {
-                    popUpTo(navHostController.graph.startDestinationId) {
+                    popUpTo(Scenes.MainFeed.route) {
                         inclusive = true
+                        saveState = true
                     }
                 }
             },
@@ -396,8 +399,9 @@ fun IdentEdit(ident: Ident, navHostController: NavHostController, vm: IdentAndAb
                     onClick = {
                         vm.cleanInvite(identAndAbout.ident)
                         navHostController.navigate("${Scenes.FeedDetail.route}/${identAndAbout.ident.oid}") {
-                            popUpTo(navHostController.graph.startDestinationId) {
+                            popUpTo(Scenes.MainFeed.route) {
                                 inclusive = true
+                                saveState = true
                             }
                         }
                     }
