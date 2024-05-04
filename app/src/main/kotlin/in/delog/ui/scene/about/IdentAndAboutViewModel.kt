@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.viewmodel
+package `in`.delog.ui.scene.about
 
 
 import android.net.Uri
@@ -31,7 +31,6 @@ import `in`.delog.db.model.Message
 import `in`.delog.db.model.isOnion
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
-import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
 import `in`.delog.model.SsbSignableMessage
@@ -39,7 +38,10 @@ import `in`.delog.model.SsbSignedMessage
 import `in`.delog.repository.DidRepository
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.TorService
+import `in`.delog.viewmodel.fromAbout
+import `in`.delog.viewmodel.fromSsbSignedMessage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -157,7 +159,9 @@ class IdentAndAboutViewModel(
     }
 
     fun onDoPublishClicked(about: About) {
-        viewModelScope.launch(Dispatchers.IO) {
+        // here we use global scope because we want to publish the message even if the viewmodel is destroyed
+        // it thatcase we have navigated away ...
+        GlobalScope.launch(Dispatchers.IO) {
             val iAndA: IdentAndAbout = identRepository.findByPublicKey(about.about) ?: return@launch
             val ident = iAndA.ident
             val ssbSignableMessage = SsbSignableMessage.fromAbout(about)

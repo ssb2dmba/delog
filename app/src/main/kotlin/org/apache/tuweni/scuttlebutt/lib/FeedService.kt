@@ -144,14 +144,12 @@ class FeedService(
     fun executeDeleteMessage(m: Message) {
         val ssbMessageContent = SsbMessageContent.serialize(m.contentAsText)
         if (ssbMessageContent.mentions?.size == 1) {
-            var link = ssbMessageContent.mentions?.get(0)?.link
+            val link = ssbMessageContent.mentions?.get(0)?.link
             if (link != null) {
-                var target = messageRepository.getMessage(link)
-                if (target != null && target.author.equals(m.author)) {
-                    var targetContent = SsbMessageContent.serialize(target.contentAsText)
-                    targetContent.mentions
-                        ?.filter { it.link.startsWith("&") }
-                        ?.first()
+                val target = messageRepository.getMessage(link)
+                if (target != null && target.author == m.author) {
+                    val targetContent = SsbMessageContent.serialize(target.contentAsText)
+                    targetContent.mentions?.first { it.link.startsWith("&") }
                         ?.link
                         ?.let {
                             GlobalScope.launch(Dispatchers.IO) {
@@ -180,6 +178,10 @@ class FeedService(
         val about: About? = m.toAbout()
         if (about != null) {
             aboutRepository.insertOrUpdate(about)
+            val message = m.toMessage()
+            runBlocking {
+                messageRepository.maybeAddMessageAndBlobs(blobRepository, message)
+            }
         } else {
             Log.w(TAG, "unable to decode %s %s".format(m.key, m.value.contentAsString))
         }

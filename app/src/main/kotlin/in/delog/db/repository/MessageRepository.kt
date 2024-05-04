@@ -25,6 +25,7 @@ import androidx.room.Transaction
 import `in`.delog.db.dao.MessageDao
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.MessageAndAbout
+import `in`.delog.model.Mention
 import `in`.delog.model.SsbMessageContent
 import `in`.delog.service.ssb.SsbService.Companion.TAG
 
@@ -47,6 +48,7 @@ interface MessageRepository {
     fun getMessage(key: String): Message?
     fun blobIsUsefull(key: String):Boolean
     suspend fun maybeAddMessageAndBlobs(blobRepository: BlobRepository, message: Message)
+    suspend fun maybeAddAboutAndImage(blobRepository: BlobRepository,message: Message)
     fun deleteMessage(key: String)
 }
 
@@ -99,6 +101,14 @@ class MessageRepositoryImpl(
         }
     }
 
+    override suspend fun maybeAddAboutAndImage(blobRepository: BlobRepository,message: Message) {
+        // TODO validate signature here
+        if (!existsMessage(message.key)) {
+            addMessage(message)
+            addImage(blobRepository, message.author, message)
+        }
+    }
+
     private suspend fun addBlobs(blobRepository: BlobRepository,author: String, message: Message) {
         val ssbMessageContent = SsbMessageContent.serialize(message.contentAsText)
         val blobs = ssbMessageContent.mentions?.filter { it.link.startsWith("&") }
@@ -107,6 +117,17 @@ class MessageRepositoryImpl(
                 blobRepository.createWant(author, blob)
             }
         }
+    }
+
+    private suspend fun addImage(blobRepository: BlobRepository, author: String, message: Message) {
+        val ssbMessageContent = SsbMessageContent.serialize(message.contentAsText)
+        ssbMessageContent.image
+        val mention = Mention(
+            link = ssbMessageContent.image!!,
+            type = null,
+            size = 0
+        )
+        blobRepository.createWant(author, mention)
     }
 
     override suspend fun findByDefaultFeed(): LiveData<List<Message>> {

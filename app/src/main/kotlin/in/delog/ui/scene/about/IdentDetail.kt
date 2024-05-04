@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.delog.ui.scene
+package `in`.delog.ui.scene.about
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -65,15 +65,13 @@ import androidx.navigation.NavHostController
 import `in`.delog.R
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.getInviteURl
-import `in`.delog.db.model.isOnion
 import `in`.delog.ui.component.IdentityBox
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
+import `in`.delog.ui.scene.ExportMnemonicDialog
 import `in`.delog.ui.scene.identitifiers.InviteWebRequest
 import `in`.delog.ui.theme.keySmall
-import `in`.delog.viewmodel.AboutUIState
 import `in`.delog.viewmodel.BottomBarViewModel
-import `in`.delog.viewmodel.IdentAndAboutViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 

@@ -82,7 +82,6 @@ import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.observeAsState
 import `in`.delog.viewmodel.BottomBarViewModel
 import `in`.delog.viewmodel.FeedMainUIState
-import `in`.delog.viewmodel.IdentAndAboutViewModel
 import `in`.delog.viewmodel.MessageListViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
