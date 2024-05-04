@@ -21,7 +21,6 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.sun.syndication.feed.atom.Feed
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAboutWithBlob
 import `in`.delog.db.model.Message
@@ -37,7 +36,6 @@ import `in`.delog.model.Mention
 import `in`.delog.model.SsbMessageContent
 import `in`.delog.model.SsbSignableMessage
 import `in`.delog.model.SsbSignedMessage
-import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.viewmodel.fromSsbSignedMessage
 import io.netty.channel.ConnectTimeoutException
 import io.vertx.core.Vertx
@@ -55,6 +53,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.apache.tuweni.scuttlebutt.Invite
 import org.apache.tuweni.scuttlebutt.handshake.vertx.SecureScuttlebuttVertxClient
@@ -102,7 +101,7 @@ class SsbService(
     val uiState: StateFlow<SsbUIState> = _uiState.asStateFlow()
     private lateinit var promise: CompletableFuture<Boolean>
     lateinit var callBack: () -> Unit
-    lateinit var vertx: Vertx
+    var vertx: Vertx
 
 
     init {
@@ -119,6 +118,7 @@ class SsbService(
         const val TAG: String = "dlog-ssb-service"
 
 
+        @OptIn(ExperimentalSerializationApi::class)
         val format = Json {
             prettyPrint = true
             prettyPrintIndent = "  " // two spaces
@@ -196,7 +196,7 @@ class SsbService(
                         break
                     }
                 } else {
-                    ct=0;
+                    ct=0
                 }
             }
         }
@@ -393,14 +393,14 @@ class SsbService(
             Log.w(TAG, "deletePost: messageEntity is null")
             return
         }
-        val last: Message? = messageRepository.getLastMessage(messageEntity!!.author)
+        val last: Message? = messageRepository.getLastMessage(messageEntity.author)
         var sequence = 1L
         if (last != null) {
             sequence = last.sequence + 1
         }
         val mentions = arrayOf(
             Mention(
-                link = messageEntity!!.key
+                link = messageEntity.key
             )
         )
         val ssbMessageContent = SsbMessageContent(
@@ -410,7 +410,7 @@ class SsbService(
         val ssbSignableMessage = SsbSignableMessage(
             previous = last?.key,
             sequence=sequence,
-            author = messageEntity!!.author,
+            author = messageEntity.author,
             timestamp = System.currentTimeMillis(),
             content = ssbMessageContent,
             hash = "sha256"

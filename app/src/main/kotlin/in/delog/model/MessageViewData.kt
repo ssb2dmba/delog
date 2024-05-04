@@ -23,7 +23,6 @@ import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService.Companion.TAG
-import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.viewmodel.BlobItem
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -108,7 +107,7 @@ fun Message.toMessageViewData() = MessageViewData(
 
 suspend fun Draft.toMessageViewData(format: Json, blobRepository: BlobRepository? =null): MessageViewData {
     val mvd = MessageViewData(
-        oid = oid ?: 0L,
+        oid = oid,
         key = "",
         timestamp = timestamp,
         author = author,

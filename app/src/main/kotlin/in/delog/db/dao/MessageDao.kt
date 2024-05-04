@@ -55,10 +55,10 @@ interface MessageDao {
     @Query("SELECT * FROM message WHERE author = :author and sequence > :sequence order by sequence asc LIMIT :limit")
     fun getMessagesPage(author: String, sequence: Long, limit: Int): List<Message>
 
-    @Query("SELECT * FROM message WHERE key = :key LIMIT 1")
+    @Query("SELECT * FROM message WHERE 'key' = :key LIMIT 1")
     fun findByKey(key: String): Message
 
-    @Query("SELECT EXISTS(SELECT * FROM message WHERE key = :key)")
+    @Query("SELECT EXISTS(SELECT * FROM message WHERE 'key' = :key)")
     fun existsByKey(key: String): Boolean
 
     @Insert
@@ -86,13 +86,13 @@ interface MessageDao {
     fun getFeed(pk: String): IdentAndAbout
 
     @Transaction
-    @Query("SELECT * FROM message WHERE key = :key LIMIT 1")
+    @Query("SELECT * FROM message WHERE 'key' = :key LIMIT 1")
     fun getMessageAndAbout(key: String): MessageAndAbout?
 
-    @Query("SELECT * FROM message WHERE key = :key LIMIT 1")
+    @Query("SELECT * FROM message WHERE 'key' = :key LIMIT 1")
     fun getMessage(key: String): Message?
 
-    @Query("DELETE FROM message WHERE key = :key")
+    @Query("DELETE FROM message WHERE 'key' = :key")
     fun deleteMessage(key: String)
 
 }

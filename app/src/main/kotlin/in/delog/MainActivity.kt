@@ -19,10 +19,8 @@ package `in`.delog
 
 import android.content.res.Configuration
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,12 +51,10 @@ import java.io.File
 
 class MainActivity : ComponentActivity() {
 
-    private var pressedTime: Long = 0
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
+
         setContent {
             MyTheme {
                 MyApp()
@@ -77,7 +73,7 @@ class MainActivity : ComponentActivity() {
 
     private fun deleteTempFiles(file: File): Boolean {
         if (file.isDirectory) {
-            val files: Array<File> = file.listFiles()
+            val files: Array<out File>? = file.listFiles()
             if (files != null) {
                 for (f in files) {
                     if (f.isDirectory) {
@@ -90,28 +86,8 @@ class MainActivity : ComponentActivity() {
         }
         return file.delete()
     }
-
-    // on below line we are calling on back press method.
-    /**
-    override fun onBackPressed() {
-        // on below line we are checking if the press time is greater than 2 sec
-        if (pressedTime + 2000 > System.currentTimeMillis()) {
-            // if time is greater than 2 sec we are closing the application.
-            super.onBackPressedDispatcher.onBackPressed()
-            finish()
-        } else {
-            // in else condition displaying a toast message.
-            Toast.makeText(getBaseContext(), "Press back again to exit", Toast.LENGTH_SHORT).show();
-        }
-        // on below line initializing our press time variable
-        pressedTime = System.currentTimeMillis();
-    }
-    */
-
 }
 
-
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MyApp() {
 
@@ -173,7 +149,6 @@ fun MyApp() {
             }
         }
     }
-
 
 
 }

@@ -20,7 +20,6 @@ package `in`.delog.ui.component
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.provider.Settings.Global.getString
 import android.text.format.DateUtils
 import android.webkit.MimeTypeMap
 import android.widget.Toast
@@ -45,7 +44,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -268,8 +266,6 @@ fun MessageItem(
                         authorImage = messageViewData.authorImage
                     )
                 }
-
-                //}
             }
             // spacer
             Column(modifier = Modifier.width(8.dp)) {}
@@ -296,7 +292,7 @@ fun MessageItem(
                             style = MaterialTheme.typography.labelSmall,
                             maxLines = 1,
                         )
-                        var own = LocalActiveFeed.current?.ident?.publicKey == messageViewData.author
+                        val own = LocalActiveFeed.current?.ident?.publicKey == messageViewData.author
                         if (own) {
                             IconButton(onClick = { expanded=true }) {
                                 Icon(
