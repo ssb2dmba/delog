@@ -21,8 +21,10 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.sun.syndication.feed.atom.Feed
 import `in`.delog.db.model.Ident
 import `in`.delog.db.model.IdentAndAboutWithBlob
+import `in`.delog.db.model.Message
 import `in`.delog.db.model.asKeyPair
 import `in`.delog.db.model.isOnion
 import `in`.delog.db.model.toCanonicalForm
@@ -31,6 +33,12 @@ import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.ContactRepository
 import `in`.delog.db.repository.IdentRepository
 import `in`.delog.db.repository.MessageRepository
+import `in`.delog.model.Mention
+import `in`.delog.model.SsbMessageContent
+import `in`.delog.model.SsbSignableMessage
+import `in`.delog.model.SsbSignedMessage
+import `in`.delog.ui.LocalActiveFeed
+import `in`.delog.viewmodel.fromSsbSignedMessage
 import io.netty.channel.ConnectTimeoutException
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
@@ -377,5 +385,47 @@ class SsbService(
             }
         }
     }
+
+
+
+    suspend fun deletePost(ident: Ident, messageEntity:Message?) {
+        if (messageEntity== null) {
+            Log.w(TAG, "deletePost: messageEntity is null")
+            return
+        }
+        val last: Message? = messageRepository.getLastMessage(messageEntity!!.author)
+        var sequence = 1L
+        if (last != null) {
+            sequence = last.sequence + 1
+        }
+        val mentions = arrayOf(
+            Mention(
+                link = messageEntity!!.key
+            )
+        )
+        val ssbMessageContent = SsbMessageContent(
+            type = "post-delete",
+            mentions = mentions,
+        )
+        val ssbSignableMessage = SsbSignableMessage(
+            previous = last?.key,
+            sequence=sequence,
+            author = messageEntity!!.author,
+            timestamp = System.currentTimeMillis(),
+            content = ssbMessageContent,
+            hash = "sha256"
+        )
+        // precise some blockchain info
+        val sig = ssbSignableMessage.signMessage(ident)
+        // add sig & hash info
+        val ssbSignedMessage = SsbSignedMessage(ssbSignableMessage, sig)
+        val hash = ssbSignedMessage.makeHash()
+        ssbSignedMessage.hash = "%" + hash!!.bytes().toBase64String() + ".sha256"
+        // translate to db model
+        val message = fromSsbSignedMessage(ssbSignedMessage)
+        feedService?.executeDeleteMessage(message)
+        messageRepository.addMessage(message)
+    }
+
 
 }

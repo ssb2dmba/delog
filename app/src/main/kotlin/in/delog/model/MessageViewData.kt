@@ -23,6 +23,7 @@ import `in`.delog.db.model.Draft
 import `in`.delog.db.model.Message
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.service.ssb.SsbService.Companion.TAG
+import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.viewmodel.BlobItem
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -52,7 +53,8 @@ data class MessageViewData(
     var blobs: Array<BlobItem> = arrayOf(),
     var links: Array<Mention> = arrayOf(),
     var replies:Long = 0,
-    var level: Long = 0
+    var level: Long = 0,
+    var own: Boolean = false
     ) {
     companion object
 
@@ -143,7 +145,8 @@ suspend fun AppDatabaseView.MessageInTree.toMessageViewData(format: Json, blobRe
         replies = replies,
         level = level,
         links = arrayOf(),
-        blobs = arrayOf()
+        blobs = arrayOf(),
+
     )
     val mc = mvd.serializeMessageContent(format)
     mvd.type=mc.type

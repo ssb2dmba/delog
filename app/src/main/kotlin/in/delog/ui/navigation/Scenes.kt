@@ -21,7 +21,6 @@ sealed class Scenes(val route: String) {
     object FeedList : Scenes("feed_list")
     object NewFeed : Scenes("new_feed")
     object FeedDetail : Scenes("feed_detail")
-    object FeedInit : Scenes("feed_init")
     object AboutEdit : Scenes("about_edit")
     object MainFeed : Scenes("main_feed")
     object DraftList : Scenes("draft_list")
@@ -29,5 +28,6 @@ sealed class Scenes(val route: String) {
     object DraftEdit : Scenes("draft_edit")
     object ContactList : Scenes("contact_list")
     object Preferences : Scenes("preferences")
+    object PostDelete : Scenes("post_delete")
 
 }

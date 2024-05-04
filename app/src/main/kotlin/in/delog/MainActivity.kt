@@ -19,6 +19,7 @@ package `in`.delog
 
 import android.content.res.Configuration
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -43,6 +44,7 @@ import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.AppBottomAppBar
 import `in`.delog.ui.component.AppScaffold
 import `in`.delog.ui.navigation.NavGraph
+import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
 import `in`.delog.viewmodel.IdentListViewModel
 import kotlinx.coroutines.launch
@@ -51,8 +53,7 @@ import java.io.File
 
 class MainActivity : ComponentActivity() {
 
-    private val app: MainApplication get() = application as MainApplication
-
+    private var pressedTime: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,6 +90,23 @@ class MainActivity : ComponentActivity() {
         }
         return file.delete()
     }
+
+    // on below line we are calling on back press method.
+    /**
+    override fun onBackPressed() {
+        // on below line we are checking if the press time is greater than 2 sec
+        if (pressedTime + 2000 > System.currentTimeMillis()) {
+            // if time is greater than 2 sec we are closing the application.
+            super.onBackPressedDispatcher.onBackPressed()
+            finish()
+        } else {
+            // in else condition displaying a toast message.
+            Toast.makeText(getBaseContext(), "Press back again to exit", Toast.LENGTH_SHORT).show();
+        }
+        // on below line initializing our press time variable
+        pressedTime = System.currentTimeMillis();
+    }
+    */
 
 }
 
@@ -148,10 +166,14 @@ fun MyApp() {
                                 .fillMaxHeight()
                         ) {
                             NavGraph(navController = navController)
+                            navController.navigate(Scenes.MainFeed.route)
                         }
                     },
                 )
             }
         }
     }
+
+
+
 }

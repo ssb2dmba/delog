@@ -17,21 +17,21 @@
 package org.apache.tuweni.scuttlebutt.lib
 
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import `in`.delog.db.model.About
-import `in`.delog.db.model.Ident
 import `in`.delog.db.model.Message
 import `in`.delog.db.model.toJsonResponse
 import `in`.delog.db.repository.AboutRepository
 import `in`.delog.db.repository.BlobRepository
 import `in`.delog.db.repository.MessageRepository
-import `in`.delog.model.SsbSignedMessage
+import `in`.delog.model.SsbMessageContent
 import `in`.delog.service.ssb.SsbService
 import `in`.delog.service.ssb.SsbService.Companion.TAG
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.concurrent.AsyncResult
@@ -65,7 +65,7 @@ class FeedService(
     private val aboutRepository: AboutRepository,
     private val messageRepository: MessageRepository,
     private val blobService: BlobService
-)  {
+) {
     companion object {
         private val objectMapper = ObjectMapper()
     }
@@ -97,7 +97,7 @@ class FeedService(
 
         val params = HashMap<String, Any>()
         params["id"] = pk
-        params["seq"] = sequence -10 // TODO handle sequence overlap
+        params["seq"] = sequence - 10 // TODO handle sequence overlap
         params["limit"] = 100
         params["keys"] = true
         params["live"] = true
@@ -109,7 +109,7 @@ class FeedService(
         ) { _: Runnable ->
             object : ScuttlebuttStreamHandler {
 
-                override  fun onMessage(requestNumber: Int, message: RPCResponse) {
+                override fun onMessage(requestNumber: Int, message: RPCResponse) {
                     routeFeedMessage(message)
                 }
 
@@ -130,6 +130,7 @@ class FeedService(
         if (m.type.isPresent) {
             when (m.type.get()) {
                 "post" -> storePostMessage(m)
+                "post-delete" -> executeDeleteMessage(m)
                 "vote" -> storeVoteMessage(m)
                 "contact" -> storeContactMessage(m)
                 "about" -> storeAboutMessage(m)
@@ -138,6 +139,33 @@ class FeedService(
         } else {
             Log.w(TAG, "type not present: $m")
         }
+    }
+
+    fun executeDeleteMessage(m: Message) {
+        val ssbMessageContent = SsbMessageContent.serialize(m.contentAsText)
+        if (ssbMessageContent.mentions?.size == 1) {
+            var link = ssbMessageContent.mentions?.get(0)?.link
+            if (link != null) {
+                var target = messageRepository.getMessage(link)
+                if (target != null && target.author.equals(m.author)) {
+                    var targetContent = SsbMessageContent.serialize(target.contentAsText)
+                    targetContent.mentions
+                        ?.filter { it.link.startsWith("&") }
+                        ?.first()
+                        ?.link
+                        ?.let {
+                            GlobalScope.launch(Dispatchers.IO) {
+                                blobRepository.deleteIfKeyUnused(it)
+                            }
+                        }
+                    messageRepository.deleteMessage(link)
+                }
+            }
+        }
+    }
+    private fun executeDeleteMessage(m: FeedMessage) {
+        executeDeleteMessage(m.toMessage())
+        storePostMessage(m)
     }
 
     private fun storeVoteMessage(m: FeedMessage) {
@@ -160,15 +188,16 @@ class FeedService(
     private fun storePostMessage(m: FeedMessage) {
         val message: Message = m.toMessage()
         runBlocking {
-            messageRepository.maybeAddMessageAndBlobs(blobRepository ,message)
+            messageRepository.maybeAddMessageAndBlobs(blobRepository, message)
         }
     }
 
     fun onCreateHistoryStream(rpcMessage: RPCMessage) {
-        val rpcStreamRequest = rpcMessage.asJSON(SsbService.objectMapper, RPCStreamRequest2::class.java)
+        val rpcStreamRequest =
+            rpcMessage.asJSON(SsbService.objectMapper, RPCStreamRequest2::class.java)
         val id = rpcStreamRequest.id
         // TODO -10 below is a hack amid we implement last push stored cursor
-        val sequence =  rpcStreamRequest.seq - 10
+        val sequence = rpcStreamRequest.seq - 10
         val remoteLimit = rpcStreamRequest.limit
         if (sequence < 1) {
             Log.w(TAG, String.format("pub is requesting complete history !", sequence))

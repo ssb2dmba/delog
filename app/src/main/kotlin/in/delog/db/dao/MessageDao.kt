@@ -81,6 +81,7 @@ interface MessageDao {
     )
     fun getLastSequence(author: String): Long
 
+    @Transaction
     @Query("SELECT * FROM ident WHERE public_key = :pk LIMIT 1")
     fun getFeed(pk: String): IdentAndAbout
 
@@ -90,5 +91,8 @@ interface MessageDao {
 
     @Query("SELECT * FROM message WHERE key = :key LIMIT 1")
     fun getMessage(key: String): Message?
+
+    @Query("DELETE FROM message WHERE key = :key")
+    fun deleteMessage(key: String)
 
 }

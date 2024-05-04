@@ -20,6 +20,7 @@ package `in`.delog.ui.component
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings.Global.getString
 import android.text.format.DateUtils
 import android.webkit.MimeTypeMap
 import android.widget.Toast
@@ -41,11 +42,15 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Reply
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +68,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,9 +76,11 @@ import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import `in`.delog.MainApplication
+import `in`.delog.R
 import `in`.delog.model.MessageViewData
 import `in`.delog.model.serializeMessageContent
 import `in`.delog.service.ssb.SsbService.Companion.format
+import `in`.delog.ui.LocalActiveFeed
 import `in`.delog.ui.component.richtext.RichTextViewer
 import `in`.delog.ui.navigation.Scenes
 import `in`.delog.ui.theme.MyTheme
@@ -84,12 +92,14 @@ import java.sql.Timestamp
 import java.util.Calendar
 import java.util.Date
 
+var ACTION_NAVIGATE="ACTION_NAVIGATE"
+var ACTION_DELETE="ACTION_DELETE"
 
 @Composable
 fun MsgToolbar(
     navController: NavController,
     message: MessageViewData,
-    onClickCallBack: () -> Unit,
+    onClickCallBack: (String) -> Unit,
     truncated: Boolean,
 ) {
     Row(
@@ -103,12 +113,12 @@ fun MsgToolbar(
             if (truncated) {
                 IconButton(
                     onClick = {
-                        onClickCallBack.invoke()
+                        onClickCallBack.invoke(ACTION_NAVIGATE)
                     }
                 )
                 {
                     Icon(
-                        Icons.Filled.MoreVert,
+                        Icons.Filled.MoreHoriz,
                         contentDescription = "show more",
                         modifier = Modifier.size(ButtonDefaults.IconSize)
                     )// reply
@@ -163,7 +173,7 @@ fun MsgToolbar(
             )
             {
                 Icon(
-                    Icons.Filled.Reply,
+                    Icons.AutoMirrored.Filled.Reply,
                     contentDescription = "",
                     modifier = Modifier.size(ButtonDefaults.IconSize)
                 )
@@ -178,7 +188,7 @@ fun MessageItem(
     messageViewData: MessageViewData,
     showToolbar: Boolean = false,
     hasDivider: Boolean = false,
-    onClickCallBack: () -> Unit,
+    onClickCallBack: (String) -> Unit,
     truncate: Boolean = false
 ) {
 
@@ -190,9 +200,11 @@ fun MessageItem(
     val whereToCut = remember(messageText) {
         // Cuts the text in the first space or new line after SHORT_TEXT_LENGTH characters
         val firstSpaceAfterCut =
-            messageText.indexOf(' ', SHORT_TEXT_LENGTH).let { if (it < 0) messageText.length else it }
+            messageText.indexOf(' ', SHORT_TEXT_LENGTH)
+                .let { if (it < 0) messageText.length else it }
         val firstNewLineAfterCut =
-            messageText.indexOf('\n', SHORT_TEXT_LENGTH).let { if (it < 0) messageText.length else it }
+            messageText.indexOf('\n', SHORT_TEXT_LENGTH)
+                .let { if (it < 0) messageText.length else it }
 
         // or after SHORTEN_AFTER_LINES lines
         val numberOfLines = messageText.count { it == '\n' }
@@ -231,9 +243,10 @@ fun MessageItem(
         modifier = Modifier
             .wrapContentHeight()
             .clickable {
-                onClickCallBack()
+                onClickCallBack(ACTION_NAVIGATE)
             }
     ) {
+        var expanded by remember { mutableStateOf(false) }
         Row(
             modifier = Modifier.threadIndicator(messageViewData.level.toInt())
         ) {
@@ -243,11 +256,11 @@ fun MessageItem(
                     .padding(8.dp)
                     .width(64.dp)
             ) {
-                if( messageViewData.authorImage.isNullOrEmpty()) {
+                if (messageViewData.authorImage.isNullOrEmpty()) {
                     ProfileImage(
                         identAndAboutWithBlob = null,
                         authorImage = null,
-                        pk=messageViewData.author
+                        pk = messageViewData.author
                     )
                 } else {
                     ProfileImage(
@@ -255,18 +268,16 @@ fun MessageItem(
                         authorImage = messageViewData.authorImage
                     )
                 }
+
+                //}
             }
             // spacer
             Column(modifier = Modifier.width(8.dp)) {}
             // Message head
             Column {
-                Row(
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                ) {
 
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()) {
                         Text(
                             modifier = Modifier.weight(0.9f),
                             text = messageViewData.authorName ?: messageViewData.author,
@@ -283,11 +294,34 @@ fun MessageItem(
                         Text(
                             text = strTimeAgo,
                             style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1
+                            maxLines = 1,
                         )
+                        var own = LocalActiveFeed.current?.ident?.publicKey == messageViewData.author
+                        if (own) {
+                            IconButton(onClick = { expanded=true }) {
+                                Icon(
+                                    Icons.Filled.MoreVert,
+                                    contentDescription = "show more",
+                                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                                )
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(id = R.string.delete)) },
+                                        onClick = {
+                                            onClickCallBack(ACTION_DELETE)
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                     }
 
-                }
+
                 // row message
                 Row(
                     modifier = Modifier
@@ -295,7 +329,7 @@ fun MessageItem(
                         .padding(top = 20.dp)
                 ) {
                     val maxLines = if (truncate) 6 else Int.MAX_VALUE
-                    RichTextViewer(text, { onClickCallBack.invoke() }, maxLines)
+                    RichTextViewer(text, { onClickCallBack.invoke("navigate") }, maxLines)
                 }
 
 
@@ -308,7 +342,7 @@ fun MessageItem(
                     .fillMaxWidth()
                     .threadIndicator(messageViewData.level.toInt())
             ) {
-                Row(modifier=Modifier.padding(start = (messageViewData.level * 40).toInt().dp)) {
+                Row(modifier = Modifier.padding(start = (messageViewData.level * 40).toInt().dp)) {
                     BlobsEdit(
                         blobs = messageViewData.blobs,
                         action = { openView(it) }, actionIcon = { PageViewIcon() })
@@ -317,12 +351,12 @@ fun MessageItem(
             }
         }
         if (showToolbar) {
-            Row(modifier=Modifier.threadIndicator(messageViewData.level.toInt())) {
+            Row(modifier = Modifier.threadIndicator(messageViewData.level.toInt())) {
                 MsgToolbar(
                     navController = navController,
                     message = messageViewData,
                     truncated = truncated,
-                    onClickCallBack = onClickCallBack
+                    onClickCallBack = { onClickCallBack("navigate") }
                 )
             }
         } else {
@@ -333,8 +367,7 @@ fun MessageItem(
 }
 
 
-
-fun openView( it: BlobItem) {
+fun openView(it: BlobItem) {
     val context = MainApplication.applicationContext()
     val type = it.type
     try {
@@ -363,6 +396,7 @@ fun openView( it: BlobItem) {
         ).show()
     }
 }
+
 fun makeArgUri(key: String): Any {
     return URLEncoder.encode(key, Charset.defaultCharset().toString())
 }
@@ -401,7 +435,8 @@ fun MessageItemPreview() {
     )
     blobs = blobs.plus(b1)
     blobs = blobs.plus(b2)
-    val txt =  "#title \n we made healthy  \uD83D\uDD25  Wikipedia[note 3] is a #multilingual free online encyclopedia written and maintained by a community of volunteers, known as @Wikipedians, through open collaboration and using a wiki-based editing system called MediaWiki. Wikipedia is the largest and most-read reference work in history.[3] It is consistently one of the 10 most popular websites ranked by Similarweb and formerly Alexa; as of 2022, Wikipedia was ranked the 5th most popular site in the world.[4] It is hosted by the Wikimedia Foundation, an American non-profit organization funded mainly through donations.[5]"
+    val txt =
+        "#title \n we made healthy  \uD83D\uDD25  Wikipedia[note 3] is a #multilingual free online encyclopedia written and maintained by a community of volunteers, known as @Wikipedians, through open collaboration and using a wiki-based editing system called MediaWiki. Wikipedia is the largest and most-read reference work in history.[3] It is consistently one of the 10 most popular websites ranked by Similarweb and formerly Alexa; as of 2022, Wikipedia was ranked the 5th most popular site in the world.[4] It is hosted by the Wikimedia Foundation, an American non-profit organization funded mainly through donations.[5]"
 
     val messageViewData = MessageViewData(
         key = "@1234",
@@ -413,7 +448,7 @@ fun MessageItemPreview() {
     )
 
     val messageViewData2 = messageViewData.copy(
-        key="@1235",
+        key = "@1235",
         contentAsText = "{ \"type\": \"post\", \"text\":  \"plop\" }",
         level = 1
     )
@@ -426,7 +461,7 @@ fun MessageItemPreview() {
             Column {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(1),
-                    modifier=Modifier.padding(8.dp),
+                    modifier = Modifier.padding(8.dp),
                     content = {
                         item {
                             MessageItem(
