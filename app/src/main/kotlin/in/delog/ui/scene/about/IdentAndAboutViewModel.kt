@@ -19,7 +19,6 @@ package `in`.delog.ui.scene.about
 
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,7 +37,6 @@ import `in`.delog.model.SsbSignableMessage
 import `in`.delog.model.SsbSignedMessage
 import `in`.delog.repository.DidRepository
 import `in`.delog.service.ssb.SsbService
-import `in`.delog.service.ssb.SsbService.Companion.TAG
 import `in`.delog.service.ssb.TorService
 import `in`.delog.viewmodel.fromAbout
 import `in`.delog.viewmodel.fromSsbSignedMessage
@@ -188,7 +186,6 @@ class IdentAndAboutViewModel(
             ssbSignedMessage.hash = "%" + hash!!.bytes().toBase64String() + ".sha256"
             // translate to db model
             val message = fromSsbSignedMessage(ssbSignedMessage)
-            Log.d(TAG, message.toString())
             // save message & delete draft
             messageRepository.addMessage(message)
             aboutRepository.insertOrUpdate(about = about)
