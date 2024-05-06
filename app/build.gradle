@@ -225,7 +225,7 @@ dependencies {
     // Rendering clickable text
     implementation 'com.google.accompanist:accompanist-flowlayout:0.30.0'
     implementation 'com.google.accompanist:accompanist-webview:0.30.0'
-    implementation 'com.github.jeziellago:compose-markdown:0.3.6'
+    implementation 'com.github.jeziellago:compose-markdown:0.5.0'
 
     // qr code printing
     implementation "com.google.zxing:core:3.5.3"
