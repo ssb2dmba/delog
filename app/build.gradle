@@ -210,7 +210,7 @@ dependencies {
 
     // link preview
     implementation 'com.linkedin.urls:url-detector:0.1.17'
-    implementation 'org.jsoup:jsoup:1.17.2'
+    implementation 'org.jsoup:jsoup:1.18.1'
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.6")
     implementation 'io.coil-kt:coil-compose:2.5.0'
     implementation 'io.coil-kt:coil-video:2.5.0'
